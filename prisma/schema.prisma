@@ -1,0 +1,95 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model account {
+  id                       Int       @id @default(autoincrement())
+  userId                   Int
+  type                     String
+  access_token             String?   @db.Text
+  createdAt                DateTime  @default(now())
+  expires_at               Int?
+  id_token                 String?   @db.Text
+  provider                 String    @db.VarChar(50)
+  providerAccountId        String    @db.VarChar(100)
+  refresh_token            String?   @db.Text
+  refresh_token_expires_in Int?
+  scope                    String?
+  session_state            String?
+  token_type               String?
+  updatedAt                DateTime?
+  active                   Int?      @default(1) @db.TinyInt
+  user                     user      @relation(fields: [userId], references: [id])
+
+  @@unique([provider, providerAccountId], map: "Account_provider_providerAccountId_key")
+}
+
+model user {
+  id            Int        @id @default(autoincrement())
+  nick          String?    @unique(map: "username_UNIQUE")
+  email         String     @unique(map: "User_email_key")
+  name          String
+  password      String?
+  role          user_role? @default(user)
+  emailVerified DateTime?
+  image         String?
+  createdAt     DateTime?  @default(now())
+  updatedAt     DateTime?
+  active        Int?       @default(1) @db.TinyInt
+  accounts      account[]
+}
+
+model verificationtoken {
+  identifier String   @id @unique
+  token      String
+  expires    DateTime
+}
+
+model comment {
+  id                 Int       @default(autoincrement())
+  comment            String    @db.VarChar(255)
+  createdAt          DateTime? @default(now())
+  image_id           Int
+  image_post_id      Int
+  image_post_user_id Int
+  who                Int
+  active             Int?      @default(1) @db.TinyInt
+
+  @@id([id, image_id, image_post_id, image_post_user_id])
+}
+
+model post {
+  id          Int       @default(autoincrement())
+  title       String?   @db.VarChar(100)
+  description String?   @db.VarChar(1000)
+  imagenumber Int?      @default(1) @db.TinyInt
+  createdAt   DateTime? @default(now())
+  user_id     Int
+  active      Int?      @default(1) @db.TinyInt
+
+  @@id([id, user_id])
+}
+
+model image {
+  id           Int       @default(autoincrement())
+  description  String?   @db.VarChar(1000)
+  image        String    @db.VarChar(255)
+  createdAt    DateTime? @default(now())
+  post_id      Int
+  post_user_id Int
+  active       Int?      @default(1) @db.TinyInt
+  index        Int       @default(1) @db.TinyInt
+
+  @@id([id, post_id, post_user_id])
+}
+
+enum user_role {
+  user
+  admin
+  moderator
+}
