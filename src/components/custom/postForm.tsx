@@ -23,6 +23,7 @@ import Link from "next/link"
 //import { t } from "@/app/text"
 import { useGlobalContext } from "@/context/globalcontext"
 import { cfg } from "@/config"
+import { uploadPostImage } from "@/lib/cloudinary-functions"
 
 const PostForm = () => {
 
@@ -43,28 +44,28 @@ const PostForm = () => {
     });
 
     // 2. Función para subir la imagen a Cloudinary
-    async function uploadImage(file: File) {
-        // 1. Obtener la firma desde el backend
-        const signatureRes = await fetch("/api/cloudinary-sign");
-        const { signature, timestamp, apiKey, cloudName, folder } = await signatureRes.json();
-
-        // 2. Crear el FormData con los datos necesarios
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("api_key", apiKey);
-        formData.append("timestamp", timestamp.toString());
-        formData.append("signature", signature);
-        formData.append("folder", folder); // Agregar la carpeta donde se guardará la imagen
-
-        // 3. Subir la imagen a Cloudinary
-        const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
-            method: "POST",
-            body: formData,
-        });
-
-        const data = await res.json();
-        return data.secure_url; // Devuelve la URL de la imagen subida
-    }
+    /* async function uploadImage(file: File) {
+         // 1. Obtener la firma desde el backend
+         const signatureRes = await fetch("/api/cloudinary-sign");
+         const { signature, timestamp, apiKey, cloudName, folder } = await signatureRes.json();
+ 
+         // 2. Crear el FormData con los datos necesarios
+         const formData = new FormData();
+         formData.append("file", file);
+         formData.append("api_key", apiKey);
+         formData.append("timestamp", timestamp.toString());
+         formData.append("signature", signature);
+         formData.append("folder", folder); // Agregar la carpeta donde se guardará la imagen
+ 
+         // 3. Subir la imagen a Cloudinary
+         const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+             method: "POST",
+             body: formData,
+         });
+ 
+         const data = await res.json();
+         return data.secure_url; // Devuelve la URL de la imagen subida
+     }*/
 
 
     // 3. Define a submit handler.
@@ -76,7 +77,8 @@ const PostForm = () => {
 
             if (image) {
                 try {
-                    imageUrl = await uploadImage(image);
+                    imageUrl = await uploadPostImage(image);
+
                 } catch (error) {
                     setError("Error al subir la imagen");
                     return;
@@ -89,6 +91,7 @@ const PostForm = () => {
             } else {
                 router.push("/")
             }
+
         });
     }
 
@@ -131,7 +134,7 @@ const PostForm = () => {
                                     />
                                 </FormControl>
                                 <FormDescription>
-                                    Enter your password
+                                    Enter some description
                                 </FormDescription>
                                 <FormMessage />
                             </FormItem>

@@ -1,11 +1,30 @@
+import LoggedHome from "@/components/custom/loggedHome";
 import { pageContainer } from "./classnames";
+import auth from "@/auth";
+import NoLoggedHome from "@/components/custom/noLoggedHome";
+import ShareButton from "@/components/custom/shareButton";
 
-export default function HomePage() {
-  //console.log("new Date(Date.now()): ", new Date(Date.now()));
+export default async function HomePage({ children }: { children: React.ReactNode }) {
+  const session = await auth(); // ⚡️ Ahora esperamos la sesión correctamente
 
   return (
-    <div className={pageContainer}>
-      <h1>Home Page</h1>
+    <div id="HomePage" className="homePage">
+      {/*<ShareButton />*/}
+      {/*<p>{session?.user.id}</p>*/}
+      {session && (
+        <>
+          {/*<p>{session.user.name} está logueado </p>*/}
+          <LoggedHome session={session} />
+        </>
+      )}
+      {!session && (
+        <>
+          <p>No hay sesión</p>
+          <NoLoggedHome />
+        </>
+
+      )}
     </div>
   );
 }
+

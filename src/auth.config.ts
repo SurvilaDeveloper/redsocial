@@ -60,7 +60,7 @@ const authConfig: NextAuthConfig = {
                     });
 
                     // Enviar correo de verificación
-                    const emailState = await sendEmailVerification(user.email, token);
+                    const emailState = await sendEmailVerification(user.name, user.email, token);
                     //console.log("emailState: ", emailState)
                     //throw new Error("Email send verification");
                 }
@@ -69,7 +69,7 @@ const authConfig: NextAuthConfig = {
                     id: user.id.toString(),
                     name: user.name,
                     email: user.email,
-                    image: user.image,
+                    image: user.imageUrl,
                     role: user.role || "",
                 };
             },

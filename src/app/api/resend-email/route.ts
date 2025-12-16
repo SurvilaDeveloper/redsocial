@@ -40,7 +40,7 @@ export async function POST(request: Request) {
         });
 
         // Enviar el correo de verificación
-        const emailState = await sendEmailVerification(email, token);
+        const emailState = await sendEmailVerification(user.name, email, token);
 
         return NextResponse.json({ success: true, emailState });
     } catch (error) {

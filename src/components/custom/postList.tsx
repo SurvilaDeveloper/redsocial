@@ -4,18 +4,22 @@ import { useEffect, useRef, useState } from "react";
 import { PostCard } from "./postCard"; // Componente que muestra cada post
 
 interface Post {
-    id: number;
     title: string;
     description: string;
     image?: string;
+    id: number;
     createdAt: string;
+    userData?: { id: number, name: string, imageUrl: string, imagePublicId: string }
+    active: number;
+    visibility: number;
 
     images?: {
-        id: number,
-        image: string,
+        imageUrl: string,
+        imagePublicId: string,
         index: number,
         post_user_id: number,
-        post_id: number
+        post_id: number,
+        id: number
     }[]
 }
 
@@ -32,13 +36,12 @@ export default function PostList({ userId }: { userId: number }) {
             setLoading(true);
             const res = await fetch(`/api/user-posts?user_id=${userId}&page=${page}`);
             const data = await res.json();
-            console.log("data: ", data);
-            if (data.postImages && data.postImages.length === 0) {
+            if (data.allPosts && data.allPosts.length === 0) {
                 setHasMore(false);
-            } else if (data.postImages) {
+            } else if (data.allPosts) {
                 setPosts((prev) => {
                     const existingIds = new Set(prev.map(post => post.id));
-                    const newPosts = data.postImages.filter((post: { id: number; }) => !existingIds.has(post.id));
+                    const newPosts = data.allPosts.filter((post: { id: number; }) => !existingIds.has(post.id));
                     return [...prev, ...newPosts];
                 });
             }
@@ -65,14 +68,17 @@ export default function PostList({ userId }: { userId: number }) {
     }, [posts, hasMore]);
 
     return (
-        <div className="flex flex-col items-center space-y-4">
+        <div className="flex flex-col items-center space-y-4 w-[700px]">
             {posts.map((post, index) => (
+
                 <div
                     key={post.id}
                     ref={index === posts.length - 1 ? lastPostRef : null}
                 >
                     <PostCard post={post} />
                 </div>
+
+
             ))}
             {loading && <p>Cargando...</p>}
         </div>

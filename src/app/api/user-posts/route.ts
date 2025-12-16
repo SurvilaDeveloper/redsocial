@@ -11,22 +11,22 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ error: "user_id is required" }, { status: 400 });
     }
 
-    const posts = await prisma.post.findMany({
+    const postsReq = await prisma.post.findMany({
         where: { user_id: userId },
         orderBy: { createdAt: "desc" },
         skip: (page - 1) * pageSize,
         take: pageSize,
     });
 
-    const postImages = posts.map(async (post) => {
+    const posts = postsReq.map(async (post) => {
         const images = await prisma.image.findMany({
-            where: { post_id: post.id, post_user_id: post.user_id },
+            where: { post_id: post.id },
         });
         return { ...post, images };
     });
 
-    const resolvedPosts = await Promise.all(postImages);
+    const resolvedPosts = await Promise.all(posts);
 
-    return NextResponse.json({ postImages: resolvedPosts });
+    return NextResponse.json({ allPosts: resolvedPosts });
 
 }

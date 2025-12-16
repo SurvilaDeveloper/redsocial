@@ -4,7 +4,7 @@ import { Resend } from "resend"
 
 const resend = new Resend(process.env.AUTH_RESEND_KEY);
 
-export const sendEmailVerification = async (email: string, token: string) => {
+export const sendEmailVerification = async (name: string, email: string, token: string) => {
     //console.log("sendEmailVerification ejecutandose....");
     try {
         const emailProvisorio = "surviladeveloper@gmail.com" ///////////// PROVISORIO
@@ -13,6 +13,7 @@ export const sendEmailVerification = async (email: string, token: string) => {
             to: emailProvisorio, // cambiar por email
             subject: "Verify your email",
             html: `
+            <h1>Hello ${name}</h1>
             <p>Please verify your email by clicking on the following link:
             <a href="${process.env.NEXTAUTH_URL}/api/auth/verify-email?token=${token}&email=${email}">Verify Email</a></p>`
         })

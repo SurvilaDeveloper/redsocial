@@ -1,6 +1,7 @@
 import { pageContainer } from "@/app/classnames";
 import { PostEdit } from "@/components/custom/postEdit";
 
+
 interface ShowPostPageProps {
     searchParams: Promise<{ post_id?: string }>;
 }
@@ -15,6 +16,7 @@ const EditPostPage = async ({ searchParams }: ShowPostPageProps) => {
 
     //const res = await fetch(`/api/post?post_id=${post_id}`);
     //const data = await res.json();
+    //console.log("data en editpost/page.ts:", data);
 
     //if (!data.post) {
     //   return <div>Post not found</div>;

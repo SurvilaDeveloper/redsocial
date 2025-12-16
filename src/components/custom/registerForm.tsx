@@ -205,10 +205,11 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import Image from "next/image";
+import { uploadProfileImage } from "@/lib/cloudinary-functions";
 
 const RegisterForm = () => {
     const [image, setImage] = useState<File | null>(null); // Estado para la imagen
-    const [preview, setPreview] = useState<string | null>("/user.webp"); // Estado para la vista previa
+    const [preview, setPreview] = useState<string | null>("/user.jpg"); // Estado para la vista previa
     const [error, setError] = useState<string | null>(null);
     const [isPending, startTransition] = useTransition();
     const router = useRouter();
@@ -233,29 +234,9 @@ const RegisterForm = () => {
             const imageUrl = URL.createObjectURL(file);
             setPreview(imageUrl);
         } else {
-            setPreview("/user.webp");
+            setPreview("/user.jpg");
         }
     };
-
-    async function uploadImage(file: File) {
-        const signatureRes = await fetch("/api/cloudinary-sign");
-        const { signature, timestamp, apiKey, cloudName, folder } = await signatureRes.json();
-
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("api_key", apiKey);
-        formData.append("timestamp", timestamp.toString());
-        formData.append("signature", signature);
-        formData.append("folder", folder);
-
-        const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
-            method: "POST",
-            body: formData,
-        });
-
-        const data = await res.json();
-        return data.secure_url;
-    }
 
     async function onSubmit(values: z.infer<typeof signUpSchema>) {
         setError(null);
@@ -264,19 +245,21 @@ const RegisterForm = () => {
 
             if (image) {
                 try {
-                    imageUrl = await uploadImage(image);
+                    imageUrl = await uploadProfileImage(image);
+                    const response = await registerAction(values, imageUrl);
+
+                    if (response.error) {
+                        setError(response.error);
+                    } else {
+                        router.push("/login?emailsend=true");
+                    }
+
                 } catch (error) {
                     setError("Error al subir la imagen");
                     return;
                 }
             }
-            const response = await registerAction(values, imageUrl);
 
-            if (response.error) {
-                setError(response.error);
-            } else {
-                router.push("/login?emailsend=true");
-            }
         });
     }
 

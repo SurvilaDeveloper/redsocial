@@ -1,57 +1,94 @@
 import Image from "next/image";
-import { Pencil } from "lucide-react";
 import Link from "next/link";
-import { useState, useEffect, Key } from "react";
-import EditPostForm from "./editPostForm";
-import { parse } from "path";
+import { formatDate } from "@/lib/dateUtils";
+import UserProfileMiniCard from "./userProfileMiniCard";
+import FriendshipRequest from "./friendshipRequest";
+import { useRouter } from "next/navigation";
 
-
-export function PostCard({ post }: { post: { title: string; description: string; image?: string; id: number; images?: { image: string, index: number, post_user_id: number, post_id: number, id: number }[] } }) {
-    console.log("post.images en PostCard: ", post.images);
-
+export function PostCard({ session, post }: {
+    session: any
+    post: Post
+}) {
+    const router = useRouter();
     return (
-        <div className="border p-4 rounded-lg shadow-md w-full">
+        <div
+            className={post.active === 0 ?
+                "flex flex-col bg-black border-2 border-solid border-red-500 p-2 shadow-md w-full max-h-[200px] overflow-hidden text-gray-200"
+                :
+                "postCardActive"
+            }
+        >
+            {post.active === 0 && <span className="text-red-500">oculto</span>}
+            {/*<div className="flex flex-col bg-black justify-between w-full text-gray-200 border-b-2">*/}
+            {post.userData && post.userData.imageUrl && (
+                <UserProfileMiniCard
+                    session={session}
+                    userId={post.userData.id}
+                    userName={post.userData.name}
+                    profileImageUrl={post.userData.imageUrl}
+                    following={post.relations.following}
+                    isFollower={post.relations.isFollower}
+                    isFriend={post.relations.isFriend}
+                ></UserProfileMiniCard>
 
-
-
-            {/*post.image && <img src={post.image} alt={post.title} className="w-full h-40 object-cover rounded-md" />*/}
-
-            <h3 className="text-lg font-semibold mt-2">{post.title}</h3>
-
-            {/*post.image && <Image src={post.image} alt={post.title} width={600} height={600}></Image>*/}
-            <p className="text-gray-600 w-[600px]">{post.description}</p>
-
-
-            {post.images && post.images.length > 0 && (
-                <div className="grid grid-cols-2 gap-2">
-
-                    {post.images.map((img, index) =>
-                        img ? (
-                            <Link
-                                key={
-                                    parseInt(img.post_user_id.toString() +
-                                        img.post_id.toString() +
-                                        img.id.toString() +
-                                        img.index.toString()
-                                        + index.toString()
-                                    )
-                                }
-                                href={`/showpost?post_id=${img.post_id}`}>
-                                <Image
-                                    src={img.image}
-                                    alt={`Imagen ${index}`}
-                                    width={600}
-                                    height={600}
-                                />
-                                <p>index: {img.index}</p>
-                            </Link>
-
-                        ) : null
-                    )}
-                </div>
             )}
+            <span className="text-[10px] ">{formatDate(post.createdAt)}</span>
+            {/*</div>*/}
+            <Link href={`/showpost?post_id=${post.id}`} >
+                <h3 className="text-lg font-semibold mt-2">{post.title}</h3>
+            </Link>
+            {post.active === 1 &&
+                post.images && post.images.length > 0 && (
+                    <div className="flex flex-row flex-wrap justify-between gap-3">
 
+                        {post.images.map((img, index) =>
+                            img ? (
+                                <div
+                                    key={`${img.post_id}-${img.id}-${img.index}-${index}`}
+                                    className={index == 0 ?
+                                        "flex flex-row gap-2 bg-black relative w-full aspect-square overflow-hidden border border-blue-500 rounded-[8px]"
+                                        :
+                                        "flex flex-row gap-2 bg-black relative w-[48%] aspect-square overflow-hidden border border-blue-500 rounded-[8px]"
+                                    }
+                                >
+                                    <div
+                                        onDoubleClick={() => router.push(`/showpost?post_id=${post.id}`)}
+                                        className="cursor-zoom-in select-none">
+                                        <Image
+                                            src={img.imageUrl}
+                                            alt={`Imagen ${index}`}
 
+                                            fill={true}
+                                            sizes="100vw"
+                                            className="object-contain"
+                                        />
+                                    </div>
+                                </div>
+                            ) : null
+                        )}
+                        {/*<pre className="text-gray-200 w-[500px] text-wrap bg-black">{post.description}</pre>*/}
+
+                    </div>
+                )
+            }
+            {post.active === 0 &&
+                <div className="flex flex-row gap-2 relative w-full aspect-square overflow-hidden">
+                    <Link
+                        href={`/showpost?post_id=${post.id}`}>
+                        {post.images?.length != 0 && post.images != undefined &&
+                            <Image
+                                src={post?.images[0].imageUrl}
+                                alt={`Imagen del post`}
+                                fill={true}
+                                sizes="100vw"
+                                className="object-contain"
+                            />
+                        }
+                    </Link>
+
+                </div>
+            }
+            <pre className="text-gray-200 w-full text-wrap">{post.description}</pre>
         </div>
     );
 }

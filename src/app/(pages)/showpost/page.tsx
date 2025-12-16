@@ -1,5 +1,7 @@
 import { pageContainer } from "@/app/classnames";
 import { Post } from "@/components/custom/post";
+import AsideLeft from "@/components/custom/asideleft";
+import AsideRight from "@/components/custom/asideright";
 
 interface ShowPostPageProps {
     searchParams: Promise<{ post_id?: string }>;
@@ -21,10 +23,16 @@ const ShowPostPage = async ({ searchParams }: ShowPostPageProps) => {
     //}
 
     return (
-        <div className={pageContainer}>
-            <h1>Post shower</h1>
 
-            <Post postId={parseInt(post_id)} />
+        <div className="flex flex-row w-full text-white bg-black">
+            <AsideLeft> Aside Left Aside LeftAside LeftAside LeftAside LeftAside LeftAside LeftAside LeftAside LeftAside</AsideLeft>
+
+
+            <div className="flex flex-col items-center w-[60%] pt-[40px]">
+                <Post postId={parseInt(post_id)} />
+            </div>
+
+            <AsideRight> Aside Right </AsideRight>
         </div>
     );
 }
