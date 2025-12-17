@@ -12,7 +12,9 @@ export type PostNoViewReason =
     | "login_required"
     | "followers_or_friends_only"
     | "friends_only"
+    | "post_hidden"
     | "invalid_visibility";
+
 
 export type PostApiOk = PostModel & {
     images: ImageModel[];

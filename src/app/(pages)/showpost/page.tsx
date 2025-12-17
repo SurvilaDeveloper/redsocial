@@ -15,13 +15,6 @@ const ShowPostPage = async ({ searchParams }: ShowPostPageProps) => {
         return <div>Post ID is missing</div>;
     }
 
-    //const res = await fetch(`/api/post?post_id=${post_id}`);
-    //const data = await res.json();
-
-    //if (!data.post) {
-    //   return <div>Post not found</div>;
-    //}
-
     return (
 
         <div className="flex flex-row w-full text-white bg-black">

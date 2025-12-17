@@ -23,12 +23,15 @@ export function PostCard({
     const viewerId = session?.user?.id ? Number(session.user.id) : null;
     const isOwner = viewerId !== null && viewerId === post.user_id;
 
+    const rel = post.relations ?? { following: false, isFollower: false, isFriend: false };
+
     const canView =
         isOwner ||
         post.visibility === 1 ||
         (post.visibility === 2 && viewerId !== null) ||
-        (post.visibility === 3 && viewerId !== null && (post.relations.isFriend || post.relations.following)) ||
-        (post.visibility === 4 && viewerId !== null && post.relations.isFriend);
+        (post.visibility === 3 && viewerId !== null && (rel.isFriend || rel.following)) ||
+        (post.visibility === 4 && viewerId !== null && rel.isFriend);
+
 
 
     if (!canView) {

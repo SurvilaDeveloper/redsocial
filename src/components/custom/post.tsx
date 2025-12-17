@@ -72,6 +72,9 @@ export function Post({ postId }: { postId: number }) {
     // ---- helpers UI ----
     const visibilityMsg = (p: PostApiNoView) => {
         switch (p.reason) {
+            case "post_hidden":
+                return "Este post está oculto por su autor";
+
             case "login_required":
                 return "Debes iniciar sesión para ver este post";
             case "followers_or_friends_only":

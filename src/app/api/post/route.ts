@@ -2,6 +2,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import auth from "@/auth";
+import type { PostNoViewReason } from "@/types/post-api";
+
 
 export async function GET(req: NextRequest) {
     try {
@@ -33,21 +35,36 @@ export async function GET(req: NextRequest) {
         const isLogged = viewerId !== null;
         const isOwner = isLogged && viewerId === ownerId;
 
-        // relaciones (solo si hace falta)
+        const visibility = post.visibility ?? 1;
+        const isActive = (post.active ?? 1) === 1;
+
+        // ✅ 0) Si está oculto y no es dueño: no lo ve nadie
+        if (!isActive && !isOwner) {
+            const relations = { isFriend: false, isFollower: false, isOwner, isLogged };
+
+            return NextResponse.json({
+                id: post.id,
+                title: post.title,
+                createdAt: post.createdAt,
+                visibility,
+                active: post.active,
+                user_id: post.user_id,
+                relations,
+                canView: false,
+                reason: "post_hidden",
+            });
+        }
+
+        // ✅ 1) relaciones solo si hace falta
         let isFollower = false;
         let isFriend = false;
 
-        const needsRelations = (post.visibility === 3 || post.visibility === 4) && isLogged && !isOwner;
+        const needsRelations = (visibility === 3 || visibility === 4) && isLogged && !isOwner;
 
         if (needsRelations) {
             const [follow, friendship] = await Promise.all([
                 prisma.follow.findUnique({
-                    where: {
-                        followerId_followingId: {
-                            followerId: viewerId!,
-                            followingId: ownerId,
-                        },
-                    },
+                    where: { followerId_followingId: { followerId: viewerId!, followingId: ownerId } },
                     select: { id: true },
                 }),
                 prisma.friendship.findFirst({
@@ -66,37 +83,34 @@ export async function GET(req: NextRequest) {
             isFriend = Boolean(friendship);
         }
 
-        // permisos
+        // ✅ 2) permisos por visibility
         let canView = false;
-        let reason: string | null = null;
+        let reason: PostNoViewReason = "invalid_visibility";
 
         if (isOwner) {
             canView = true;
-        } else if (post.visibility === 1) {
+            reason = "invalid_visibility"; // no se usa porque canView=true
+        } else if (visibility === 1) {
             canView = true;
-        } else if (post.visibility === 2) {
+        } else if (visibility === 2) {
             canView = isLogged;
-            reason = canView ? null : "login_required";
-        } else if (post.visibility === 3) {
+            reason = "login_required";
+        } else if (visibility === 3) {
             canView = isLogged && (isFollower || isFriend);
-            reason = canView ? null : "followers_or_friends_only";
-        } else if (post.visibility === 4) {
+            reason = "followers_or_friends_only";
+        } else if (visibility === 4) {
             canView = isLogged && isFriend;
-            reason = canView ? null : "friends_only";
-        } else {
-            canView = false;
-            reason = "invalid_visibility";
+            reason = "friends_only";
         }
 
         const relations = { isFriend, isFollower, isOwner, isLogged };
 
-        // si no puede ver: devolvés “mínimo” (sin description/images)
         if (!canView) {
             return NextResponse.json({
                 id: post.id,
                 title: post.title,
                 createdAt: post.createdAt,
-                visibility: post.visibility,
+                visibility,
                 active: post.active,
                 user_id: post.user_id,
                 relations,
@@ -105,13 +119,14 @@ export async function GET(req: NextRequest) {
             });
         }
 
-        // si puede ver: devolvés todo
         return NextResponse.json({
             ...post,
+            visibility,
             relations,
             canView: true,
             reason: null,
         });
+
     } catch (e: any) {
         console.error("GET /api/post error:", e);
         return NextResponse.json({ error: e?.message ?? "Internal Server Error" }, { status: 500 });
