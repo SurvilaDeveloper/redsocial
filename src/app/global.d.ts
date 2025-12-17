@@ -1,20 +1,41 @@
+// global.d.ts
+
+type PostVisibility = 1 | 2 | 3 | 4;
+
 interface Post {
-    title: string;
-    description: string;
-    image?: string;
-    imagenumber: number;
     id: number;
+
+    user_id: number; // ✅ dueño del post
+
+    title: string | null;
+    description: string | null;
+
+    imagenumber: number | null;
     createdAt: string;
-    relations: { following: boolean, isFollower: boolean, isFriend: boolean }
-    userData?: { id: number, name: string, imageUrl: string, imagePublicId: string };
-    active: number;
-    visibility: number;
+
+    active: number; // 1/0
+    visibility: PostVisibility;
+
+    relations: {
+        following: boolean;
+        isFollower: boolean;
+        isFriend: boolean;
+    };
+
+    userData?: {
+        id: number;
+        name: string;
+        imageUrl: string | null;
+        imagePublicId: string | null;
+    };
+
     images?: {
-        imageUrl: string,
-        imagePublicId: string,
-        index: number,
-        post_user_id: number,
-        post_id: number,
-        id: number
-    }[]
+        id: number;
+        post_id: number;
+        imageUrl: string;
+        imagePublicId: string;
+        index: number;
+        active?: number | null;
+    }[];
 }
+

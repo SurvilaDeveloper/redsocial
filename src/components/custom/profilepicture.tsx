@@ -5,7 +5,7 @@ import Image from 'next/image';
 
 const ProfilePicture = ({ session }: { session: Session }) => {
     return (
-        <div>
+        <div className="w-8 aspect-square relative overflow-hidden rounded-full">
             <Image
                 src={session?.user?.image || '/user.jpg'} // URL de la imagen o un placeholder
                 alt="Profile Picture"

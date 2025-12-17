@@ -167,7 +167,7 @@ const UserProfileMiniCard = ({
             <span className="text-[14px] font-bold m-0">{userName}</span>
             <div className="friendshipButtonImageAndButtons">
                 <Link href={`/wall?user=${userId}`}>
-                    <div className="flex flex-col items-center">
+                    <div className="w-8 aspect-square relative overflow-hidden rounded-full">
                         <span className="absolute text-red-500 font-black">{userId}</span>{/*QUITAR*/}
                         <Image src={profileImageUrl} alt="imagen de perfil" width={24} height={24} className="rounded-full w-auto h-auto m-0"></Image>
                     </div>

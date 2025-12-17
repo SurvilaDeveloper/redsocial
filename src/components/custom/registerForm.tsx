@@ -348,13 +348,15 @@ const RegisterForm = () => {
                         {preview && (
                             <div className="mt-2">
                                 <p>Vista previa:</p>
-                                <Image
-                                    src={preview}
-                                    alt="Vista previa de la imagen de perfil"
-                                    width={100}
-                                    height={100}
-                                    className="object-cover rounded-full border-dotted border-2 border-gray-500"
-                                />
+                                <div className="w-[96px] aspect-square relative overflow-hidden rounded-full">
+                                    <Image
+                                        src={preview}
+                                        alt="Vista previa de la imagen de perfil"
+                                        width={100}
+                                        height={100}
+                                        className="object-cover rounded-full border-dotted border-2 border-gray-500"
+                                    />
+                                </div>
                             </div>
                         )}
 
