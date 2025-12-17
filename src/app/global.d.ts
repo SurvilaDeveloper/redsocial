@@ -2,9 +2,37 @@
 
 type PostVisibility = 1 | 2 | 3 | 4;
 
+interface MiniUser {
+    id: number;
+    name: string;
+    imageUrl: string | null;
+    imagePublicId?: string | null;
+}
+
+interface PostCommentResponse {
+    id: number;
+    response: string;
+    createdAt: string;
+    who_responses: number;
+    active?: number | null;
+    user?: MiniUser; // viene del include
+}
+
+interface PostComment {
+    id: number;
+    comment: string;
+    createdAt: string;
+    post_id: number;
+    who_comments: number;
+    active?: number | null;
+    user?: MiniUser; // viene del include
+    responses?: PostCommentResponse[]; // ✅ clave
+}
+
+
 interface Post {
     id: number;
-
+    post_comment?: PostComment[];
     user_id: number; // ✅ dueño del post
 
     title: string | null;

@@ -1,3 +1,4 @@
+// app/api/last-posts/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import auth from "@/auth";
@@ -19,7 +20,7 @@ export async function GET(req: NextRequest) {
     const results: any[] = [];
 
     for (let loop = 0; loop < MAX_LOOPS && results.length < pageSize; loop++) {
-        // 1) traer posts + user + images (1 query)
+        // 1) traer posts + user + images + comments + responses (1 query)
         const chunk = await prisma.post.findMany({
             orderBy: { createdAt: "desc" },
             skip,
@@ -35,6 +36,26 @@ export async function GET(req: NextRequest) {
                         name: true,
                         imageUrl: true,
                         imagePublicId: true,
+                    },
+                },
+
+                // ✅ comentarios del post + respuestas + user
+                post_comment: {
+                    where: { active: 1 },
+                    orderBy: { createdAt: "desc" },
+                    include: {
+                        user: {
+                            select: { id: true, name: true, imageUrl: true },
+                        },
+                        responses: {
+                            where: { active: 1 },
+                            orderBy: { createdAt: "asc" },
+                            include: {
+                                user: {
+                                    select: { id: true, name: true, imageUrl: true },
+                                },
+                            },
+                        },
                     },
                 },
             },
@@ -71,13 +92,13 @@ export async function GET(req: NextRequest) {
 
         // amigos: el otro id (distinto del viewer) es el owner
         const friendSet = new Set<number>();
-        for (const fr of viewerFriends) {
+        for (const fr of viewerFriends as any[]) {
             const other = fr.friend_one === viewerId ? fr.friend_two : fr.friend_one;
             friendSet.add(other);
         }
 
         // 3) armar posts con relations + filtrar por visibility
-        for (const post of chunk) {
+        for (const post of chunk as any[]) {
             const isOwner = viewerId !== null && viewerId === post.user_id;
             const isLogged = viewerId !== null;
 
@@ -86,7 +107,6 @@ export async function GET(req: NextRequest) {
 
             // OJO: en tu código "isFollower" era "el otro te sigue"
             // Para eso necesitarías otra query batch inversa.
-            // Si no la usás para visibility, la dejamos como false por ahora (o la calculo abajo).
             const isFollower = false;
 
             // --- reglas visibility ---
@@ -97,7 +117,7 @@ export async function GET(req: NextRequest) {
             else if (post.visibility === 3) canView = isLogged && (isFriend || following);
             else if (post.visibility === 4) canView = isLogged && isFriend;
 
-            // además, solo activos (como venías haciendo en el frontend)
+            // además, solo activos
             if ((post.active ?? 1) !== 1) continue;
 
             if (!canView) continue;
