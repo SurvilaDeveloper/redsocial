@@ -1,3 +1,4 @@
+//src/auth.ts
 import NextAuth from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
@@ -83,33 +84,3 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 });
 
 export default auth;
-
-
-/*
-import NextAuth from "next-auth";
-import authConfig from "./auth.config";
-import { PrismaAdapter } from "@auth/prisma-adapter";
-import { prisma } from "@/lib/prisma";
-
-export const { handlers, signIn, signOut, auth } = NextAuth({
-    adapter: PrismaAdapter(prisma),
-    session: { strategy: "jwt" },
-    ...authConfig,
-    callbacks: {
-        jwt({ token, user }) {
-            if (user) {
-                token.role = user.role; // Agrega `role` al token
-                token.id = user.id; // Opcional: añade `id` al token si lo necesitas
-            }
-            return token;
-        },
-        session({ session, token }) {
-            if (session.user) {
-                session.user.role = token.role as string; // Propaga `role` a la sesión
-                session.user.id = token.id as string; // Opcional: añade `id` a la sesión
-            }
-            return session;
-        },
-    },
-});
-*/

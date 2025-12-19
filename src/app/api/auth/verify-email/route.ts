@@ -1,3 +1,4 @@
+//src/app/api/auth/verify-email/route.ts
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { type NextRequest } from "next/server";
@@ -11,7 +12,7 @@ export async function GET(request: NextRequest) {
     }
 
     // verificar si existe en token en la base de datos
-    const verifyToken = await prisma.verificationtoken.findFirst({
+    const verifyToken = await prisma.verificationToken.findFirst({
         where: {
             token,
         }
@@ -45,7 +46,7 @@ export async function GET(request: NextRequest) {
         }
     })
 
-    await prisma.verificationtoken.delete({
+    await prisma.verificationToken.delete({
         where: {
             identifier: verifyToken.identifier
         }

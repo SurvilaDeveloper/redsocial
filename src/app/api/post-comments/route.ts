@@ -30,7 +30,7 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "Post not found" }, { status: 404 });
     }
 
-    const created = await prisma.post_comment.create({
+    const created = await prisma.postComment.create({
         data: {
             post_id,
             comment,

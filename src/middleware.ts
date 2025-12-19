@@ -1,3 +1,4 @@
+//src/middleware.ts
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
@@ -34,16 +35,4 @@ export const config = {
     matcher: ["/dashboard/:path*", "/admin/:path*", "/newpost/:path*"], // Aplica el middleware a /dashboard y sus subrutas
 };
 
-/*
-export const config = {
-    matcher: [
-        
-        //  Aplicar el middleware a todas las rutas excepto las internas de Next.js y archivos estáticos
-        
-        "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
-        "/(api|trpc)(.*)",
-    ],
-};
-
-*/
 

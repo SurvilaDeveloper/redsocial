@@ -1,10 +1,13 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import AutoResizeTextarea from "./AutoResizeTextarea";
+import { MessageCircle, MessageCircleOff } from "lucide-react";
 
 
+/*
 type MiniUser = {
     id: number;
     name: string;
@@ -20,7 +23,7 @@ type PostCommentResponse = {
     active?: number | null;
     user?: MiniUser;
 };
-
+*/
 type Props = {
     commentId: number;
     responses?: PostCommentResponse[];
@@ -31,7 +34,7 @@ type Props = {
     sessionUserImageUrl?: string | null;
 
     disabled?: boolean;
-    onCreated?: () => void;
+    onCreated?: (created: PostCommentResponse) => void; // 👈 antes era () => void
 
     defaultExpanded?: boolean;
 
@@ -48,7 +51,7 @@ function pluralRespuestas(n: number) {
     return n === 1 ? "1 respuesta" : `${n} respuestas`;
 }
 
-export default function PostCardCommetsResponsesContainer({
+export default function PostCardCommentsResponsesContainer({
     commentId,
     responses = [],
     isLogged,
@@ -73,6 +76,26 @@ export default function PostCardCommetsResponsesContainer({
 
     const bottomRef = useRef<HTMLDivElement | null>(null);
 
+    useEffect(() => {
+        // Sincronizar sin perder info previa (especialmente user)
+        setLocalResponses((prev) => {
+            const prevById = new Map(prev.map((r) => [r.id, r]));
+
+            return responses.map((r) => {
+                const old = prevById.get(r.id);
+                // Mezclamos: lo nuevo pisa lo viejo, pero si no viene user,
+                // conservamos el que ya teníamos.
+                return {
+                    ...old,
+                    ...r,
+                    user: r.user ?? old?.user ?? r.user,
+                };
+            });
+        });
+    }, [responses]);
+
+
+
     const activeSorted = useMemo(() => {
         return localResponses
             .filter((r) => (r.active ?? 1) === 1)
@@ -86,10 +109,10 @@ export default function PostCardCommetsResponsesContainer({
 
     const count = activeSorted.length;
 
-    const buttonLabel = expanded
+    /*const buttonLabel = expanded
         ? "Ocultar respuestas"
         : `Ver ${pluralRespuestas(count)}`;
-
+*/
     const canSubmit =
         !disabled && isLogged && sessionUserId != null && reply.trim().length > 0 && !loading;
 
@@ -145,7 +168,8 @@ export default function PostCardCommetsResponsesContainer({
             const data = await res.json().catch(() => null);
             if (!res.ok) throw new Error(data?.error || "No se pudo guardar la respuesta");
 
-            const created = data?.data; // { id, createdAt, response, who_responses, post_comment_id }
+            const created = data?.data as PostCommentResponse | undefined;
+            if (!created) throw new Error("Respuesta creada inválida");
 
             setLocalResponses((prev) =>
                 prev.map((r) =>
@@ -155,13 +179,20 @@ export default function PostCardCommetsResponsesContainer({
                             id: created.id,
                             createdAt: created.createdAt,
                             __optimistic: false,
+                            // si el backend envía created.user, lo usamos;
+                            // si no, dejamos el que ya teníamos del optimistic
+                            user: created.user ?? r.user,
                         }
                         : r
                 )
             );
 
+
             setMsg("Respuesta guardada ✅");
-            onCreated?.();
+
+            // ✅ AVISAMOS AL PADRE CON LA RESPUESTA REAL
+            onCreated?.(created);
+
             scrollToBottom();
         } catch (err: any) {
             setLocalResponses((prev) => prev.filter((r) => r.id !== tempId));
@@ -171,6 +202,7 @@ export default function PostCardCommetsResponsesContainer({
         }
     };
 
+
     return (
         <div className="mt-2 ml-3 border-l border-neutral-700 pl-3">
             {/* Toggle */}
@@ -179,7 +211,18 @@ export default function PostCardCommetsResponsesContainer({
                 onClick={() => setExpanded((v) => !v)}
                 className="text-xs text-gray-300 hover:text-gray-200 select-none"
             >
-                {buttonLabel}
+                {
+                    expanded
+                        ?
+                        <div className="flex flex-row">
+                            <MessageCircleOff className="w-6 h-6 text-gray-400 hover:text-gray-100" />
+                            <span>{pluralRespuestas(activeSorted.length)}</span>
+                        </div>
+                        :
+                        <div className="flex flex-row">
+                            <MessageCircle className="w-6 h-6 text-gray-400 hover:text-gray-100" />
+                            <span>{pluralRespuestas(activeSorted.length)}</span>
+                        </div>}
             </button>
 
             {expanded && (
@@ -189,9 +232,19 @@ export default function PostCardCommetsResponsesContainer({
                         <div className="text-xs text-gray-500">Sin respuestas todavía.</div>
                     ) : (
                         activeSorted.map((r) => {
-                            const userId = r.user?.id ?? null;
-                            const name = r.user?.name ?? "Usuario";
-                            const imageUrl = r.user?.imageUrl ?? null;
+                            const isCurrentUser = r.who_responses === sessionUserId;
+
+                            const name =
+                                r.user?.name ??
+                                (isCurrentUser && sessionUserName ? sessionUserName : "Usuario");
+
+                            const imageUrl =
+                                r.user?.imageUrl ??
+                                (isCurrentUser ? sessionUserImageUrl ?? null : null);
+
+                            const userId =
+                                r.user?.id ??
+                                (isCurrentUser ? sessionUserId : null);
 
                             return (
                                 <div key={r.id} className="text-sm text-gray-300">
@@ -206,7 +259,13 @@ export default function PostCardCommetsResponsesContainer({
                                             >
                                                 <div className="relative w-6 h-6 mt-[2px] rounded-full overflow-hidden bg-neutral-800 border border-neutral-700">
                                                     {imageUrl ? (
-                                                        <Image src={imageUrl} alt={name} fill sizes="24px" className="object-cover" />
+                                                        <Image
+                                                            src={imageUrl}
+                                                            alt={name}
+                                                            fill
+                                                            sizes="24px"
+                                                            className="object-cover"
+                                                        />
                                                     ) : (
                                                         <div className="w-full h-full flex items-center justify-center text-[10px] text-gray-300">
                                                             {name.slice(0, 1).toUpperCase()}
@@ -220,7 +279,13 @@ export default function PostCardCommetsResponsesContainer({
                                                 className="relative w-6 h-6 mt-[2px] rounded-full overflow-hidden bg-neutral-800 border border-neutral-700 shrink-0"
                                             >
                                                 {imageUrl ? (
-                                                    <Image src={imageUrl} alt={name} fill sizes="24px" className="object-cover" />
+                                                    <Image
+                                                        src={imageUrl}
+                                                        alt={name}
+                                                        fill
+                                                        sizes="24px"
+                                                        className="object-cover"
+                                                    />
                                                 ) : (
                                                     <div className="w-full h-full flex items-center justify-center text-[10px] text-gray-300">
                                                         {name.slice(0, 1).toUpperCase()}
@@ -258,9 +323,8 @@ export default function PostCardCommetsResponsesContainer({
                                     </div>
                                 </div>
                             );
-
-
                         })
+
                     )}
 
                     {/* ancla para scroll */}
@@ -273,13 +337,14 @@ export default function PostCardCommetsResponsesContainer({
                         </div>
                     ) : isLogged ? (
                         <form onSubmit={submit} className="mt-2 space-y-2">
-                            <textarea
+                            <AutoResizeTextarea
                                 value={reply}
                                 onChange={(e) => setReply(e.target.value)}
-                                rows={2}
+                                rows={1}
                                 placeholder="Escribí una respuesta..."
-                                className="w-full rounded-md bg-neutral-900 text-gray-100 border border-neutral-700 p-2 outline-none focus:border-neutral-500"
+                                className="w-full rounded-md bg-neutral-900 text-gray-100 border border-neutral-700 p-2 outline-none focus:border-neutral-500 text-sm"
                             />
+
                             <div className="flex items-center gap-2">
                                 <button
                                     type="submit"

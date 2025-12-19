@@ -44,4 +44,7 @@ next-env.d.ts
 z.txt
 zarbol.txt
 zNextAuth.txt
+zz_db_anterior.txt
+zz-nombre_modelos.txt
+zz-postCard.txt
 *.sql

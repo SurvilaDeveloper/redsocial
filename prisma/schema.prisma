@@ -7,7 +7,21 @@ datasource db {
   //url      = env("DATABASE_URL")
 }
 
-model account {
+enum UserRole {
+  novice
+  user
+  premiun
+  shop
+  admin
+  moderator
+}
+
+enum MediaType {
+  image
+  video
+}
+
+model Account {
   id                       Int       @id @default(autoincrement())
   userId                   Int
   type                     String
@@ -24,53 +38,54 @@ model account {
   token_type               String?
   updatedAt                DateTime?
   active                   Int?      @default(1) @db.TinyInt
-  user                     user      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user                     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId], map: "Account_provider_providerAccountId_key")
+  @@map("account")
 }
 
-model user {
-  id                Int        @id @default(autoincrement())
-  nick              String?    @unique(map: "username_UNIQUE")
-  email             String     @unique(map: "User_email_key")
+model User {
+  id                Int       @id @default(autoincrement())
+  nick              String?   @unique(map: "username_UNIQUE")
+  email             String    @unique(map: "User_email_key")
   name              String
   password          String?
-  role              user_role? @default(user)
+  role              UserRole? @default(user)
   emailVerified     DateTime?
   imageUrl          String?
   imagePublicId     String?
   imageWallUrl      String?
   imageWallPublicId String?
-  createdAt         DateTime?  @default(now())
+  createdAt         DateTime? @default(now())
   updatedAt         DateTime?
   deletedAt         DateTime?
-  active            Int?       @default(1) @db.TinyInt
+  active            Int?      @default(1) @db.TinyInt
 
   // Información de perfil extendida
-  bio              String?   @db.VarChar(500) // Descripción personal
-  phoneNumber      String?   @unique // Número de teléfono opcional
-  movilNumber      String?   @unique // Número de teléfono móvil
-  birthday         DateTime? // Fecha de nacimiento
-  location         String?   @db.VarChar(255) // Ubicación geográfica
-  country          String?   @db.VarChar(127) // país
-  province         String?   @db.VarChar(127) // province
-  city             String?   @db.VarChar(127) // ciudad
-  street           String?   @db.VarChar(127) // calle
-  number           String?   @db.VarChar(7) // numero de casa
-  department       String?   @db.VarChar(7) // numero de departamento
+  bio              String?   @db.VarChar(500)
+  phoneNumber      String?   @unique
+  movilNumber      String?   @unique
+  birthday         DateTime?
+  location         String?   @db.VarChar(255)
+  country          String?   @db.VarChar(127)
+  province         String?   @db.VarChar(127)
+  city             String?   @db.VarChar(127)
+  street           String?   @db.VarChar(127)
+  number           String?   @db.VarChar(7)
+  department       String?   @db.VarChar(7)
   mail_code        String?   @db.VarChar(10)
-  website          String?   @db.VarChar(127) // Página web personal
-  language         String?   @db.VarChar(3) // idioma preferido (SP, EN)
-  occupation       String?   @db.VarChar(100) // Profesión o cargo
-  company          String?   @db.VarChar(100) // Empresa o institución
-  dataVerifiedCode String?   @db.VarChar(31) // código enviado por correo postal para verificar la cuenta
+  website          String?   @db.VarChar(127)
+  language         String?   @db.VarChar(3)
+  occupation       String?   @db.VarChar(100)
+  company          String?   @db.VarChar(100)
+  dataVerifiedCode String?   @db.VarChar(31)
   dataVerified     Int?      @default(0) @db.TinyInt
   visibility       Int?      @default(1) @db.TinyInt
 
   // Configuraciones de seguridad
-  twoFactorEnabled    Boolean?  @default(false) // Autenticación en dos pasos
-  lastLogin           DateTime? // Último inicio de sesión
-  failedLoginAttempts Int?      @default(0) // Intentos fallidos de inicio de sesión
+  twoFactorEnabled    Boolean?  @default(false)
+  lastLogin           DateTime?
+  failedLoginAttempts Int?      @default(0)
 
   // Redes sociales vinculadas
   twitterHandle   String? @db.VarChar(100)
@@ -80,197 +95,362 @@ model user {
   githubHandle    String? @db.VarChar(100)
 
   // Preferencias del usuario
-  darkModeEnabled    Boolean? @default(false) // Modo oscuro activado
-  emailNotifications Boolean? @default(true) // Recibe notificaciones por correo
-  pushNotifications  Boolean? @default(true) // Recibe notificaciones push
-  themePreference    String? // Preferencia de tema personalizado
+  darkModeEnabled    Boolean? @default(false)
+  emailNotifications Boolean? @default(true)
+  pushNotifications  Boolean? @default(true)
+  themePreference    String?
 
   // Relaciones con otros modelos
-  accounts               account[]
-  posts                  post[] // 🔗 Relación con posts creados por el usuario
-  comments               post_comment[] // 🔗 Relación con comentarios en posts
-  imageComments          image_comment[] // 🔗 Relación con comentarios en imágenes
-  postCommentsResponses  post_comment_responses[] // 🔗 Relación con respuestas a comentarios
-  imageCommentsResponses image_comment_responses[]
-  followers              follow[]                  @relation(name: "UserFollowers") // Seguidores
-  following              follow[]                  @relation(name: "UserFollowing") // Usuarios seguidos
-  post_like              post_like[]
-  image_like             image_like[]
+  accounts               Account[]
+  posts                  Post[]
+  comments               PostComment[]
+  imageComments          ImageComment[]
+  postCommentsResponses  PostCommentResponse[]
+  imageCommentsResponses ImageCommentResponse[]
+  followers              Follow[]               @relation("UserFollowers")
+  following              Follow[]               @relation("UserFollowing")
+  post_like              PostLike[]
+  image_like             ImageLike[]
   productListings        ProductListing[]
 
   // Relaciones con amistades
-  friendsInitiated friendship[] @relation("FriendshipOne")
-  friendsReceived  friendship[] @relation("FriendshipTwo")
+  friendsInitiated Friendship[] @relation("FriendshipOne")
+  friendsReceived  Friendship[] @relation("FriendshipTwo")
 
   // Métodos de pago o facturación
-  stripeCustomerId       String?
-  paypalEmail            String?
-  productListingComments ProductListingComment[]
-  productListingLikes    ProductListingLike[]
-  productListingUnlikes  ProductListingUnlike[]
+  stripeCustomerId             String?
+  paypalEmail                  String?
+  productListingComments       ProductListingComment[]
+  productListingLikes          ProductListingLike[]
+  productListingUnlikes        ProductListingUnlike[]
+  postUnlikes                  PostUnlike[]
+  imageUnlikes                 ImageUnlike[]
+  imageCommentLikes            ImageCommentLike[]
+  imageCommentUnlikes          ImageCommentUnlike[]
+  imageCommentResponsesLikes   ImageCommentResponseLike[]
+  imageCommentResponsesUnlikes ImageCommentResponseUnlike[]
+  postCommentLikes             PostCommentLike[]
+  postCommentUnlikes           PostCommentUnlike[]
+  postCommentResponsesLikes    PostCommentResponseLike[]
+  postCommentResponsesUnlikes  PostCommentResponseUnlike[]
+  productListingMediaLikes     ProductListingMediaLike[]
+  productListingMediaUnlikes   ProductListingMediaUnlike[]
+  productListingCommentLikes   ProductListingCommentLike[]
+  productListingCommentUnlikes ProductListingCommentUnlike[]
+  serviceListings              ServiceListing[]
+  serviceListingComments       ServiceListingComment[]
+  serviceListingLikes          ServiceListingLike[]
+  serviceListingUnlikes        ServiceListingUnlike[]
+  serviceListingMediaLikes     ServiceListingMediaLike[]
+  serviceListingMediaUnlikes   ServiceListingMediaUnlike[]
+  serviceListingCommentLikes   ServiceListingCommentLike[]
+  serviceListingCommentUnlikes ServiceListingCommentUnlike[]
+
+  @@map("user")
 }
 
-model friendship {
-  id              Int      @id @default(autoincrement()) // Clave primaria
-  friend_one      Int // ID del usuario que inicia la amistad
-  friend_two      Int // ID del usuario con quien quiere amistad
-  friend_request  Int      @default(0) @db.TinyInt // 1 = solicitud enviada, 0 = cancelada
-  friend_response Int      @default(0) @db.TinyInt // 1 = aceptada, 0 = pendiente
+model Friendship {
+  id              Int      @id @default(autoincrement())
+  friend_one      Int
+  friend_two      Int
+  friend_request  Int      @default(0) @db.TinyInt
+  friend_response Int      @default(0) @db.TinyInt
   createdAt       DateTime @default(now())
 
-  // Relaciones con la tabla User
-  friendOne user @relation("FriendshipOne", fields: [friend_one], references: [id], onDelete: Cascade)
-  friendTwo user @relation("FriendshipTwo", fields: [friend_two], references: [id], onDelete: Cascade)
+  friendOne User @relation("FriendshipOne", fields: [friend_one], references: [id], onDelete: Cascade)
+  friendTwo User @relation("FriendshipTwo", fields: [friend_two], references: [id], onDelete: Cascade)
 
-  // Clave única para evitar duplicados en ambas direcciones
   @@unique([friend_one, friend_two])
-  // Índice para optimizar la búsqueda de amistades por usuario
   @@index([friend_one])
+  @@map("friendship")
 }
 
-model post {
-  id           Int            @id @default(autoincrement())
-  title        String?        @db.VarChar(100)
-  description  String?        @db.VarChar(1000)
-  imagenumber  Int?           @default(1) @db.TinyInt
-  createdAt    DateTime?      @default(now())
+model Post {
+  id           Int           @id @default(autoincrement())
+  title        String?       @db.VarChar(100)
+  description  String?       @db.VarChar(1000)
+  imagenumber  Int?          @default(1) @db.TinyInt
+  createdAt    DateTime?     @default(now())
   deletedAt    DateTime?
   user_id      Int
-  active       Int?           @default(1) @db.TinyInt
-  visibility   Int?           @default(1) @db.TinyInt
-  user         user           @relation(fields: [user_id], references: [id], onDelete: Cascade) // 🔗 Relación con user
-  images       image[] // 🔗 Relación inversa (Un post tiene muchas imágenes)
-  post_comment post_comment[]
-  post_like    post_like[]
+  active       Int?          @default(1) @db.TinyInt
+  visibility   Int?          @default(1) @db.TinyInt
+  user         User          @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  images       Image[]
+  post_comment PostComment[]
+  post_like    PostLike[]
+  post_unlike  PostUnlike[]
+
+  @@map("post")
 }
 
-model follow {
+model Follow {
   id          Int      @id @default(autoincrement())
-  followerId  Int // Usuario que sigue
-  followingId Int // Usuario seguido
-  createdAt   DateTime @default(now()) // Fecha en la que comenzó a seguir
+  followerId  Int
+  followingId Int
+  createdAt   DateTime @default(now())
 
-  // Relaciones con la tabla user
-  follower  user @relation(name: "UserFollowers", fields: [followerId], references: [id], onDelete: Cascade)
-  following user @relation(name: "UserFollowing", fields: [followingId], references: [id], onDelete: Cascade)
+  follower  User @relation("UserFollowers", fields: [followerId], references: [id], onDelete: Cascade)
+  following User @relation("UserFollowing", fields: [followingId], references: [id], onDelete: Cascade)
 
-  @@unique([followerId, followingId]) // Evita duplicados
+  @@unique([followerId, followingId])
+  @@map("follow")
 }
 
-model deleted_user {
-  id        Int        @id @default(autoincrement())
+model DeletedUser {
+  id        Int       @id @default(autoincrement())
   nick      String?
   email     String
   name      String
-  role      user_role?
+  role      UserRole?
   createdAt DateTime?
   deletedAt DateTime?
+
+  @@map("deleted_user")
 }
 
-model verificationtoken {
+model VerificationToken {
   identifier String   @id @unique
   token      String
   expires    DateTime
+
+  @@map("verificationtoken")
 }
 
-model image_comment {
-  id           Int                       @id @default(autoincrement())
-  comment      String                    @db.VarChar(255)
-  createdAt    DateTime                  @default(now())
+model ImageComment {
+  id           Int                    @id @default(autoincrement())
+  comment      String                 @db.VarChar(127)
+  createdAt    DateTime               @default(now())
   image_id     Int
-  active       Int?                      @default(1) @db.TinyInt
-  who_comments Int // Usuario que hizo el comentario
-  image        image                     @relation(fields: [image_id], references: [id], onDelete: Cascade)
-  user         user                      @relation(fields: [who_comments], references: [id], onDelete: Cascade) // Relación con user
-  responses    image_comment_responses[]
+  active       Int?                   @default(1) @db.TinyInt
+  who_comments Int
+  image        Image                  @relation(fields: [image_id], references: [id], onDelete: Cascade)
+  user         User                   @relation(fields: [who_comments], references: [id], onDelete: Cascade)
+  responses    ImageCommentResponse[]
+  likes        ImageCommentLike[]
+  unlikes      ImageCommentUnlike[]
+
+  @@map("image_comment")
 }
 
-model image_comment_responses {
-  id               Int           @id @default(autoincrement())
-  response         String        @db.VarChar(255)
-  createdAt        DateTime      @default(now())
+model ImageCommentResponse {
+  id               Int                          @id @default(autoincrement())
+  response         String                       @db.VarChar(127)
+  createdAt        DateTime                     @default(now())
   image_comment_id Int
-  active           Int?          @default(1) @db.TinyInt
-  who_responses    Int // Usuario que respondió
-  image_comment    image_comment @relation(fields: [image_comment_id], references: [id], onDelete: Cascade)
-  user             user          @relation(fields: [who_responses], references: [id], onDelete: Cascade) // Relación con user
+  active           Int?                         @default(1) @db.TinyInt
+  who_responses    Int
+  image_comment    ImageComment                 @relation(fields: [image_comment_id], references: [id], onDelete: Cascade)
+  user             User                         @relation(fields: [who_responses], references: [id], onDelete: Cascade)
+  likes            ImageCommentResponseLike[]
+  unlikes          ImageCommentResponseUnlike[]
+
+  @@map("image_comment_responses")
 }
 
-model post_comment {
-  id           Int                      @id @default(autoincrement())
-  comment      String                   @db.VarChar(255)
-  createdAt    DateTime                 @default(now())
+model PostComment {
+  id           Int                   @id @default(autoincrement())
+  comment      String                @db.VarChar(127)
+  createdAt    DateTime              @default(now())
   post_id      Int
-  active       Int?                     @default(1) @db.TinyInt
-  who_comments Int // Usuario que hizo el comentario
-  post         post                     @relation(fields: [post_id], references: [id], onDelete: Cascade)
-  user         user                     @relation(fields: [who_comments], references: [id], onDelete: Cascade) // Relación con user
-  responses    post_comment_responses[]
+  active       Int?                  @default(1) @db.TinyInt
+  who_comments Int
+  post         Post                  @relation(fields: [post_id], references: [id], onDelete: Cascade)
+  user         User                  @relation(fields: [who_comments], references: [id], onDelete: Cascade)
+  responses    PostCommentResponse[]
+  likes        PostCommentLike[]
+  unlikes      PostCommentUnlike[]
+
+  @@map("post_comment")
 }
 
-model post_comment_responses {
-  id              Int          @id @default(autoincrement())
-  response        String       @db.VarChar(255)
-  createdAt       DateTime     @default(now())
+model PostCommentResponse {
+  id              Int                         @id @default(autoincrement())
+  response        String                      @db.VarChar(127)
+  createdAt       DateTime                    @default(now())
   post_comment_id Int
-  active          Int?         @default(1) @db.TinyInt
-  who_responses   Int // Usuario que respondió
-  post_comment    post_comment @relation(fields: [post_comment_id], references: [id], onDelete: Cascade)
-  user            user         @relation(fields: [who_responses], references: [id], onDelete: Cascade) // Relación con user
+  active          Int?                        @default(1) @db.TinyInt
+  who_responses   Int
+  post_comment    PostComment                 @relation(fields: [post_comment_id], references: [id], onDelete: Cascade)
+  user            User                        @relation(fields: [who_responses], references: [id], onDelete: Cascade)
+  likes           PostCommentResponseLike[]
+  unlikes         PostCommentResponseUnlike[]
+
+  @@map("post_comment_responses")
 }
 
-model image {
-  id            Int             @id @default(autoincrement()) // Clave primaria única
-  description   String?         @db.VarChar(1000)
-  imageUrl      String          @db.VarChar(255)
+model Image {
+  id            Int            @id @default(autoincrement())
+  description   String?        @db.VarChar(1000)
+  imageUrl      String         @db.VarChar(255)
   imagePublicId String
-  createdAt     DateTime        @default(now())
+  createdAt     DateTime       @default(now())
   post_id       Int
-  active        Int?            @default(1) @db.TinyInt
-  index         Int             @default(1) @db.TinyInt
-  post          post            @relation(fields: [post_id], references: [id], onDelete: Cascade) // 🔗 Relación con Post
-  comments      image_comment[] // 🔗 Relación inversa (Una image tiene muchos comentarios)
-  image_like    image_like[]
+  active        Int?           @default(1) @db.TinyInt
+  index         Int            @default(1) @db.TinyInt
+  post          Post           @relation(fields: [post_id], references: [id], onDelete: Cascade)
+  comments      ImageComment[]
+  image_like    ImageLike[]
+  image_unlike  ImageUnlike[]
 
-  @@unique([post_id, index]) // 🔹 Agrega este índice único
+  @@unique([post_id, index])
+  @@map("image")
 }
 
-model post_like {
+model PostLike {
   id        Int      @id @default(autoincrement())
-  userId    Int // Usuario que dio like
-  postId    Int // Post al que le dio like
+  userId    Int
+  postId    Int
   createdAt DateTime @default(now())
 
-  user user @relation(fields: [userId], references: [id], onDelete: Cascade)
-  post post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, postId]) // Un usuario solo puede dar like una vez por post
+  @@unique([userId, postId])
+  @@map("post_like")
 }
 
-model image_like {
+model PostUnlike {
   id        Int      @id @default(autoincrement())
-  userId    Int // Usuario que dio like
-  imageId   Int // Imagen a la que le dio like
+  userId    Int
+  postId    Int
   createdAt DateTime @default(now())
 
-  user  user  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  image image @relation(fields: [imageId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, imageId]) // Un usuario solo puede dar like una vez por imagen
+  @@unique([userId, postId])
+  @@map("post_unlike")
 }
 
-enum user_role {
-  novice
-  user
-  premiun
-  shop
-  admin
-  moderator
+model ImageLike {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  imageId   Int
+  createdAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  image Image @relation(fields: [imageId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, imageId])
+  @@map("image_like")
 }
 
-enum media_type {
-  image
-  video
+model ImageUnlike {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  imageId   Int
+  createdAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  image Image @relation(fields: [imageId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, imageId])
+  @@map("image_unlike")
+}
+
+model ImageCommentLike {
+  id               Int      @id @default(autoincrement())
+  userId           Int
+  image_comment_id Int
+  createdAt        DateTime @default(now())
+
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  image_comment ImageComment @relation(fields: [image_comment_id], references: [id], onDelete: Cascade)
+
+  @@unique([userId, image_comment_id])
+  @@map("image_comment_like")
+}
+
+model ImageCommentUnlike {
+  id               Int      @id @default(autoincrement())
+  userId           Int
+  image_comment_id Int
+  createdAt        DateTime @default(now())
+
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  image_comment ImageComment @relation(fields: [image_comment_id], references: [id], onDelete: Cascade)
+
+  @@unique([userId, image_comment_id])
+  @@map("image_comment_unlike")
+}
+
+model ImageCommentResponseLike {
+  id                         Int      @id @default(autoincrement())
+  userId                     Int
+  image_comment_responses_id Int
+  createdAt                  DateTime @default(now())
+
+  user     User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  response ImageCommentResponse @relation(fields: [image_comment_responses_id], references: [id], onDelete: Cascade)
+
+  @@unique([userId, image_comment_responses_id])
+  @@map("image_comment_responses_like")
+}
+
+model ImageCommentResponseUnlike {
+  id                         Int      @id @default(autoincrement())
+  userId                     Int
+  image_comment_responses_id Int
+  createdAt                  DateTime @default(now())
+
+  user     User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  response ImageCommentResponse @relation(fields: [image_comment_responses_id], references: [id], onDelete: Cascade)
+
+  @@unique([userId, image_comment_responses_id])
+  @@map("image_comment_responses_unlike")
+}
+
+model PostCommentLike {
+  id              Int      @id @default(autoincrement())
+  userId          Int
+  post_comment_id Int
+  createdAt       DateTime @default(now())
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  postComment PostComment @relation(fields: [post_comment_id], references: [id], onDelete: Cascade)
+
+  @@unique([userId, post_comment_id])
+  @@map("post_comment_like")
+}
+
+model PostCommentUnlike {
+  id              Int      @id @default(autoincrement())
+  userId          Int
+  post_comment_id Int
+  createdAt       DateTime @default(now())
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  postComment PostComment @relation(fields: [post_comment_id], references: [id], onDelete: Cascade)
+
+  @@unique([userId, post_comment_id])
+  @@map("post_comment_unlike")
+}
+
+model PostCommentResponseLike {
+  id                        Int      @id @default(autoincrement())
+  userId                    Int
+  post_comment_responses_id Int
+  createdAt                 DateTime @default(now())
+
+  user         User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  response_row PostCommentResponse @relation(fields: [post_comment_responses_id], references: [id], onDelete: Cascade)
+
+  @@unique([userId, post_comment_responses_id])
+  @@map("post_comment_responses_like")
+}
+
+model PostCommentResponseUnlike {
+  id                        Int      @id @default(autoincrement())
+  userId                    Int
+  post_comment_responses_id Int
+  createdAt                 DateTime @default(now())
+
+  user         User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  response_row PostCommentResponse @relation(fields: [post_comment_responses_id], references: [id], onDelete: Cascade)
+
+  @@unique([userId, post_comment_responses_id])
+  @@map("post_comment_responses_unlike")
 }
 
 model ProductListing {
@@ -278,20 +458,18 @@ model ProductListing {
   title       String? @db.VarChar(100)
   description String? @db.VarChar(500)
 
-  // ✅ precio con centavos
-  price    Decimal? @db.Decimal(10, 2)
-  currency String?  @db.VarChar(3) // ej: "ARS", "USD" (opcional)
+  price          Decimal? @db.Decimal(10, 2)
+  currency       String?  @db.VarChar(3)
+  clarifications String?  @db.VarChar(500)
 
-  clarifications String? @db.VarChar(500)
-
-  medianumber Int?      @default(1) @db.TinyInt // cantidad de media (opcional)
+  medianumber Int?      @default(1) @db.TinyInt
   createdAt   DateTime  @default(now())
   deletedAt   DateTime?
   user_id     Int
   active      Int?      @default(1) @db.TinyInt
   visibility  Int?      @default(1) @db.TinyInt
 
-  user user @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   media    ProductListingMedia[]
   comments ProductListingComment[]
@@ -305,15 +483,14 @@ model ProductListing {
 model ProductListingMedia {
   id Int @id @default(autoincrement())
 
-  type media_type @default(image)
+  type MediaType @default(image)
 
   url      String @db.VarChar(255)
   publicId String @db.VarChar(255)
 
-  // opcionales útiles para video/preview
   thumbnailUrl      String? @db.VarChar(255)
   thumbnailPublicId String? @db.VarChar(255)
-  durationSec       Int? // duración del video (opcional)
+  durationSec       Int?
   format            String? @db.VarChar(20)
 
   createdAt          DateTime @default(now())
@@ -321,7 +498,9 @@ model ProductListingMedia {
   active             Int?     @default(1) @db.TinyInt
   index              Int      @default(1) @db.TinyInt
 
-  listing ProductListing @relation(fields: [product_listing_id], references: [id], onDelete: Cascade)
+  listing ProductListing              @relation(fields: [product_listing_id], references: [id], onDelete: Cascade)
+  likes   ProductListingMediaLike[]
+  unlikes ProductListingMediaUnlike[]
 
   @@unique([product_listing_id, index])
   @@index([product_listing_id])
@@ -336,8 +515,10 @@ model ProductListingComment {
   active             Int?     @default(1) @db.TinyInt
   who_comments       Int
 
-  listing ProductListing @relation(fields: [product_listing_id], references: [id], onDelete: Cascade)
-  user    user           @relation(fields: [who_comments], references: [id], onDelete: Cascade)
+  listing ProductListing                @relation(fields: [product_listing_id], references: [id], onDelete: Cascade)
+  user    User                          @relation(fields: [who_comments], references: [id], onDelete: Cascade)
+  likes   ProductListingCommentLike[]
+  unlikes ProductListingCommentUnlike[]
 
   @@index([product_listing_id])
   @@index([who_comments])
@@ -350,7 +531,7 @@ model ProductListingLike {
   productListingId Int
   createdAt        DateTime @default(now())
 
-  user    user           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user    User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   listing ProductListing @relation(fields: [productListingId], references: [id], onDelete: Cascade)
 
   @@unique([userId, productListingId])
@@ -364,10 +545,229 @@ model ProductListingUnlike {
   productListingId Int
   createdAt        DateTime @default(now())
 
-  user    user           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user    User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   listing ProductListing @relation(fields: [productListingId], references: [id], onDelete: Cascade)
 
   @@unique([userId, productListingId])
   @@index([productListingId])
   @@map("product_listing_unlike")
+}
+
+model ProductListingMediaLike {
+  id                    Int      @id @default(autoincrement())
+  userId                Int
+  productListingMediaId Int
+  createdAt             DateTime @default(now())
+
+  user  User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  media ProductListingMedia @relation(fields: [productListingMediaId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productListingMediaId])
+  @@index([productListingMediaId])
+  @@map("product_listing_media_like")
+}
+
+model ProductListingMediaUnlike {
+  id                    Int      @id @default(autoincrement())
+  userId                Int
+  productListingMediaId Int
+  createdAt             DateTime @default(now())
+
+  user  User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  media ProductListingMedia @relation(fields: [productListingMediaId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productListingMediaId])
+  @@index([productListingMediaId])
+  @@map("product_listing_media_unlike")
+}
+
+model ProductListingCommentLike {
+  id                      Int      @id @default(autoincrement())
+  userId                  Int
+  productListingCommentId Int
+  createdAt               DateTime @default(now())
+
+  user    User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comment ProductListingComment @relation(fields: [productListingCommentId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productListingCommentId])
+  @@index([productListingCommentId])
+  @@map("product_listing_comment_like")
+}
+
+model ProductListingCommentUnlike {
+  id                      Int      @id @default(autoincrement())
+  userId                  Int
+  productListingCommentId Int
+  createdAt               DateTime @default(now())
+
+  user    User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comment ProductListingComment @relation(fields: [productListingCommentId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productListingCommentId])
+  @@index([productListingCommentId])
+  @@map("product_listing_comment_unlike")
+}
+
+model ServiceListing {
+  id          Int     @id @default(autoincrement())
+  title       String? @db.VarChar(100)
+  description String? @db.VarChar(500)
+
+  // precio del servicio (por hora, por trabajo, etc.)
+  price    Decimal? @db.Decimal(10, 2)
+  currency String?  @db.VarChar(3) // ej: "ARS", "USD"
+
+  clarifications String? @db.VarChar(500)
+
+  // campos específicos de servicios
+  durationMinutes Int? // duración estimada (ej: 60, 90, 120)
+  modality        String? @db.VarChar(50) // "online", "presencial", "híbrido"
+  location        String? @db.VarChar(255) // zona/barrio/ciudad
+
+  medianumber Int?      @default(1) @db.TinyInt
+  createdAt   DateTime  @default(now())
+  deletedAt   DateTime?
+  user_id     Int
+  active      Int?      @default(1) @db.TinyInt
+  visibility  Int?      @default(1) @db.TinyInt
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  media    ServiceListingMedia[]
+  comments ServiceListingComment[]
+  likes    ServiceListingLike[]
+  unlikes  ServiceListingUnlike[]
+
+  @@index([user_id])
+  @@map("service_listing")
+}
+
+model ServiceListingMedia {
+  id Int @id @default(autoincrement())
+
+  type MediaType @default(image)
+
+  url      String @db.VarChar(255)
+  publicId String @db.VarChar(255)
+
+  thumbnailUrl      String? @db.VarChar(255)
+  thumbnailPublicId String? @db.VarChar(255)
+  durationSec       Int?
+  format            String? @db.VarChar(20)
+
+  createdAt          DateTime @default(now())
+  service_listing_id Int
+  active             Int?     @default(1) @db.TinyInt
+  index              Int      @default(1) @db.TinyInt
+
+  listing ServiceListing              @relation(fields: [service_listing_id], references: [id], onDelete: Cascade)
+  likes   ServiceListingMediaLike[]
+  unlikes ServiceListingMediaUnlike[]
+
+  @@unique([service_listing_id, index])
+  @@index([service_listing_id])
+  @@map("service_listing_media")
+}
+
+model ServiceListingComment {
+  id                 Int      @id @default(autoincrement())
+  comment            String   @db.VarChar(255)
+  createdAt          DateTime @default(now())
+  service_listing_id Int
+  active             Int?     @default(1) @db.TinyInt
+  who_comments       Int
+
+  listing ServiceListing                @relation(fields: [service_listing_id], references: [id], onDelete: Cascade)
+  user    User                          @relation(fields: [who_comments], references: [id], onDelete: Cascade)
+  likes   ServiceListingCommentLike[]
+  unlikes ServiceListingCommentUnlike[]
+
+  @@index([service_listing_id])
+  @@index([who_comments])
+  @@map("service_listing_comment")
+}
+
+model ServiceListingLike {
+  id               Int      @id @default(autoincrement())
+  userId           Int
+  serviceListingId Int
+  createdAt        DateTime @default(now())
+
+  user    User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listing ServiceListing @relation(fields: [serviceListingId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, serviceListingId])
+  @@index([serviceListingId])
+  @@map("service_listing_like")
+}
+
+model ServiceListingUnlike {
+  id               Int      @id @default(autoincrement())
+  userId           Int
+  serviceListingId Int
+  createdAt        DateTime @default(now())
+
+  user    User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listing ServiceListing @relation(fields: [serviceListingId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, serviceListingId])
+  @@index([serviceListingId])
+  @@map("service_listing_unlike")
+}
+
+model ServiceListingMediaLike {
+  id                    Int      @id @default(autoincrement())
+  userId                Int
+  serviceListingMediaId Int
+  createdAt             DateTime @default(now())
+
+  user  User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  media ServiceListingMedia @relation(fields: [serviceListingMediaId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, serviceListingMediaId])
+  @@index([serviceListingMediaId])
+  @@map("service_listing_media_like")
+}
+
+model ServiceListingMediaUnlike {
+  id                    Int      @id @default(autoincrement())
+  userId                Int
+  serviceListingMediaId Int
+  createdAt             DateTime @default(now())
+
+  user  User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  media ServiceListingMedia @relation(fields: [serviceListingMediaId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, serviceListingMediaId])
+  @@index([serviceListingMediaId])
+  @@map("service_listing_media_unlike")
+}
+
+model ServiceListingCommentLike {
+  id                      Int      @id @default(autoincrement())
+  userId                  Int
+  serviceListingCommentId Int
+  createdAt               DateTime @default(now())
+
+  user    User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comment ServiceListingComment @relation(fields: [serviceListingCommentId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, serviceListingCommentId])
+  @@index([serviceListingCommentId])
+  @@map("service_listing_comment_like")
+}
+
+model ServiceListingCommentUnlike {
+  id                      Int      @id @default(autoincrement())
+  userId                  Int
+  serviceListingCommentId Int
+  createdAt               DateTime @default(now())
+
+  user    User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comment ServiceListingComment @relation(fields: [serviceListingCommentId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, serviceListingCommentId])
+  @@index([serviceListingCommentId])
+  @@map("service_listing_comment_unlike")
 }

@@ -1,6 +1,5 @@
+//src/config.ts
 import { texts } from "./app/text"
-
-
 
 export const cfg = {
     TEXTS: texts("sp"),

@@ -19,19 +19,19 @@ export async function POST(request: Request) {
         }
 
         // Si ya existe un token, eliminarlo
-        const existingToken = await prisma.verificationtoken.findFirst({
+        const existingToken = await prisma.verificationToken.findFirst({
             where: { identifier: email },
         });
 
         if (existingToken) {
-            await prisma.verificationtoken.delete({
+            await prisma.verificationToken.delete({
                 where: { identifier: email },
             });
         }
 
         // Crear un nuevo token
         const token = nanoid();
-        await prisma.verificationtoken.create({
+        await prisma.verificationToken.create({
             data: {
                 identifier: email,
                 token,

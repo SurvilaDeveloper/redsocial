@@ -20,7 +20,7 @@ export async function POST(req: Request) {
     }
 
     // (Opcional) validar que el comentario exista y esté activo
-    const parent = await prisma.post_comment.findFirst({
+    const parent = await prisma.postComment.findFirst({
         where: { id: post_comment_id, active: 1 },
         select: { id: true },
     });
@@ -29,7 +29,7 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "Comment not found" }, { status: 404 });
     }
 
-    const created = await prisma.post_comment_responses.create({
+    const created = await prisma.postCommentResponse.create({
         data: {
             post_comment_id,
             response,

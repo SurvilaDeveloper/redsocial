@@ -28,18 +28,6 @@ export const createPost = async (
             }
         }
         const userId = session.user.id;
-        // verificar la cantidad de imagenes del usuario en la tabla image
-        /*const images = await prisma.image.findMany(
-            {
-                where: {
-                    post_user_id: parseInt(userId),
-                    post_id: parseInt(userId)
-                }
-            }
-        )*/
-        // const imagesAumont = images.length;
-        // console.log("images: ", images);
-        // crear el post
         await prisma.post.create(
             {
                 data: {
@@ -117,35 +105,9 @@ export const updatePost = async (
         // Obtener el ID del usuario autenticado
         const userId = session.user.id;
         // verificar la cantidad de imagenes del usuario en la tabla image
-        /*const images = await prisma.image.findMany(
-            {
-                where: {
-                    post_user_id: parseInt(userId),
-                    post_id: parseInt(userId)
-                }
-            }
-        )*/
-        // const imagesAumont = images.length;
-        // console.log("images: ", images);
-        // crear el post
-        try {
-            /*
-            for (let i = 0; i < imagesToDelete.length; i++) {
-                const img = await prisma.image.findFirst({
-                    where: {
-                        post_id: postId,
-                        imageUrl: imagesToDelete[i]?.url,
-                        imagePublicId: imagesToDelete[i]?.publicId
-                    }
-                })
-                if (img?.id) {
-                    await prisma.image.delete({
-                        where: { id: img.id }
-                    });
-                }
 
-            }
-            */
+        try {
+
 
             await Promise.all(imagesToDelete.map(async (image) => {
                 if (image) {
@@ -175,9 +137,6 @@ export const updatePost = async (
                 user_id: parseInt(userId),
             }
         });
-
-
-
 
         // guardar la imagen
         if (post && post.id) {

@@ -1,7 +1,7 @@
-//postCard.tsx
+// src/components/custom/postCard.tsx
 "use client";
-import { useMemo, useRef, useState } from "react";
-import { useEffect } from "react";
+
+import { useMemo, useRef, useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { formatDate } from "@/lib/dateUtils";
@@ -9,6 +9,7 @@ import UserProfileMiniCard from "./userProfileMiniCard";
 import { useRouter } from "next/navigation";
 import PostCardCommentsContainer from "./postCardCommentsContainer";
 import PostCardCommetsResponsesContainer from "./postCardCommetsResponsesContainer";
+import { MessageCircle, MessageCircleOff } from "lucide-react";
 
 export function PostCard({
     session,
@@ -19,9 +20,11 @@ export function PostCard({
 }) {
     const router = useRouter();
     const [showFullDesc, setShowFullDesc] = useState(false);
+
     const [expandedCommentId, setExpandedCommentId] = useState<number | null>(null);
     const toggleComment = (id: number) =>
         setExpandedCommentId((prev) => (prev === id ? null : id));
+
     const [newComment, setNewComment] = useState("");
     const [commentLoading, setCommentLoading] = useState(false);
     const [commentMsg, setCommentMsg] = useState<string | null>(null);
@@ -29,34 +32,104 @@ export function PostCard({
     const [commentsExpanded, setCommentsExpanded] = useState(false);
     const commentRefs = useRef<Record<number, HTMLDivElement | null>>({});
 
-
-
-    useEffect(() => {
-        setLocalComments((post.post_comment ?? []) as LocalPostComment[]);
-    }, [post.id]); // o [post.post_comment]
-
-
-    const scrollToComment = (id: number) => {
-        setTimeout(() => {
-            commentRefs.current[id]?.scrollIntoView({ behavior: "smooth", block: "start" });
-        }, 30);
-    };
-
     type LocalPostComment = PostComment & {
         __optimistic?: boolean;
         __error?: string | null;
     };
 
+    // 🔹 post “vivo” que se va refrescando desde la API
+    const [currentPost, setCurrentPost] = useState<Post>(post);
+
+    // 🔹 si el padre llega a cambiar el post (otro render), sincronizamos
+    useEffect(() => {
+        setCurrentPost(post);
+    }, [post.id]);
+
+    // 🔹 estado local de comentarios (para optimistic + merges con servidor)
     const [localComments, setLocalComments] = useState<LocalPostComment[]>(
         (post.post_comment ?? []) as LocalPostComment[]
     );
 
-    const sessionUserId = session?.user?.id ? Number(session.user.id) : null;
+    // 🔹 cuando cambian los comentarios del post refrescado, los mezclamos
+    //    con los locales, sin perder user ni los comentarios optimistas
+    useEffect(() => {
+        setLocalComments((prev) => {
+            const fromServer =
+                (currentPost.post_comment ?? []) as LocalPostComment[];
 
-    // opcional: si tenés el nombre en session
+            const prevById = new Map(prev.map((c) => [c.id, c]));
+
+            const mergedFromServer = fromServer.map((c) => {
+                const old = prevById.get(c.id);
+                return {
+                    ...old,
+                    ...c,
+                    // si el servidor no trae user, conservamos el anterior
+                    user: c.user ?? old?.user ?? c.user,
+                    __optimistic: false,
+                    __error: null,
+                };
+            });
+
+            const serverIds = new Set(fromServer.map((c) => c.id));
+
+            const stillOptimistic = prev.filter(
+                (c) => c.__optimistic && !serverIds.has(c.id)
+            );
+
+            return [...stillOptimistic, ...mergedFromServer];
+        });
+    }, [currentPost.post_comment, currentPost.id]);
+
+    // 🔹 polling cada 10 segundos para refrescar el post desde la API
+    useEffect(() => {
+        if (!currentPost?.id) return;
+
+        let cancelled = false;
+
+        const fetchLatest = async () => {
+            try {
+                const res = await fetch(`/api/posts/${currentPost.id}`, {
+                    method: "GET",
+                    cache: "no-store",
+                });
+
+                if (!res.ok) return;
+
+                const json = await res.json().catch(() => null);
+                const fresh = json?.data as Post | undefined;
+                if (!fresh) return;
+
+                if (!cancelled) {
+                    setCurrentPost(fresh);
+                }
+            } catch (err) {
+                // opcional: console.error(err);
+            }
+        };
+
+        // primer chequeo inmediato
+        fetchLatest();
+
+        const id = setInterval(fetchLatest, 10_000); // 10 segundos
+        return () => {
+            cancelled = true;
+            clearInterval(id);
+        };
+    }, [currentPost?.id]);
+
+    const scrollToComment = (id: number) => {
+        setTimeout(() => {
+            commentRefs.current[id]?.scrollIntoView({
+                behavior: "smooth",
+                block: "start",
+            });
+        }, 30);
+    };
+
+    const sessionUserId = session?.user?.id ? Number(session.user.id) : null;
     const sessionUserName = session?.user?.name ?? "Tú";
     const sessionUserImageUrl = session?.user?.imageUrl ?? null;
-
 
     const canCreatePostComment =
         Boolean(session?.user?.id) && newComment.trim().length > 0 && !commentLoading;
@@ -69,12 +142,11 @@ export function PostCard({
         setNewComment("");
         setCommentMsg(null);
 
-        // id temporal negativo
         const tempId = -Date.now();
 
         const optimistic: LocalPostComment = {
             id: tempId,
-            post_id: post.id,
+            post_id: currentPost.id, // 🔹 usamos currentPost
             comment: content,
             createdAt: new Date().toISOString(),
             who_comments: sessionUserId,
@@ -88,16 +160,12 @@ export function PostCard({
             __optimistic: true,
             __error: null,
         };
-        // ✅ auto-expand comentarios cuando comentás
-        setCommentsExpanded(true);
 
-        // (opcional) expandir ese comentario recién creado
+        setCommentsExpanded(true);
         setExpandedCommentId(tempId);
 
-        // ✅ aparece instantáneo arriba
         setLocalComments((prev) => [optimistic, ...prev]);
 
-        // ✅ scroll al comentario nuevo
         scrollToComment(tempId);
 
         setCommentLoading(true);
@@ -106,7 +174,7 @@ export function PostCard({
             const res = await fetch("/api/post-comments", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ post_id: post.id, comment: content }),
+                body: JSON.stringify({ post_id: currentPost.id, comment: content }),
             });
 
             const data = await res.json().catch(() => null);
@@ -115,9 +183,7 @@ export function PostCard({
                 throw new Error(data?.error || "No se pudo guardar el comentario");
             }
 
-            // ✅ reemplazar temp por el real que viene del server
-            const created = data?.data; // { id, createdAt, post_id, who_comments, comment }
-
+            const created = data?.data;
             const realId = created.id;
 
             setLocalComments((prev) =>
@@ -133,17 +199,13 @@ export function PostCard({
                         : c
                 )
             );
-            // ✅ mantener el “expand” apuntando al id real
-            setExpandedCommentId((prev) => (prev === tempId ? realId : prev));
 
-            // ✅ scroll al id real (por si el key cambió)
+            setExpandedCommentId((prev) => (prev === tempId ? realId : prev));
             scrollToComment(realId);
 
             setCommentMsg("Comentario guardado ✅");
         } catch (err: any) {
             const msg = err?.message ?? "Error";
-
-            // ❌ si falla: eliminamos el optimistic (o podés marcarlo como error)
             setLocalComments((prev) => prev.filter((c) => c.id !== tempId));
             setCommentMsg(msg);
         } finally {
@@ -153,25 +215,36 @@ export function PostCard({
 
     // ✅ Reglas visibility (seguro extra frontend)
     const viewerIdRaw = session?.user?.id;
-    const viewerIdParsed = viewerIdRaw != null ? parseInt(String(viewerIdRaw), 10) : null;
-    const viewerId = viewerIdParsed != null && Number.isFinite(viewerIdParsed) ? viewerIdParsed : null;
+    const viewerIdParsed =
+        viewerIdRaw != null ? parseInt(String(viewerIdRaw), 10) : null;
+    const viewerId =
+        viewerIdParsed != null && Number.isFinite(viewerIdParsed)
+            ? viewerIdParsed
+            : null;
 
-    const isOwner = viewerId !== null && viewerId === post.user_id;
+    const isOwner = viewerId !== null && viewerId === currentPost.user_id; // 🔹 currentPost
 
-    const rel = post.relations ?? { following: false, isFollower: false, isFriend: false };
+    const rel =
+        currentPost.relations ?? {
+            following: false,
+            isFollower: false,
+            isFriend: false,
+        };
 
     const canView =
         isOwner ||
-        post.visibility === 1 ||
-        (post.visibility === 2 && viewerId !== null) ||
-        (post.visibility === 3 && viewerId !== null && (rel.isFriend || rel.following)) ||
-        (post.visibility === 4 && viewerId !== null && rel.isFriend);
+        currentPost.visibility === 1 ||
+        (currentPost.visibility === 2 && viewerId !== null) ||
+        (currentPost.visibility === 3 &&
+            viewerId !== null &&
+            (rel.isFriend || rel.following)) ||
+        (currentPost.visibility === 4 && viewerId !== null && rel.isFriend);
 
     if (!canView) {
         const msg =
-            post.visibility === 2
+            currentPost.visibility === 2
                 ? "Debes iniciar sesión para ver este post."
-                : post.visibility === 3
+                : currentPost.visibility === 3
                     ? "Debes ser seguidor o amigo para poder ver este post."
                     : "Debes ser amigo para poder ver este post.";
 
@@ -182,50 +255,56 @@ export function PostCard({
         );
     }
 
-    const desc = (post.description ?? "").trim();
+    const desc = (currentPost.description ?? "").trim(); // 🔹 currentPost
     const shortDesc = useMemo(() => {
         if (!desc) return "Sin descripción (click para comentar)";
         if (desc.length <= 70) return desc;
         return desc.slice(0, 70) + "…";
     }, [desc]);
 
-    const shownDesc = showFullDesc ? (desc || "Sin descripción") : shortDesc;
+    const shownDesc = showFullDesc ? desc || "Sin descripción" : shortDesc;
 
-
-    const activeCommentsCount = (localComments ?? [])
-        .filter((c) => (c.active ?? 1) === 1)
-        .length;
-
-    const commentsLabel =
-        activeCommentsCount === 1
-            ? "Ver 1 comentario"
-            : `Ver ${activeCommentsCount} comentarios`;
+    const activeCommentsCount = (localComments ?? []).filter(
+        (c) => (c.active ?? 1) === 1
+    ).length;
 
     return (
-        <div className={post.active === 0 ? "flex flex-col bg-black border-2 border-solid border-red-500 p-2 shadow-md w-full max-h-[200px] overflow-hidden text-gray-200" : "postCardActive"}>
-            {post.active === 0 && <span className="text-red-500">oculto</span>}
+        <div
+            className={
+                currentPost.active === 0
+                    ? "flex flex-col bg-black border-2 border-solid border-red-500 p-2 shadow-md w-full max-h-[200px] overflow-hidden text-gray-200"
+                    : "postCardActive"
+            }
+        >
+            {currentPost.active === 0 && (
+                <span className="text-red-500">oculto</span>
+            )}
 
-            {post.userData?.imageUrl && (
+            {currentPost.userData?.imageUrl && (
                 <UserProfileMiniCard
                     session={session}
-                    userId={post.userData.id}
-                    userName={post.userData.name}
-                    profileImageUrl={post.userData.imageUrl}
-                    following={post.relations.following}
-                    isFollower={post.relations.isFollower}
-                    isFriend={post.relations.isFriend}
+                    userId={currentPost.userData.id}
+                    userName={currentPost.userData.name}
+                    profileImageUrl={currentPost.userData.imageUrl}
+                    following={rel.following}
+                    isFollower={rel.isFollower}
+                    isFriend={rel.isFriend}
                 />
             )}
 
-            <span className="text-[10px]">{formatDate(post.createdAt)}</span>
+            <span className="text-[10px]">
+                {formatDate(currentPost.createdAt)}
+            </span>
 
-            <Link href={`/showpost?post_id=${post.id}`}>
-                <h3 className="text-lg font-semibold mt-2">{post.title}</h3>
+            <Link href={`/showpost?post_id=${currentPost.id}`}>
+                <h3 className="text-lg font-semibold mt-2">
+                    {currentPost.title}
+                </h3>
             </Link>
 
-            {post.images && post.images.length > 0 && (
+            {currentPost.images && currentPost.images.length > 0 && (
                 <div className="flex flex-row flex-wrap justify-between gap-3">
-                    {post.images.map((img, index) =>
+                    {currentPost.images.map((img, index) =>
                         img ? (
                             <div
                                 key={`${img.post_id}-${img.id}-${img.index}-${index}`}
@@ -236,7 +315,11 @@ export function PostCard({
                                 }
                             >
                                 <div
-                                    onDoubleClick={() => router.push(`/showpost?post_id=${post.id}`)}
+                                    onDoubleClick={() =>
+                                        router.push(
+                                            `/showpost?post_id=${currentPost.id}`
+                                        )
+                                    }
                                     className="relative w-full h-full cursor-zoom-in select-none"
                                 >
                                     <Image
@@ -252,94 +335,58 @@ export function PostCard({
                     )}
                 </div>
             )}
+
             <pre
                 onClick={() => setShowFullDesc((v) => !v)}
-                title={showFullDesc ? "Click para contraer" : "Click para ver completo"}
+                title={
+                    showFullDesc
+                        ? "Click para contraer"
+                        : "Click para ver completo"
+                }
                 className="mt-2 text-gray-200 w-full whitespace-pre-wrap break-words cursor-pointer select-none"
             >
                 {shownDesc}
             </pre>
+
+            {/* Botón para expandir/cerrar comentarios */}
             <button
                 type="button"
                 onClick={() => setCommentsExpanded((v) => !v)}
-                className="mt-3 text-xs text-gray-300 hover:text-gray-200 select-none"
+                className="mt-3 text-xs text-gray-300 hover:text-gray-200 select-none w-fit"
             >
-                {commentsExpanded ? "Ocultar comentarios" : commentsLabel}
+                {commentsExpanded ? (
+                    <div className="flex flex-row">
+                        <MessageCircleOff className="w-6 h-6 text-gray-400 hover:text-gray-100" />
+                        <span>{activeCommentsCount}</span>
+                    </div>
+                ) : (
+                    <div className="flex flex-row">
+                        <MessageCircle className="w-6 h-6 text-gray-400 hover:text-gray-100" />
+                        <span>{activeCommentsCount}</span>
+                    </div>
+                )}
             </button>
 
-            {showFullDesc && (
-                <div className="mt-3">
-                    {sessionUserId != null ? (
-                        <form onSubmit={submitPostComment} className="space-y-2">
-                            <textarea
-                                value={newComment}
-                                onChange={(e) => setNewComment(e.target.value)}
-                                rows={3}
-                                placeholder="Escribí un comentario..."
-                                className="w-full rounded-md bg-neutral-900 text-gray-100 border border-neutral-700 p-2 outline-none focus:border-neutral-500"
-                            />
-                            <div className="flex items-center gap-2">
-                                <button
-                                    type="submit"
-                                    disabled={!canCreatePostComment}
-                                    className="px-3 py-1.5 rounded-md bg-neutral-800 text-gray-100 border border-neutral-700 disabled:opacity-50"
-                                >
-                                    {commentLoading ? "Guardando..." : "Comentar"}
-                                </button>
-
-                                {commentMsg && (
-                                    <span className={commentMsg.includes("✅") ? "text-green-400 text-sm" : "text-red-400 text-sm"}>
-                                        {commentMsg}
-                                    </span>
-                                )}
-                            </div>
-                        </form>
-                    ) : (
-                        <div className="text-sm text-gray-400">Iniciá sesión para comentar.</div>
-                    )}
-                </div>
-            )}
+            {/* Contenedor de comentarios */}
             {commentsExpanded && (
-                <div className="mt-3 flex flex-col gap-3 max-h-[500px] overflow-y-auto">
-                    {localComments
-                        .filter((c) => (c.active ?? 1) === 1)
-                        .map((comment) => (
-                            <div
-                                key={comment.id}
-                                ref={(el) => {
-                                    commentRefs.current[comment.id] = el;
-                                }}
-                                className="border border-neutral-800 rounded-md p-2 scroll-mt-24"
-                            >
-                                {comment.__optimistic && (
-                                    <div className="text-[11px] text-gray-400 mb-1">Enviando…</div>
-                                )}
-
-                                <PostCardCommentsContainer
-                                    disabled={Boolean(comment.__optimistic)}
-                                    onClickExpand={() => toggleComment(comment.id)}
-                                    showFullDesc={expandedCommentId === comment.id}
-                                    shownDesc={comment.comment}
-                                    isLogged={Boolean(session?.user?.id)}
-                                    sessionUserId={sessionUserId}
-                                    commentId={comment.id}
-                                    commentUser={comment.user} // ✅ avatar + nombre
-                                />
-
-                                <PostCardCommetsResponsesContainer
-                                    commentId={comment.id}
-                                    responses={comment.responses ?? []}
-                                    isLogged={Boolean(session?.user?.id)}
-                                    sessionUserId={sessionUserId}
-                                    sessionUserName={session?.user?.name ?? null}
-                                    sessionUserImageUrl={session?.user?.imageUrl ?? null}
-                                    disabled={Boolean(comment.__optimistic)}
-                                    autoExpandOnNew
-                                    autoScrollOnNew
-                                />
-                            </div>
-                        ))}
-                </div>
+                <PostCardCommentsContainer
+                    session={session}
+                    sessionUserId={sessionUserId}
+                    localComments={localComments}
+                    setLocalComments={setLocalComments}
+                    expandedCommentId={expandedCommentId}
+                    onToggleComment={toggleComment}
+                    commentRefs={commentRefs}
+                    newComment={newComment}
+                    setNewComment={setNewComment}
+                    canCreatePostComment={canCreatePostComment}
+                    commentLoading={commentLoading}
+                    commentMsg={commentMsg}
+                    submitPostComment={submitPostComment}
+                    PostCardCommetsResponsesContainer={
+                        PostCardCommetsResponsesContainer
+                    }
+                />
             )}
         </div>
     );
