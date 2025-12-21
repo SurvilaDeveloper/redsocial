@@ -1,50 +1,87 @@
-import Link from "next/link"
-import Image from "next/image"
-import { useState, useEffect } from "react"
-import FollowButton from "./followButton"
-import FriendButton from "./friendButton"
-import PostCardMenubar from "./postCardMenubar"
+// src/components/custom/userProfileMiniCard.tsx
+"use client";
 
-interface ButtonFriendshipParams {
-    text: string | null
-    actionYes?: number | null,
-    textYes?: string | null,
-    actionNo?: number,
-    textNo?: string
-}
+import Link from "next/link";
+import Image from "next/image";
+import { useState } from "react";
+import FollowButton from "./followButton";
+import FriendButton from "./friendButton";
+import PostCardMenubar from "./postCardMenubar";
+
+import { ButtonFriendshipParams } from "@/types/friendship";
+
+const buttonParamsFromRelState = (relation: number): ButtonFriendshipParams => {
+    if ([0, 1, 4, 5, 6, 7].includes(relation)) {
+        return { text: "Enviar solicitud de amistad", actionYes: 2 };
+    } else if (relation === 3) {
+        return {
+            text: "Quiere ser tu amigo",
+            actionYes: 8,
+            textYes: "aceptar",
+            actionNo: 4,
+            textNo: "rechazar",
+        };
+    } else if (relation === 8) {
+        return {
+            text: "Son amigos",
+            actionYes: 6,
+            textYes: "sí",
+            actionNo: 0,
+            textNo: "No, no quiero eliminar esta amistad",
+        };
+    } else if (relation === 2) {
+        return {
+            text: "Le has enviado solicitud de amistad",
+            actionYes: 1,
+            textYes: "sí",
+            actionNo: 0,
+            textNo: "No, no quiero cancelar la solicitud de amistad enviada",
+        };
+    }
+    return { text: "" };
+};
 
 const UserProfileMiniCard = ({
     session,
     userId,
     userName,
     profileImageUrl,
-    isFollower,
-    isFriend,
+    isFollower = false,
+    isFriend = false,
     following,
-
 }: {
-    session: any,
-    userId: number,
-    userName: string,
-    profileImageUrl: string,
-    isFollower?: boolean,
-    isFriend?: boolean,
-    following: boolean
+    session: any;
+    userId: number;
+    userName: string;
+    profileImageUrl: string | null;
+    isFollower?: boolean;
+    isFriend?: boolean;
+    following: boolean;
 }) => {
-    const [buttonFriendshipParamsState, setButtonFriendshipParams] = useState<ButtonFriendshipParams>()
-    const [data, setData] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<Error | null>(null);
-    const [requestPopup, setRequestPopup] = useState(false)
-    const [requestPopupMenu, setRequestPopupMenu] = useState(false)
-    const [requestPopupMenuDelete, setRequestPopupMenuDelete] = useState(false)
+    // 🔹 Estado local basado en lo que YA viene del backend (relations)
+    const [isFollowerState] = useState<boolean>(Boolean(isFollower));
+    const [isFriendState, setIsFriendState] = useState<boolean>(Boolean(isFriend));
+    const [followingState, setFollowingState] = useState<boolean>(Boolean(following));
 
-    const [isFollowerState, setIsFollowerState] = useState(isFollower)
-    const [isFriendState, setIsFriendState] = useState(isFriend)
-    const [followingState, setFollowingState] = useState(following)
+    // 🔹 Estado para el botón de amistad (texto + acciones)
+    const [buttonFriendshipParamsState, setButtonFriendshipParams] =
+        useState<ButtonFriendshipParams>(() => {
+            if (isFriend) {
+                // estado "son amigos" (approx relState = 8)
+                return buttonParamsFromRelState(8);
+            }
+            // estado por defecto: todavía no son amigos
+            return buttonParamsFromRelState(1);
+        });
 
+    const [requestPopup, setRequestPopup] = useState(false);
+    const [requestPopupMenu, setRequestPopupMenu] = useState(false);
+    const [requestPopupMenuDelete, setRequestPopupMenuDelete] = useState(false);
+
+    // ✅ Seguimiento
     const onClickHandleFollowing = async () => {
-        setFollowingState((prev) => !prev);
+        const prev = followingState;
+        setFollowingState((p) => !p);
         try {
             const response = await fetch("/api/follow", {
                 method: "POST",
@@ -56,57 +93,16 @@ const UserProfileMiniCard = ({
                 setFollowingState(Boolean(data.following));
             } else {
                 console.error("Error en la API:", data.error);
-                setFollowingState(following); // opcional: rollback
+                setFollowingState(prev); // rollback
             }
         } catch (error) {
             console.error("Error de red:", error);
-            setFollowingState(following); // opcional: rollback
+            setFollowingState(prev); // rollback
         }
     };
 
-    const buttonParamsFunction = (relation: number): ButtonFriendshipParams => {
-        if (relation === 0 || relation === 1 || relation === 4 || relation === 5 || relation === 6 || relation === 7) {
-            return { text: "Enviar solicitud de amistad", actionYes: 2 }
-        } else if (relation === 3) {
-            return { text: "Quiere ser tu amigo", actionYes: 8, textYes: "aceptar", actionNo: 4, textNo: "rechazar" }
-        } else if (relation === 8) {
-            return { text: "Son amigos", actionYes: 6, textYes: "sí", actionNo: 0, textNo: "No, no quiero eliminar esta amistad" }
-        } else if (relation === 2) {
-            return { text: "Le has enviado solicitud de amistad", actionYes: 1, textYes: "sí", actionNo: 0, textNo: "No, no quiero cancelar la solicitud de amistad enviada" }
-        }
-        return { text: "" }
-    }
-
-    useEffect(() => {
-        let isMounted = true; // Para evitar memory leaks en caso de desmontaje
-        setLoading(true);
-
-        async function fetchData() {
-            try {
-                const response = await fetch("/api/friendship", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ userId, subject: "get" }),
-                });
-                if (!response.ok) throw new Error("Error en la petición");
-                const result = await response.json();
-                if (isMounted) setData(result);
-                if (isMounted) setButtonFriendshipParams(buttonParamsFunction(result.relState))
-            } catch (err) {
-                if (isMounted && err instanceof Error) setError(err);
-            } finally {
-                if (isMounted) setLoading(false);
-            }
-        }
-        fetchData();
-        return () => {
-            isMounted = false; // Cleanup para evitar actualizaciones en componentes desmontados
-        };
-    }, []); // Solo se ejecuta una vez al montar el componente
-
-
+    // ✅ Amistad
     const onClickHandleFriendship = async (subject: string) => {
-        //setIsFriendState(!isFriendState);
         try {
             const response = await fetch("/api/friendship", {
                 method: "POST",
@@ -117,23 +113,26 @@ const UserProfileMiniCard = ({
             const result = await response.json();
             console.log("result en friendButton: ", result);
             if (response.ok) {
-                //setIsFriendState(result.following);
-                setButtonFriendshipParams(buttonParamsFunction(result.relState))
+                if (typeof result.relState === "number") {
+                    setButtonFriendshipParams(
+                        buttonParamsFromRelState(result.relState)
+                    );
+                    setIsFriendState(result.relState === 8);
+                }
             } else {
                 console.error("Error en la API:", result.error);
             }
         } catch (error) {
             console.error("Error de red:", error);
         }
-        setRequestPopup(false)
+        setRequestPopup(false);
     };
 
     const switchRequestPopup = () => {
-        setRequestPopup(requestPopup ? false : true)
-    }
+        setRequestPopup((v) => !v);
+    };
 
     const onClickHandleFriendshipMenu = async (subject: string) => {
-        //setIsFriendState(!isFriendState);
         try {
             const response = await fetch("/api/friendship", {
                 method: "POST",
@@ -142,39 +141,62 @@ const UserProfileMiniCard = ({
             });
 
             const result = await response.json();
-            console.log("result en friendButton: ", result);
+            console.log("result en friendButton (menu): ", result);
             if (response.ok) {
-                //setIsFriendState(result.following);
-                setButtonFriendshipParams(buttonParamsFunction(result.relState))
+                if (typeof result.relState === "number") {
+                    setButtonFriendshipParams(
+                        buttonParamsFromRelState(result.relState)
+                    );
+                    setIsFriendState(result.relState === 8);
+                }
             } else {
                 console.error("Error en la API:", result.error);
             }
         } catch (error) {
             console.error("Error de red:", error);
         }
-        setRequestPopupMenu(false)
+        setRequestPopupMenu(false);
     };
-    const switchRequestPopupMenu = () => {
-        setRequestPopupMenu(requestPopupMenu ? false : true)
-    }
-    const switchRequestPopupMenuDelete = () => {
-        setRequestPopupMenuDelete(requestPopupMenuDelete ? false : true)
-    }
 
+    const switchRequestPopupMenu = () => {
+        setRequestPopupMenu((v) => !v);
+    };
+
+    const switchRequestPopupMenuDelete = () => {
+        setRequestPopupMenuDelete((v) => !v);
+    };
 
     return (
-        <div className="userProfileMiniCard">
-            <span className="text-[14px] font-bold m-0">{userName}</span>
-            <div className="friendshipButtonImageAndButtons">
+        <div className="flex flex-col w-full gap-1 text-slate-100">
+            {/* Nombre */}
+            <span className="text-[14px] font-bold leading-tight">
+                {userName}
+            </span>
+
+            {/* Avatar + botones */}
+            <div className="flex flex-row items-center w-full gap-2">
                 <Link href={`/wall?user=${userId}`}>
-                    <div className="w-8 aspect-square relative overflow-hidden rounded-full">
-                        <span className="absolute text-red-500 font-black">{userId}</span>{/*QUITAR*/}
-                        <Image src={profileImageUrl} alt="imagen de perfil" width={24} height={24} className="rounded-full w-auto h-auto m-0"></Image>
+                    <div className="w-8 h-8 relative overflow-hidden rounded-full border border-slate-600 bg-slate-800 flex items-center justify-center">
+                        {profileImageUrl ? (
+                            <Image
+                                src={profileImageUrl}
+                                alt="imagen de perfil"
+                                width={32}
+                                height={32}
+                                className="w-full h-full object-cover"
+                            />
+                        ) : (
+                            <span className="text-[10px] text-slate-300">
+                                {userName[0]?.toUpperCase() ?? "?"}
+                            </span>
+                        )}
                     </div>
                 </Link>
+
                 {session && session.user.id != userId && (
-                    <div className="userProfMCardButAndMenuContainer">
-                        <div className="userProfileMiniCardButtonsContainer">
+                    <div className="flex flex-1 flex-col gap-1 ml-1">
+                        {/* Fila: botón de amistad + badge "Te sigue" */}
+                        <div className="flex flex-row flex-wrap items-center gap-1">
                             <FriendButton
                                 userId={userId}
                                 buttonParams={buttonFriendshipParamsState}
@@ -182,11 +204,24 @@ const UserProfileMiniCard = ({
                                 onClickHandle={onClickHandleFriendship}
                                 requestPopup={requestPopup}
                             />
-                            {isFollowerState && <span id="isFollowingYou" className="userProfileMiniCardButton">Te sigue</span>}
 
+                            {isFollowerState && (
+                                <span
+                                    id="isFollowingYou"
+                                    className="userProfileMiniCardButton"
+                                >
+                                    Te sigue
+                                </span>
+                            )}
                         </div>
-                        <div className="userProfileMiniCardPostCardMenubarContainer">
-                            <FollowButton userId={userId} following={followingState} onclick={onClickHandleFollowing}></FollowButton>
+
+                        {/* Fila: seguir / menú (alineado a la derecha) */}
+                        <div className="flex flex-row items-center justify-end gap-1">
+                            <FollowButton
+                                userId={userId}
+                                following={followingState}
+                                onclick={onClickHandleFollowing}
+                            />
                             <PostCardMenubar
                                 following={followingState}
                                 followingId={userId}
@@ -199,10 +234,10 @@ const UserProfileMiniCard = ({
                         </div>
                     </div>
                 )}
-
             </div>
         </div>
-    )
-}
+    );
+};
 
-export default UserProfileMiniCard
+export default UserProfileMiniCard;
+

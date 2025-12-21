@@ -1,6 +1,7 @@
 // src/app/layout.tsx
 import type { Metadata } from "next";
 import "./globals.css";
+import "./images_sample.css";
 import Navbar from "@/components/custom/navbar";
 import Main from "../components/custom/main";
 import ClientSessionProvider from "./sessionprovider";
@@ -10,7 +11,7 @@ export const metadata: Metadata = {
   title: "Red Social",
   description: "Red Social con autenticación de usuarios.",
   icons: {
-    icon: "/favicon.ico",        // asegúrate de tener este archivo
+    icon: "/favicon.ico",
     shortcut: "/favicon.ico",
   },
 };
@@ -21,17 +22,31 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es">
-      <body>
+    <html lang="es" className="h-full">
+      <body
+        className="
+          h-full 
+          bg-slate-950 
+          text-slate-100 
+          antialiased 
+          selection:bg-blue-500/40 
+          selection:text-white
+        "
+      >
         <GlobalProvider>
           <ClientSessionProvider>
-            <Main>
+            {/* Contenedor principal de la app */}
+            <div className="min-h-screen flex flex-col">
               <Navbar />
-              {children}
-            </Main>
+              {/* Main se encarga del layout interno de cada página */}
+              <Main>
+                {children}
+              </Main>
+            </div>
           </ClientSessionProvider>
         </GlobalProvider>
       </body>
     </html>
   );
 }
+

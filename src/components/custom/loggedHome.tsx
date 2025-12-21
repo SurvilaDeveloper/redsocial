@@ -1,3 +1,4 @@
+// src/components/custom/loggedhome.tsx
 "use client";
 
 import { useSearchParams } from "next/navigation";
@@ -5,35 +6,60 @@ import AsideLeft from "./asideleft";
 import AsideRight from "./asideright";
 import ListSelect from "./listSelect";
 import PostListLoggedHome from "./postListLoggedHome";
-import PostListLoggedHomeFriends from "./postListLoggedHomeFriends";
 import PostFormWall from "./postFormWall";
 
 const LoggedHome = ({ session }: { session: any }) => {
     const searchParams = useSearchParams();
-    const friends = searchParams.get("friends"); // Captura el parámetro "friends"
+    const friends = searchParams.get("friends"); // 👈 lo dejamos para usar más adelante
 
     return (
-        <>
-            {/*<h1>Home (logueado) {session.user.id}</h1>*/}
-            {/*<p>Filtro de amigos: {friends ? friends : "Ninguno"}</p>*/}
-            <div id="LoggedHome" className="loggedHome">
+        <div
+            id="LoggedHome"
+            className="
+                flex 
+                flex-1 
+                w-full 
+                gap-4
+            "
+        >
+            {/* Aside izquierdo: sólo en pantallas grandes */}
+            <aside className="hidden lg:block w-[220px] xl:w-[260px]">
                 <AsideLeft>
-                    <ListSelect />
+                    {/* Más adelante, cuando ListSelect esté listo, lo descomentás */}
+                    {/* <ListSelect /> */}
+                    <></>
                 </AsideLeft>
-                <div className="flex flex-col items-center w-[34%] md:bg-transparent">
+            </aside>
+
+            {/* Columna central: formulario + feed */}
+            <main className=" w-full flex-1 flex justify-center">
+                <div
+                    className="
+                        w-full 
+                        max-w-[720px] 
+                        py-3 
+                        space-y-4
+                    "
+                >
                     <PostFormWall />
-                    {friends && <PostListLoggedHomeFriends session={session} />}
-                    {!friends && <PostListLoggedHome session={session} />}
 
+                    {/* Por ahora siempre usamos el mismo feed.
+                       Más adelante, PostListLoggedHome podría aceptar un prop:
+                       <PostListLoggedHome session={session} mode={friends ? "friends" : "all"} />
+                    */}
+                    <PostListLoggedHome session={session} />
                 </div>
+            </main>
 
-
+            {/* Aside derecho: sólo en pantallas extra grandes */}
+            <aside className="hidden xl:block w-[260px]">
                 <AsideRight>
                     <></>
                 </AsideRight>
-            </div>
-        </>
+            </aside>
+        </div>
     );
 };
 
 export default LoggedHome;
+

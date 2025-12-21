@@ -1,0 +1,181 @@
+/*images_sample.css*/
+/* =========================================
+   Swiper de imágenes inline para PostCard
+   ========================================= */
+
+/* Contenedor principal del carrusel dentro del post */
+.inline-carousel {
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+    /* oculta las slides vecinas */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    touch-action: pan-y;
+}
+
+/* Track que se desplaza horizontalmente */
+.carousel-track {
+    display: flex;
+    /* fila horizontal de slides */
+    width: 100%;
+}
+
+/* Cada slide ocupa exactamente el ancho del contenedor (via style) */
+.carousel-slide-item {
+    flex: 0 0 auto;
+    display: flex;
+    justify-content: center;
+}
+
+/* Imagen principal del carrusel */
+.carousel-image {
+    width: 100%;
+    height: auto;
+    max-height: 70vh;
+    /* ajustá a gusto */
+    object-fit: contain;
+    border-radius: 4px;
+}
+
+/* ===========================
+   Botones de navegación lateral
+   =========================== */
+
+.nav-button {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    border: none;
+    background: rgba(0, 0, 0, 0.45);
+    color: white;
+    width: 32px;
+    height: 48px;
+    cursor: pointer;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    font-size: 24px;
+    line-height: 1;
+}
+
+.nav-button:hover {
+    background: rgba(0, 0, 0, 0.7);
+}
+
+.nav-button.prev {
+    left: 6px;
+}
+
+.nav-button.next {
+    right: 6px;
+}
+
+/* ===========================
+   Navegación inferior
+   =========================== */
+
+.carousel-thumbnails {
+    display: flex;
+    gap: 6px;
+    margin-top: 6px;
+    overflow-x: hidden;
+    padding: 0;
+}
+
+/* Miniaturas de imagen (modo "thumbnails") */
+.thumbnail {
+    width: 48px;
+    height: 32px;
+    object-fit: cover;
+    border-radius: 3px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: border-color 0.2s ease, transform 0.15s ease;
+}
+
+.thumbnail.active {
+    border-color: #ffffff;
+    transform: scale(1.02);
+}
+
+.thumbnail:hover {
+    border-color: #cccccc;
+}
+
+/* Dots (modo "dots") */
+.navigation-dot {
+    width: 16px;
+    height: 16px;
+    border: none;
+    background: none;
+    padding: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.navigation-dot span {
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+    background: #777777;
+    transition: all 0.2s ease;
+}
+
+.navigation-dot.active span {
+    width: 8px;
+    height: 8px;
+    background: #ffffff;
+}
+
+/* Números (modo "numbers") */
+.navigation-numbers {
+    border: none;
+    background: rgba(0, 0, 0, 0.45);
+    color: #cccccc;
+    font-size: 0.7rem;
+    width: 22px;
+    height: 22px;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+}
+
+.navigation-numbers.active {
+    background: #ffffff;
+    color: #000000;
+}
+
+/* ===========================
+   Ajustes para móvil
+   =========================== */
+
+@media (max-width: 640px) {
+    .carousel-image {
+        max-height: 50vh;
+    }
+
+    .nav-button {
+        width: 28px;
+        height: 40px;
+        font-size: 20px;
+    }
+
+    .thumbnail {
+        width: 40px;
+        height: 26px;
+    }
+}

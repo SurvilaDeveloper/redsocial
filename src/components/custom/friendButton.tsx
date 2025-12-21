@@ -1,114 +1,124 @@
+// src/components/friendButton.tsx
 "use client";
 
 import { Button } from "../ui/button";
-import { useEffect, useState } from "react";
 import DecisionPopup from "./decisionPopup";
-
-interface ButtonFriendshipParams {
-    text: string | null
-    actionYes?: number | null,
-    textYes?: string | null,
-    actionNo?: number,
-    textNo?: string
-}
+import { ButtonFriendshipParams } from "@/types/friendship";
 
 const FriendButton = ({
     userId,
     buttonParams,
     switchRequestPopup,
     onClickHandle,
-    requestPopup
+    requestPopup,
 }: {
     userId: number;
-    buttonParams: ButtonFriendshipParams | undefined
-    switchRequestPopup: () => void
-    onClickHandle: (subject: string) => void
-    requestPopup: boolean
+    buttonParams: ButtonFriendshipParams | undefined;
+    switchRequestPopup: () => void;
+    onClickHandle: (subject: string) => void;
+    requestPopup: boolean;
 }) => {
+    if (!buttonParams) return null;
 
+    // 👉 Estilos base para el “chip”
+    const baseChip =
+        "inline-flex items-center rounded-full border px-3 py-1 text-[11px] leading-none whitespace-nowrap";
+
+    const sendReqChip =
+        baseChip +
+        " border-sky-400 text-sky-200 bg-sky-900/30 hover:bg-sky-900/60";
+    const areFriendsChip =
+        baseChip +
+        " border-yellow-400 text-yellow-200 bg-yellow-900/30 hover:bg-yellow-900/60";
+    const wantBeFriendChip =
+        baseChip +
+        " border-pink-400 text-pink-200 bg-pink-900/30 hover:bg-pink-900/60";
+    const sentReqChip =
+        baseChip +
+        " border-rose-400 text-rose-200 bg-rose-900/30";
 
     return (
-        <div className="friendshipButton">
-            {buttonParams && buttonParams.actionYes === 6 &&
-                <div className="flex flex-row items-center">
-                    {/* es tu amigo */}
-                    <Button onClick={switchRequestPopup}>
-                        <span id="friendshipAreFriendsButton" className="userProfileMiniCardButton">
+        <div className="flex items-center">
+            {/* === SON AMIGOS (actionYes = 6) === */}
+            {buttonParams.actionYes === 6 && (
+                <div className="relative flex items-center">
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={switchRequestPopup}
+                        className="p-0 bg-transparent hover:bg-transparent"
+                    >
+                        <span className={areFriendsChip}>
                             {buttonParams.text}
                         </span>
                     </Button>
-                    {requestPopup &&
+
+                    {requestPopup && (
                         <DecisionPopup
                             question="¿Realmente quieres eliminar esta amistad?"
                             yesText={buttonParams.textYes || ""}
                             noText={buttonParams.textNo || ""}
-                            onYes={() => { onClickHandle("deleteFriendship") }}
+                            onYes={() => {
+                                onClickHandle("deleteFriendship");
+                            }}
                             onNo={switchRequestPopup}
-                        ></DecisionPopup>}
+                        />
+                    )}
                 </div>
-            }
-            {/* enviar solicitud de amistad */}
-            {buttonParams &&
-                buttonParams.actionYes === 2 &&
-                <Button onClick={() => { onClickHandle("sendRequest") }}>
-                    <span id="friendshipRequestSendButton" className="userProfileMiniCardButton">
-                        {buttonParams.text}
-                    </span>
+            )}
+
+            {/* === ENVIAR SOLICITUD (actionYes = 2) === */}
+            {buttonParams.actionYes === 2 && (
+                <Button
+                    type="button"
+                    onClick={() => {
+                        onClickHandle("sendRequest");
+                    }}
+                    variant="ghost"
+                    className="p-0 bg-transparent hover:bg-transparent"
+                >
+                    <span className={sendReqChip}>{buttonParams.text}</span>
                 </Button>
-            }
+            )}
 
-            {buttonParams && buttonParams.actionYes === 8 &&
-
-                <div className="flex flex-col items-center">
-                    {/* quiere ser tu amigo */}
-                    <Button onClick={switchRequestPopup}>
-                        <span id="frienshipWantBeFriendButton" className="userProfileMiniCardButton">
+            {/* === QUIERE SER TU AMIGO (actionYes = 8) === */}
+            {buttonParams.actionYes === 8 && (
+                <div className="relative flex flex-col items-start">
+                    <Button
+                        type="button"
+                        onClick={switchRequestPopup}
+                        variant="ghost"
+                        className="p-0 bg-transparent hover:bg-transparent"
+                    >
+                        <span className={wantBeFriendChip}>
                             {buttonParams.text}
                         </span>
                     </Button>
-                    {requestPopup &&
-                        <div className="relative left-[-60px]">
-                            <DecisionPopup
-                                question="¿Cómo quieres responder a esta solicitud de amistad?"
-                                yesText={buttonParams.textYes || ""}
-                                noText={buttonParams.textNo || ""}
-                                onYes={() => { onClickHandle("acceptRequest") }}
-                                onNo={() => { onClickHandle("rejectRequest") }}
-                            ></DecisionPopup>
 
-                        </div>
-
-                    }
-                </div>
-            }
-
-
-
-            {buttonParams && buttonParams.actionYes === 1 &&
-                <div className="flex flex-col items-center">
-                    {/* cancelar solicitud de amistad */}
-                    <div className="flex flex-row items-center">
-                        <span id="friendshipRequestSentButton" className="userProfileMiniCardButton">
-                            {buttonParams.text}
-                        </span>
-                    </div>
-                    {/*requestPopup &&
+                    {requestPopup && (
                         <DecisionPopup
-                            question="¿Quieres cancelar la solicitud de amistad que has enviado?"
+                            question="¿Cómo quieres responder a esta solicitud de amistad?"
                             yesText={buttonParams.textYes || ""}
                             noText={buttonParams.textNo || ""}
-                            onYes={() => onClickHandle("cancelRequest")}
-                            onNo={switchRequestPopup}
-                        ></DecisionPopup>*/}
+                            onYes={() => {
+                                onClickHandle("acceptRequest");
+                            }}
+                            onNo={() => {
+                                onClickHandle("rejectRequest");
+                            }}
+                        />
+                    )}
                 </div>
-            }
+            )}
 
-
+            {/* === YA ENVIADA (actionYes = 1) === */}
+            {buttonParams.actionYes === 1 && (
+                <div className="flex flex-col items-start">
+                    <span className={sentReqChip}>{buttonParams.text}</span>
+                </div>
+            )}
         </div>
     );
 };
 
 export default FriendButton;
-
-// "sendRequest" "acceptRequest" "rejectRequest" "deleteFriendship" "cancelRequest"
-// <DecisionPopup question="pregunta?" yesText="Si" noText="no, no quiero aceptar la solicitud de amistad" onYes={yestest} onNo={notest}></DecisionPopup>

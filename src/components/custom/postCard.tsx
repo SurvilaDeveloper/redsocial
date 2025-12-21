@@ -2,26 +2,52 @@
 "use client";
 
 import { useMemo, useRef, useState, useEffect } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { formatDate } from "@/lib/dateUtils";
 import UserProfileMiniCard from "./userProfileMiniCard";
 import { useRouter } from "next/navigation";
 import PostCardCommentsContainer from "./postCardCommentsContainer";
-import PostCardCommetsResponsesContainer from "./postCardCommetsResponsesContainer";
-import { MessageCircle, MessageCircleOff } from "lucide-react";
+import PostCardCommentsResponsesContainer from "./postCardCommetsResponsesContainer";
+import {
+    MessageCircle,
+    MessageCircleOff,
+    ThumbsUp,
+    ThumbsDown,
+    Pencil,
+    EyeOffIcon,
+    EyeIcon,
+    Earth,
+    UserCheck,
+    Footprints,
+    Handshake,
+} from "lucide-react";
+import PostImageCard from "./PostImageCard";
+import { ImagesSwiper } from "./ImagesSwiper";
+import { updatePostActive, updatePostVisibility } from "@/actions/post-action";
 
 export function PostCard({
     session,
     post,
+    variant = "card",
+    openCommentsInPage = false,
+    enablePolling = false,
+    enableOwnerControls = false,
+    onOpenDetail,
 }: {
     session: any;
     post: Post;
+    variant?: "card" | "detail";
+    openCommentsInPage?: boolean;
+    enablePolling?: boolean;
+    enableOwnerControls?: boolean;
+    onOpenDetail?: (postId: number) => void;
 }) {
     const router = useRouter();
     const [showFullDesc, setShowFullDesc] = useState(false);
 
-    const [expandedCommentId, setExpandedCommentId] = useState<number | null>(null);
+    const [expandedCommentId, setExpandedCommentId] = useState<number | null>(
+        null
+    );
     const toggleComment = (id: number) =>
         setExpandedCommentId((prev) => (prev === id ? null : id));
 
@@ -30,6 +56,19 @@ export function PostCard({
     const [commentMsg, setCommentMsg] = useState<string | null>(null);
 
     const [commentsExpanded, setCommentsExpanded] = useState(false);
+    const handleCommentsClick = () => {
+        if (onOpenDetail) {
+            onOpenDetail(currentPost.id);
+            return;
+        }
+
+        if (openCommentsInPage) {
+            router.push(`/showPostCard?post_id=${currentPost.id}#comments`);
+        } else {
+            setCommentsExpanded((v) => !v);
+        }
+    };
+
     const commentRefs = useRef<Record<number, HTMLDivElement | null>>({});
 
     type LocalPostComment = PostComment & {
@@ -37,25 +76,25 @@ export function PostCard({
         __error?: string | null;
     };
 
-    // 🔹 post “vivo” que se va refrescando desde la API
+    // 🔹 post “vivo” que se actualiza desde la API
     const [currentPost, setCurrentPost] = useState<Post>(post);
 
-    // 🔹 si el padre llega a cambiar el post (otro render), sincronizamos
+    // 🔹 owner toolbar state
+    const [visibilityMenu, setVisibilityMenu] = useState(false);
+    const [ownerActionsLoading, setOwnerActionsLoading] = useState(false);
+
     useEffect(() => {
         setCurrentPost(post);
     }, [post.id]);
 
-    // 🔹 estado local de comentarios (para optimistic + merges con servidor)
+    // 🔹 estado local de comentarios
     const [localComments, setLocalComments] = useState<LocalPostComment[]>(
         (post.post_comment ?? []) as LocalPostComment[]
     );
 
-    // 🔹 cuando cambian los comentarios del post refrescado, los mezclamos
-    //    con los locales, sin perder user ni los comentarios optimistas
     useEffect(() => {
         setLocalComments((prev) => {
-            const fromServer =
-                (currentPost.post_comment ?? []) as LocalPostComment[];
+            const fromServer = (currentPost.post_comment ?? []) as LocalPostComment[];
 
             const prevById = new Map(prev.map((c) => [c.id, c]));
 
@@ -64,7 +103,6 @@ export function PostCard({
                 return {
                     ...old,
                     ...c,
-                    // si el servidor no trae user, conservamos el anterior
                     user: c.user ?? old?.user ?? c.user,
                     __optimistic: false,
                     __error: null,
@@ -81,9 +119,9 @@ export function PostCard({
         });
     }, [currentPost.post_comment, currentPost.id]);
 
-    // 🔹 polling cada 10 segundos para refrescar el post desde la API
+    // 🔹 polling cada 30 segundos para refrescar el post
     useEffect(() => {
-        if (!currentPost?.id) return;
+        if (!currentPost?.id || !enablePolling) return;
 
         let cancelled = false;
 
@@ -103,28 +141,21 @@ export function PostCard({
                 if (!cancelled) {
                     setCurrentPost(fresh);
                 }
-            } catch (err) {
-                // opcional: console.error(err);
+            } catch {
+                // opcional log
             }
         };
 
-        // primer chequeo inmediato
         fetchLatest();
-
-        const id = setInterval(fetchLatest, 10_000); // 10 segundos
+        const id = setInterval(fetchLatest, 30_000);
         return () => {
             cancelled = true;
             clearInterval(id);
         };
-    }, [currentPost?.id]);
+    }, [currentPost?.id, enablePolling]);
 
-    const scrollToComment = (id: number) => {
-        setTimeout(() => {
-            commentRefs.current[id]?.scrollIntoView({
-                behavior: "smooth",
-                block: "start",
-            });
-        }, 30);
+    const scrollToComment = (_id: number) => {
+        // si después querés, reactivás el scroll suave
     };
 
     const sessionUserId = session?.user?.id ? Number(session.user.id) : null;
@@ -132,7 +163,9 @@ export function PostCard({
     const sessionUserImageUrl = session?.user?.imageUrl ?? null;
 
     const canCreatePostComment =
-        Boolean(session?.user?.id) && newComment.trim().length > 0 && !commentLoading;
+        Boolean(session?.user?.id) &&
+        newComment.trim().length > 0 &&
+        !commentLoading;
 
     const submitPostComment = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -146,7 +179,7 @@ export function PostCard({
 
         const optimistic: LocalPostComment = {
             id: tempId,
-            post_id: currentPost.id, // 🔹 usamos currentPost
+            post_id: currentPost.id,
             comment: content,
             createdAt: new Date().toISOString(),
             who_comments: sessionUserId,
@@ -174,13 +207,18 @@ export function PostCard({
             const res = await fetch("/api/post-comments", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ post_id: currentPost.id, comment: content }),
+                body: JSON.stringify({
+                    post_id: currentPost.id,
+                    comment: content,
+                }),
             });
 
             const data = await res.json().catch(() => null);
 
             if (!res.ok) {
-                throw new Error(data?.error || "No se pudo guardar el comentario");
+                throw new Error(
+                    data?.error || "No se pudo guardar el comentario"
+                );
             }
 
             const created = data?.data;
@@ -200,20 +238,24 @@ export function PostCard({
                 )
             );
 
-            setExpandedCommentId((prev) => (prev === tempId ? realId : prev));
+            setExpandedCommentId((prev) =>
+                prev === tempId ? realId : prev
+            );
             scrollToComment(realId);
 
             setCommentMsg("Comentario guardado ✅");
         } catch (err: any) {
             const msg = err?.message ?? "Error";
-            setLocalComments((prev) => prev.filter((c) => c.id !== tempId));
+            setLocalComments((prev) =>
+                prev.filter((c) => c.id !== tempId)
+            );
             setCommentMsg(msg);
         } finally {
             setCommentLoading(false);
         }
     };
 
-    // ✅ Reglas visibility (seguro extra frontend)
+    // ✅ reglas de visibilidad
     const viewerIdRaw = session?.user?.id;
     const viewerIdParsed =
         viewerIdRaw != null ? parseInt(String(viewerIdRaw), 10) : null;
@@ -222,14 +264,120 @@ export function PostCard({
             ? viewerIdParsed
             : null;
 
-    const isOwner = viewerId !== null && viewerId === currentPost.user_id; // 🔹 currentPost
+    const isOwner =
+        viewerId !== null && viewerId === currentPost.user_id;
 
     const rel =
         currentPost.relations ?? {
             following: false,
             isFollower: false,
             isFriend: false,
+            likesCount: 0,
+            unlikesCount: 0,
+            userReaction: null as PostReaction,
         };
+
+    // ⭐ Estado local de reacción y contadores
+    const [postReaction, setPostReaction] =
+        useState<PostReaction>(rel.userReaction ?? null);
+    const [likesCount, setLikesCount] = useState<number>(
+        rel.likesCount ?? 0
+    );
+    const [unlikesCount, setUnlikesCount] = useState<number>(
+        rel.unlikesCount ?? 0
+    );
+
+    useEffect(() => {
+        const r = currentPost.relations as PostRelations | undefined;
+
+        setPostReaction(r?.userReaction ?? null);
+        setLikesCount(r?.likesCount ?? 0);
+        setUnlikesCount(r?.unlikesCount ?? 0);
+    }, [
+        currentPost.id,
+        currentPost.relations?.userReaction,
+        currentPost.relations?.likesCount,
+        currentPost.relations?.unlikesCount,
+    ]);
+
+    const [reactionLoading, setReactionLoading] = useState(false);
+
+    const canReact = Boolean(sessionUserId) && !reactionLoading;
+
+    const updateCountsOptimistic = (
+        prev: PostReaction,
+        next: PostReaction
+    ) => {
+        setLikesCount((prevLikes) => {
+            let v = prevLikes;
+            if (prev === "LIKE") v -= 1;
+            if (next === "LIKE") v += 1;
+            return v < 0 ? 0 : v;
+        });
+
+        setUnlikesCount((prevUnlikes) => {
+            let v = prevUnlikes;
+            if (prev === "UNLIKE") v -= 1;
+            if (next === "UNLIKE") v += 1;
+            return v < 0 ? 0 : v;
+        });
+    };
+
+    const sendReaction = async (next: PostReaction) => {
+        if (!canReact || !currentPost.id) return;
+
+        const prev = postReaction;
+
+        setPostReaction(next);
+        updateCountsOptimistic(prev, next);
+        setReactionLoading(true);
+
+        try {
+            const res = await fetch(
+                `/api/posts/${currentPost.id}/reaction`,
+                {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ type: next }),
+                }
+            );
+
+            const data = await res.json().catch(() => null);
+
+            if (!res.ok) {
+                updateCountsOptimistic(next, prev);
+                setPostReaction(prev);
+                console.error(data?.error || "Error en reacción");
+                return;
+            }
+
+            if (data?.counts) {
+                setLikesCount(data.counts.likes ?? 0);
+                setUnlikesCount(data.counts.unlikes ?? 0);
+            }
+            if (typeof data?.userReaction !== "undefined") {
+                setPostReaction(data.userReaction as PostReaction);
+            }
+        } catch (err) {
+            updateCountsOptimistic(next, prev);
+            setPostReaction(prev);
+            console.error(err);
+        } finally {
+            setReactionLoading(false);
+        }
+    };
+
+    const handleLike = () => {
+        const next: PostReaction =
+            postReaction === "LIKE" ? null : "LIKE";
+        sendReaction(next);
+    };
+
+    const handleUnlike = () => {
+        const next: PostReaction =
+            postReaction === "UNLIKE" ? null : "UNLIKE";
+        sendReaction(next);
+    };
 
     const canView =
         isOwner ||
@@ -238,7 +386,9 @@ export function PostCard({
         (currentPost.visibility === 3 &&
             viewerId !== null &&
             (rel.isFriend || rel.following)) ||
-        (currentPost.visibility === 4 && viewerId !== null && rel.isFriend);
+        (currentPost.visibility === 4 &&
+            viewerId !== null &&
+            rel.isFriend);
 
     if (!canView) {
         const msg =
@@ -249,37 +399,232 @@ export function PostCard({
                     : "Debes ser amigo para poder ver este post.";
 
         return (
-            <div className="postCardActive">
+            <div className="w-full rounded-lg bg-slate-900 border border-slate-800 shadow-sm px-3 py-2 text-slate-100">
                 <div className="text-xs text-yellow-300">{msg}</div>
             </div>
         );
     }
 
-    const desc = (currentPost.description ?? "").trim(); // 🔹 currentPost
+    const desc = (currentPost.description ?? "").trim();
     const shortDesc = useMemo(() => {
         if (!desc) return "Sin descripción (click para comentar)";
         if (desc.length <= 70) return desc;
         return desc.slice(0, 70) + "…";
     }, [desc]);
 
-    const shownDesc = showFullDesc ? desc || "Sin descripción" : shortDesc;
+    const shownDesc =
+        showFullDesc ? desc || "Sin descripción" : shortDesc;
 
-    const activeCommentsCount = (localComments ?? []).filter(
-        (c) => (c.active ?? 1) === 1
-    ).length;
+    const activeCommentsCount = (() => {
+        const activeLocal = (localComments ?? []).filter(
+            (c) => (c.active ?? 1) === 1
+        ).length;
+        if (activeLocal > 0) return activeLocal;
+
+        const fromPost: any = (currentPost as any).commentsCount;
+        return typeof fromPost === "number" ? fromPost : 0;
+    })();
+
+    // 🔹 IMÁGENES ORDENADAS + ARRAY PARA SWIPER
+    const sortedImages = useMemo(
+        () =>
+            (currentPost.images ?? [])
+                .filter((img) => !!img && !!img.imageUrl)
+                .slice()
+                .sort(
+                    (a, b) => (a.index ?? 0) - (b.index ?? 0)
+                ),
+        [currentPost.images]
+    );
+
+    // 💡 Helpers owner toolbar
+    const handleToggleActiveOwner = async () => {
+        if (!enableOwnerControls || !isOwner) return;
+
+        const prevActive = currentPost.active ?? 1;
+        const nextActive = prevActive === 1 ? 0 : 1;
+
+        setOwnerActionsLoading(true);
+        try {
+            await updatePostActive(currentPost.id, nextActive);
+            setCurrentPost((prev) =>
+                prev
+                    ? ({ ...prev, active: nextActive } as Post)
+                    : prev
+            );
+        } catch (err) {
+            console.error("Error al actualizar active:", err);
+        } finally {
+            setOwnerActionsLoading(false);
+        }
+    };
+
+    const handleChangeVisibilityOwner = async (
+        value: PostVisibility
+    ) => {
+        if (!enableOwnerControls || !isOwner) return;
+
+        setOwnerActionsLoading(true);
+        try {
+            await updatePostVisibility(currentPost.id, value);
+            setCurrentPost((prev) =>
+                prev
+                    ? ({ ...prev, visibility: value } as Post)
+                    : prev
+            );
+            setVisibilityMenu(false);
+        } catch (err) {
+            console.error("Error al actualizar visibility:", err);
+        } finally {
+            setOwnerActionsLoading(false);
+        }
+    };
+
+    const isActive = (currentPost.active ?? 1) === 1;
+
+    //SOLO PARA DEBUG luego QUITAR
+    useEffect(() => {
+        console.log(
+            "DEBUG images para post",
+            currentPost.id,
+            "viewerId",
+            viewerId,
+            "isOwner",
+            isOwner,
+            currentPost.images
+        );
+    }, [currentPost.id, viewerId, isOwner, currentPost.images]);
+
 
     return (
         <div
             className={
-                currentPost.active === 0
-                    ? "flex flex-col bg-black border-2 border-solid border-red-500 p-2 shadow-md w-full max-h-[200px] overflow-hidden text-gray-200"
-                    : "postCardActive"
+                isActive
+                    ? "w-full rounded-lg bg-slate-900 border border-slate-800 shadow-sm px-3 py-2 text-slate-100"
+                    : "w-full rounded-lg bg-black border-2 border-red-500 px-3 py-2 shadow-md max-h-[200px] overflow-hidden text-gray-200"
             }
         >
-            {currentPost.active === 0 && (
-                <span className="text-red-500">oculto</span>
+            {!isActive && (
+                <span className="text-red-500 text-xs uppercase mb-1">
+                    oculto
+                </span>
             )}
 
+            {/* === TOOLBAR DE DUEÑO (MyWall) === */}
+            {enableOwnerControls && isOwner && (
+                <div className="mb-2 flex flex-row items-center gap-2 w-full text-white bg-[rgb(62,62,62)] px-3 py-1 rounded-md">
+                    {/* Editar */}
+                    <Link
+                        href={`/editpost?post_id=${currentPost.id}`}
+                        className="flex flex-row items-center justify-center pr-2 hover:text-sky-300 transition-colors text-xs"
+                    >
+                        <Pencil size={18} />
+                        <span className="ml-1">Editar</span>
+                    </Link>
+
+                    {/* Ocultar / mostrar */}
+                    <button
+                        type="button"
+                        onClick={handleToggleActiveOwner}
+                        disabled={ownerActionsLoading}
+                        className="flex flex-row items-center gap-1 text-[11px] px-2 py-1 rounded bg-slate-800 border border-slate-600 hover:bg-slate-700 disabled:opacity-50"
+                    >
+                        {isActive ? (
+                            <>
+                                <EyeOffIcon size={16} />
+                                <span>Ocultar</span>
+                            </>
+                        ) : (
+                            <>
+                                <EyeIcon size={16} />
+                                <span>Mostrar</span>
+                            </>
+                        )}
+                    </button>
+
+                    {/* Menú visibilidad */}
+                    <div className="relative ml-auto">
+                        <button
+                            type="button"
+                            onClick={() =>
+                                setVisibilityMenu((v) => !v)
+                            }
+                            disabled={ownerActionsLoading}
+                            className="h-8 w-8 flex items-center justify-center rounded-full bg-slate-800 border border-slate-600 hover:bg-slate-700 disabled:opacity-50"
+                        >
+                            {currentPost.visibility === 1 && (
+                                <Earth size={16} />
+                            )}
+                            {currentPost.visibility === 2 && (
+                                <UserCheck size={16} />
+                            )}
+                            {currentPost.visibility === 3 && (
+                                <div className="flex flex-row gap-0.5">
+                                    <Footprints size={14} />
+                                    <Handshake size={14} />
+                                </div>
+                            )}
+                            {currentPost.visibility === 4 && (
+                                <Handshake size={16} />
+                            )}
+                        </button>
+
+                        {visibilityMenu && (
+                            <div className="absolute right-0 mt-2 w-72 bg-black text-slate-100 border border-slate-700 rounded-lg shadow-lg z-50 text-xs">
+                                <button
+                                    type="button"
+                                    className="w-full text-left px-3 py-2 hover:bg-slate-800 flex items-center gap-2 rounded-t-lg"
+                                    onClick={() =>
+                                        handleChangeVisibilityOwner(1)
+                                    }
+                                >
+                                    <Earth size={16} />
+                                    <span>
+                                        Lo puede ver todo el mundo
+                                    </span>
+                                </button>
+                                <button
+                                    type="button"
+                                    className="w-full text-left px-3 py-2 hover:bg-slate-800 flex items-center gap-2"
+                                    onClick={() =>
+                                        handleChangeVisibilityOwner(2)
+                                    }
+                                >
+                                    <UserCheck size={16} />
+                                    <span>
+                                        Sólo usuarios logueados
+                                    </span>
+                                </button>
+                                <button
+                                    type="button"
+                                    className="w-full text-left px-3 py-2 hover:bg-slate-800 flex items-center gap-2"
+                                    onClick={() =>
+                                        handleChangeVisibilityOwner(3)
+                                    }
+                                >
+                                    <Footprints size={16} />
+                                    <Handshake size={16} />
+                                    <span>
+                                        Seguidores y amigos
+                                    </span>
+                                </button>
+                                <button
+                                    type="button"
+                                    className="w-full text-left px-3 py-2 hover:bg-slate-800 flex items-center gap-2 rounded-b-lg"
+                                    onClick={() =>
+                                        handleChangeVisibilityOwner(4)
+                                    }
+                                >
+                                    <Handshake size={16} />
+                                    <span>Sólo amigos</span>
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {/* ====== HEADER (usuario + fecha + título) ====== */}
             {currentPost.userData?.imageUrl && (
                 <UserProfileMiniCard
                     session={session}
@@ -296,99 +641,241 @@ export function PostCard({
                 {formatDate(currentPost.createdAt)}
             </span>
 
-            <Link href={`/showpost?post_id=${currentPost.id}`}>
+            <Link href={`/showPostCard?post_id=${currentPost.id}`}>
                 <h3 className="text-lg font-semibold mt-2">
                     {currentPost.title}
                 </h3>
             </Link>
 
-            {currentPost.images && currentPost.images.length > 0 && (
-                <div className="flex flex-row flex-wrap justify-between gap-3">
-                    {currentPost.images.map((img, index) =>
-                        img ? (
-                            <div
-                                key={`${img.post_id}-${img.id}-${img.index}-${index}`}
-                                className={
-                                    index === 0
-                                        ? "flex flex-row gap-2 bg-black relative w-full aspect-square overflow-hidden border border-blue-500 rounded-[8px]"
-                                        : "flex flex-row gap-2 bg-black relative w-[48%] aspect-square overflow-hidden border border-blue-500 rounded-[8px]"
-                                }
+            {/* ====== LAYOUT PRINCIPAL ====== */}
+            {variant === "detail" ? (
+                // 📌 Vista detalle: columnas (post izquierda, comentarios derecha)
+                <div className="mt-3 flex flex-col md:flex-row gap-4">
+                    {/* Columna izquierda: imágenes + descripción + reacciones */}
+                    <section className="md:w-2/3 w-full flex flex-col gap-2">
+                        {sortedImages.length === 1 && (
+                            <PostImageCard
+                                image={sortedImages[0]}
+                                sessionUserId={sessionUserId}
+                                isFirst={true}
+                            />
+                        )}
+
+                        {sortedImages.length > 1 && (
+                            <ImagesSwiper
+                                id={`post-${currentPost.id}`}
+                                imageArray={sortedImages as any}
+                                sessionUserId={sessionUserId}
+                                navigation="thumbnails"
+                            />
+                        )}
+
+                        <pre
+                            onClick={() =>
+                                setShowFullDesc((v) => !v)
+                            }
+                            title={
+                                showFullDesc
+                                    ? "Click para contraer"
+                                    : "Click para ver completo"
+                            }
+                            className="mt-2 text-gray-200 w-full whitespace-pre-wrap break-words cursor-pointer select-none"
+                        >
+                            {shownDesc}
+                        </pre>
+
+                        {/* ⭐ Reacciones del post (like / unlike) */}
+                        <div className="mt-2 flex flex-row items-center gap-3">
+                            <button
+                                type="button"
+                                onClick={handleLike}
+                                disabled={!canReact}
+                                className={`flex flex-row items-center gap-1 text-xs px-2 py-1 rounded border ${postReaction === "LIKE"
+                                    ? "bg-green-700 border-green-400 text-white"
+                                    : "bg-transparent border-gray-500 text-gray-300"
+                                    } ${!canReact
+                                        ? "opacity-50 cursor-not-allowed"
+                                        : "cursor-pointer"
+                                    }`}
                             >
-                                <div
-                                    onDoubleClick={() =>
-                                        router.push(
-                                            `/showpost?post_id=${currentPost.id}`
-                                        )
-                                    }
-                                    className="relative w-full h-full cursor-zoom-in select-none"
-                                >
-                                    <Image
-                                        src={img.imageUrl}
-                                        alt={`Imagen ${index}`}
-                                        fill
-                                        sizes="100vw"
-                                        className="object-contain"
-                                    />
-                                </div>
-                            </div>
-                        ) : null
-                    )}
+                                <ThumbsUp className="w-4 h-4" />
+                                <span>{likesCount}</span>
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={handleUnlike}
+                                disabled={!canReact}
+                                className={`flex flex-row items-center gap-1 text-xs px-2 py-1 rounded border ${postReaction === "UNLIKE"
+                                    ? "bg-red-700 border-red-400 text-white"
+                                    : "bg-transparent border-gray-500 text-gray-300"
+                                    } ${!canReact
+                                        ? "opacity-50 cursor-not-allowed"
+                                        : "cursor-pointer"
+                                    }`}
+                            >
+                                <ThumbsDown className="w-4 h-4" />
+                                <span>{unlikesCount}</span>
+                            </button>
+                        </div>
+                    </section>
+
+                    {/* Columna derecha: comentarios */}
+                    <aside
+                        id="comments"
+                        className="md:w-1/3 w-full md:border-l border-neutral-800 md:pl-3 md:h-screen overflow-y-scroll h-fit pb-[100px]"
+                    >
+                        <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs text-gray-400">
+                                Comentarios ({activeCommentsCount})
+                            </span>
+                        </div>
+
+                        <PostCardCommentsContainer
+                            session={session}
+                            sessionUserId={sessionUserId}
+                            localComments={localComments}
+                            setLocalComments={setLocalComments}
+                            expandedCommentId={expandedCommentId}
+                            onToggleComment={toggleComment}
+                            commentRefs={commentRefs}
+                            newComment={newComment}
+                            setNewComment={setNewComment}
+                            canCreatePostComment={
+                                canCreatePostComment
+                            }
+                            commentLoading={commentLoading}
+                            commentMsg={commentMsg}
+                            submitPostComment={submitPostComment}
+                            PostCardCommetsResponsesContainer={
+                                PostCardCommentsResponsesContainer
+                            }
+                        />
+                    </aside>
                 </div>
-            )}
+            ) : (
+                // 📌 Vista card (home / mywall): apilado
+                <>
+                    {sortedImages.length === 1 && (
+                        <div className="flex flex-row flex-wrap justify-between gap-3">
+                            <PostImageCard
+                                image={sortedImages[0]}
+                                sessionUserId={sessionUserId}
+                                isFirst={true}
+                            />
+                        </div>
+                    )}
 
-            <pre
-                onClick={() => setShowFullDesc((v) => !v)}
-                title={
-                    showFullDesc
-                        ? "Click para contraer"
-                        : "Click para ver completo"
-                }
-                className="mt-2 text-gray-200 w-full whitespace-pre-wrap break-words cursor-pointer select-none"
-            >
-                {shownDesc}
-            </pre>
+                    {sortedImages.length > 1 && (
+                        <ImagesSwiper
+                            id={`post-${currentPost.id}`}
+                            imageArray={sortedImages as any}
+                            sessionUserId={sessionUserId}
+                            navigation="thumbnails"
+                        />
+                    )}
 
-            {/* Botón para expandir/cerrar comentarios */}
-            <button
-                type="button"
-                onClick={() => setCommentsExpanded((v) => !v)}
-                className="mt-3 text-xs text-gray-300 hover:text-gray-200 select-none w-fit"
-            >
-                {commentsExpanded ? (
-                    <div className="flex flex-row">
-                        <MessageCircleOff className="w-6 h-6 text-gray-400 hover:text-gray-100" />
-                        <span>{activeCommentsCount}</span>
+                    <pre
+                        onClick={() =>
+                            setShowFullDesc((v) => !v)
+                        }
+                        title={
+                            showFullDesc
+                                ? "Click para contraer"
+                                : "Click para ver completo"
+                        }
+                        className="mt-2 text-gray-200 w-full whitespace-pre-wrap break-words cursor-pointer select-none"
+                    >
+                        {shownDesc}
+                    </pre>
+
+                    {/* ⭐ Reacciones del post (like / unlike) */}
+                    <div className="mt-2 flex flex-row items-center gap-3">
+                        <button
+                            type="button"
+                            onClick={handleLike}
+                            disabled={!canReact}
+                            className={`flex flex-row items-center gap-1 text-xs px-2 py-1 rounded border ${postReaction === "LIKE"
+                                ? "bg-green-700 border-green-400 text-white"
+                                : "bg-transparent border-gray-500 text-gray-300"
+                                } ${!canReact
+                                    ? "opacity-50 cursor-not-allowed"
+                                    : "cursor-pointer"
+                                }`}
+                        >
+                            <ThumbsUp className="w-4 h-4" />
+                            <span>{likesCount}</span>
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={handleUnlike}
+                            disabled={!canReact}
+                            className={`flex flex-row items-center gap-1 text-xs px-2 py-1 rounded border ${postReaction === "UNLIKE"
+                                ? "bg-red-700 border-red-400 text-white"
+                                : "bg-transparent border-gray-500 text-gray-300"
+                                } ${!canReact
+                                    ? "opacity-50 cursor-not-allowed"
+                                    : "cursor-pointer"
+                                }`}
+                        >
+                            <ThumbsDown className="w-4 h-4" />
+                            <span>{unlikesCount}</span>
+                        </button>
                     </div>
-                ) : (
-                    <div className="flex flex-row">
-                        <MessageCircle className="w-6 h-6 text-gray-400 hover:text-gray-100" />
-                        <span>{activeCommentsCount}</span>
-                    </div>
-                )}
-            </button>
 
-            {/* Contenedor de comentarios */}
-            {commentsExpanded && (
-                <PostCardCommentsContainer
-                    session={session}
-                    sessionUserId={sessionUserId}
-                    localComments={localComments}
-                    setLocalComments={setLocalComments}
-                    expandedCommentId={expandedCommentId}
-                    onToggleComment={toggleComment}
-                    commentRefs={commentRefs}
-                    newComment={newComment}
-                    setNewComment={setNewComment}
-                    canCreatePostComment={canCreatePostComment}
-                    commentLoading={commentLoading}
-                    commentMsg={commentMsg}
-                    submitPostComment={submitPostComment}
-                    PostCardCommetsResponsesContainer={
-                        PostCardCommetsResponsesContainer
-                    }
-                />
+                    {/* Botón de comentarios + contenedor inline */}
+                    <button
+                        type="button"
+                        onClick={handleCommentsClick}
+                        className="mt-3 text-xs text-gray-300 hover:text-gray-200 select-none w-fit"
+                    >
+                        {openCommentsInPage ? (
+                            <div className="flex flex-row">
+                                <MessageCircle className="w-6 h-6 text-gray-400 hover:text-gray-100" />
+                                <span>{activeCommentsCount}</span>
+                            </div>
+                        ) : commentsExpanded ? (
+                            <div className="flex flex-row">
+                                <MessageCircleOff className="w-6 h-6 text-gray-400 hover:text-gray-100" />
+                                <span>{activeCommentsCount}</span>
+                            </div>
+                        ) : (
+                            <div className="flex flex-row">
+                                <MessageCircle className="w-6 h-6 text-gray-400 hover:text-gray-100" />
+                                <span>{activeCommentsCount}</span>
+                            </div>
+                        )}
+                    </button>
+
+                    {!openCommentsInPage && commentsExpanded && (
+                        <PostCardCommentsContainer
+                            session={session}
+                            sessionUserId={sessionUserId}
+                            localComments={localComments}
+                            setLocalComments={setLocalComments}
+                            expandedCommentId={expandedCommentId}
+                            onToggleComment={toggleComment}
+                            commentRefs={commentRefs}
+                            newComment={newComment}
+                            setNewComment={setNewComment}
+                            canCreatePostComment={
+                                canCreatePostComment
+                            }
+                            commentLoading={commentLoading}
+                            commentMsg={commentMsg}
+                            submitPostComment={submitPostComment}
+                            PostCardCommetsResponsesContainer={
+                                PostCardCommentsResponsesContainer
+                            }
+                        />
+                    )}
+                </>
             )}
         </div>
     );
 }
+
+
+
 

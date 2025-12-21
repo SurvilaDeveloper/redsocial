@@ -1,12 +1,23 @@
-import { ReactNode } from "react"
+// src/components/custom/asideleft.tsx
+import { ReactNode } from "react";
 
 const AsideLeft = ({ children }: { children: ReactNode }) => {
-
     return (
-        <aside id="AsideLeft" className="asideLeft">
+        <div
+            id="AsideLeft"
+            className="
+                h-full 
+                w-full 
+                flex 
+                flex-col 
+                gap-4 
+                text-sm 
+                text-slate-200
+            "
+        >
             {children}
-        </aside>
-    )
-}
+        </div>
+    );
+};
 
-export default AsideLeft
+export default AsideLeft;

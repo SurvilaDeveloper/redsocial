@@ -1,99 +1,47 @@
+/* globals.css */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-.main {
-  width: calc(100vw - (100vw - 100%));
+/* ====== GLOBAL ====== */
+
+html {
+  max-width: 100%;
+  overflow-x: hidden;
+  /* Firefox scrollbar */
+  scrollbar-width: thin;
+  /* "auto" | "thin" */
+  scrollbar-color: #4b5563 #020617;
+  /* thumb | track */
 }
 
-.navbar {
-  position: fixed;
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: center;
-  color: white;
-  background-color: rgb(0, 0, 63);
-  padding: 0.5rem;
-  width: 100%;
-  height: 2.5rem;
-  z-index: 50
+body {
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
-.homePage {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  color: rgb(201, 201, 201);
-  width: 100%;
-  min-height: 100vh;
-  padding-top: 2.5rem;
+/* WebKit (Chrome, Edge, Opera, Safari) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
 }
 
-.loggedHome {
-  display: flex;
-  flex-direction: row;
-  width: 100%;
-  margin: 0;
-  padding: 0;
-  background-image: linear-gradient(to right, #1e3a8a, #000000);
+::-webkit-scrollbar-track {
+  background: #020617;
 }
 
-.asideLeft {
-  display: flex;
-  width: 33%;
-  min-height: 100vh;
-  background-color: transparent;
-  padding: 1rem;
+::-webkit-scrollbar-thumb {
+  background: #4b5563;
+  border-radius: 999px;
 }
 
-.asideRight {
-  display: flex;
-  width: 33%;
-  min-height: 100vh;
-  background-color: transparent;
-  padding: 1rem;
+::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
 }
 
-.postFormWall {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-  background-color: black;
-  padding: 1rem;
-  border-radius: 1rem;
-}
 
-.postFormWallTitleInput {
-  height: 1.5rem;
-  width: 33vw;
-}
-
-.postFormWallTextarea {
-  height: 1.5rem;
-}
-
-.postListLoggedHome {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-  gap: 2rem;
-  padding: 0.25rem;
-  background-color: transparent;
-}
-
-.postCardActive {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  background: #000;
-  width: 100%;
-  padding: 0.5rem;
-  border-radius: 1rem;
-}
+/* ====== COSAS QUE SIGUEN SIENDO ÚTILES ====== */
+/* (UserProfileMiniCard, botones de amistad/seguimiento, etc.) */
 
 .userProfileMiniCard {
   display: flex;
@@ -181,11 +129,14 @@
   width: 60px;
 }
 
+#ifollowyou,
 #isFollowingYou {
   color: yellow;
   border-color: yellow;
-
 }
+
+
+/* Popup de confirmación de amistad / eliminar / etc. */
 
 .decisionPopup {
   position: absolute;
@@ -217,4 +168,27 @@
 
 .decisionPopupNoButton:hover {
   background-color: rgb(175, 2, 2) !important;
+}
+
+
+/* Post card activo: estructura base (el resto ya lo hace Tailwind) */
+
+.postCardActive {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: #000;
+  width: 100%;
+  padding: 0.5rem;
+  border-radius: 1rem;
+}
+
+/* Inputs de título / textarea del formulario de post (siguen usándose) */
+.postFormWallTitleInput {
+  height: 1.5rem;
+  width: 33vw;
+}
+
+.postFormWallTextarea {
+  height: 1.5rem;
 }

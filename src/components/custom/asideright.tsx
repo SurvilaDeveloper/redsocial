@@ -1,18 +1,23 @@
-import { ReactNode } from "react"
+// src/components/custom/asideright.tsx
+import { ReactNode } from "react";
 
 const AsideRight = ({ children }: { children: ReactNode }) => {
-
     return (
-        <aside id="AsideRight" className="asideRight">
-            aside right
-            <div className="fixed">
-                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Explicabo at id ex enim tempore nesciunt corrupti vitae sapiente ab alias hic dolorum eaque praesentium, non quaerat exercitationem, quis libero optio?</p>
-                <p>Lorem ipsum dolor, sit amet consectetur adipisicing elit. Quia enim architecto officiis quaerat esse excepturi, dolores consectetur accusantium vel reiciendis eveniet voluptatem quisquam blanditiis soluta cupiditate, minus quis incidunt maxime.</p>
-            </div>
+        <div
+            id="AsideRight"
+            className="
+                h-full
+                w-full
+                flex
+                flex-col
+                gap-4
+                text-sm
+                text-slate-200
+            "
+        >
+            {children}
+        </div>
+    );
+};
 
-
-        </aside>
-    )
-}
-
-export default AsideRight
+export default AsideRight;

@@ -1,15 +1,16 @@
-import { useState } from "react";
-import { Menubar, MenubarMenu, MenubarTrigger, MenubarContent, MenubarItem } from "@/components/ui/menubar";
+// src/components/custom/postCardMenubar.tsx
+
+import {
+    Menubar,
+    MenubarMenu,
+    MenubarTrigger,
+    MenubarContent,
+    MenubarItem,
+} from "@/components/ui/menubar";
 import { EllipsisVertical } from "lucide-react";
 import DecisionPopup from "./decisionPopup";
 
-interface ButtonFriendshipParams {
-    text: string | null
-    actionYes?: number | null,
-    textYes?: string | null,
-    actionNo?: number,
-    textNo?: string
-}
+import { ButtonFriendshipParams } from "@/types/friendship";
 
 export default function PostCardMenubar({
     following,
@@ -20,74 +21,93 @@ export default function PostCardMenubar({
     onclickfriendship,
     requestPopup,
 }: {
-    following: Boolean
-    followingId: Number
-    onclickfollowing: () => void | Promise<void>
-    buttonFriendshipParams: ButtonFriendshipParams | undefined
-    switchRequestPopup: () => void
-    onclickfriendship: (subject: string) => void
-    requestPopup: boolean
+    following: boolean;
+    followingId: number;
+    onclickfollowing: () => void | Promise<void>;
+    buttonFriendshipParams: ButtonFriendshipParams | undefined;
+    switchRequestPopup: () => void;
+    onclickfriendship: (subject: string) => void;
+    requestPopup: boolean;
 }) {
-
     return (
-        <div>
-            <div className="relative left-[-300px]">
-                {requestPopup && buttonFriendshipParams && buttonFriendshipParams.actionYes === 1 &&
-                    <DecisionPopup
-                        question="¿Quieres cancelar la solicitud de amistad que has enviado?"
-                        yesText={buttonFriendshipParams?.textYes || ""}
-                        noText={buttonFriendshipParams?.textNo || ""}
-                        onYes={() => onclickfriendship("cancelRequest")}
-                        onNo={switchRequestPopup}
-                    ></DecisionPopup>
-                }
-                {requestPopup && buttonFriendshipParams && buttonFriendshipParams.actionYes === 6 &&
-                    <DecisionPopup
-                        question="¿Seguro que quieres eliminar la amistad?"
-                        yesText={buttonFriendshipParams?.textYes || ""}
-                        noText={buttonFriendshipParams?.textNo || ""}
-                        onYes={() => onclickfriendship("deleteFriendship")}
-                        onNo={switchRequestPopup}
-                    ></DecisionPopup>
-                }
-            </div>
-            <Menubar className="border-none">
+        <div className="relative flex items-center">
+            {/* Popups de confirmación para acciones de amistad (cancelar / eliminar) */}
+            {requestPopup && buttonFriendshipParams && (
+                <div className="absolute right-10 top-0">
+                    {buttonFriendshipParams.actionYes === 1 && (
+                        <DecisionPopup
+                            question="¿Quieres cancelar la solicitud de amistad que has enviado?"
+                            yesText={buttonFriendshipParams.textYes || ""}
+                            noText={buttonFriendshipParams.textNo || ""}
+                            onYes={() => onclickfriendship("cancelRequest")}
+                            onNo={switchRequestPopup}
+                        />
+                    )}
+
+                    {buttonFriendshipParams.actionYes === 6 && (
+                        <DecisionPopup
+                            question="¿Seguro que quieres eliminar la amistad?"
+                            yesText={buttonFriendshipParams.textYes || ""}
+                            noText={buttonFriendshipParams.textNo || ""}
+                            onYes={() => onclickfriendship("deleteFriendship")}
+                            onNo={switchRequestPopup}
+                        />
+                    )}
+                </div>
+            )}
+
+            <Menubar className="border-none bg-transparent shadow-none">
                 <MenubarMenu>
-                    <MenubarTrigger className="flex flex-col justify-center items-center">
-                        <EllipsisVertical size={24}></EllipsisVertical>
+                    <MenubarTrigger className="flex items-center justify-center p-0 hover:bg-transparent">
+                        <EllipsisVertical className="w-5 h-5 text-slate-200 hover:text-white" />
                     </MenubarTrigger>
-                    <MenubarContent className="bg-white rounded-[6px] relative left-[-140px]">
-                        {following &&
-                            <MenubarItem onClick={onclickfollowing}>
+                    <MenubarContent className="bg-slate-900 text-slate-100 border border-slate-700 rounded-md shadow-lg py-1 text-xs min-w-[180px]">
+                        {following && (
+                            <MenubarItem
+                                onClick={onclickfollowing}
+                                className="cursor-pointer hover:bg-slate-800"
+                            >
                                 Dejar de seguir
                             </MenubarItem>
-                        }
+                        )}
+
                         {/* cancelar solicitud de amistad */}
-                        {buttonFriendshipParams && buttonFriendshipParams.actionYes === 1 &&
-                            <>
-                                <MenubarItem onClick={switchRequestPopup}>
+                        {buttonFriendshipParams &&
+                            buttonFriendshipParams.actionYes === 1 && (
+                                <MenubarItem
+                                    onClick={switchRequestPopup}
+                                    className="cursor-pointer hover:bg-slate-800"
+                                >
                                     Cancelar solicitud de amistad
                                 </MenubarItem>
-                            </>
-                        }
+                            )}
+
                         {/* es tu amigo */}
-                        {buttonFriendshipParams && buttonFriendshipParams.actionYes === 6 &&
-                            <>
-                                <MenubarItem onClick={switchRequestPopup}>
+                        {buttonFriendshipParams &&
+                            buttonFriendshipParams.actionYes === 6 && (
+                                <MenubarItem
+                                    onClick={switchRequestPopup}
+                                    className="cursor-pointer hover:bg-slate-800"
+                                >
                                     Eliminar de mis amigos
-
                                 </MenubarItem>
-                            </>
+                            )}
 
-                        }
-                        <MenubarItem onClick={() => console.log("Bloquear")}>
+                        <MenubarItem
+                            onClick={() => console.log("Bloquear")}
+                            className="cursor-pointer hover:bg-slate-800"
+                        >
                             Bloquear
                         </MenubarItem>
-                        <MenubarItem onClick={() => console.log("Reportar")}>
+                        <MenubarItem
+                            onClick={() => console.log("Reportar")}
+                            className="cursor-pointer hover:bg-slate-800"
+                        >
                             Reportar
                         </MenubarItem>
                     </MenubarContent>
                 </MenubarMenu>
             </Menubar>
-        </div>);
+        </div>
+    );
 }

@@ -1,3 +1,5 @@
+// src/components/custom/post.tsx
+
 "use client";
 
 import Image from "next/image";
@@ -106,16 +108,16 @@ export function Post({ postId }: { postId: number }) {
 
     // ---- renders ----
     if (!post) {
-        return <div>Cargando post...</div>;
+        return <div className="postCardActive">Cargando post...</div>;
     }
 
     if ("error" in post) {
-        return <div className="text-red-500">{post.error}</div>;
+        return <div className="postCardActive text-red-500">{post.error}</div>;
     }
 
     if (post.canView === false) {
         return (
-            <div className="flex flex-col items-center justify-center w-full p-6 rounded-lg bg-black text-white border border-blue-500">
+            <div className="postCardActive">
                 <p className="text-sm">{visibilityMsg(post)}</p>
             </div>
         );
@@ -132,14 +134,20 @@ export function Post({ postId }: { postId: number }) {
         return raw;
     })();
 
+    const isActive = (p.active ?? 1) === 1;
+
     return (
         <div
             className={
-                (p.active ?? 1) === 1
-                    ? "flex flex-col items-center justify-center rounded-lg shadow-md w-full"
-                    : "flex flex-col items-center justify-center bg-red-100 border border-red-500 border-solid p-2 rounded-lg shadow-md w-full"
+                isActive
+                    ? "postCardActive"
+                    : "flex flex-col bg-black border-2 border-solid border-red-500 p-2 shadow-md w-full max-h-[200px] overflow-hidden text-gray-200"
             }
         >
+            {!isActive && (
+                <span className="text-red-500 text-xs uppercase mb-1">oculto</span>
+            )}
+
             {/* TOP BAR OWNER */}
             <div className="flex flex-row w-full justify-start">
                 {isOwner && (
@@ -151,7 +159,7 @@ export function Post({ postId }: { postId: number }) {
                             <Pencil size={24} />
                         </Link>
 
-                        {(p.active ?? 1) === 1 ? (
+                        {isActive ? (
                             <Button onClick={hidePost}>
                                 <EyeOffIcon size={24} />
                             </Button>
@@ -170,9 +178,13 @@ export function Post({ postId }: { postId: number }) {
 
                             {deleteAsk && (
                                 <div className="flex flex-col absolute bg-yellow-100 p-4 gap-4 rounded-[8px] z-50">
-                                    <p className="text-black">Are you sure you want to delete this post?</p>
+                                    <p className="text-black">
+                                        Are you sure you want to delete this post?
+                                    </p>
                                     <div className="flex flex-row justify-between gap-2">
-                                        <Button className="bg-green-400 rounded hover:bg-green-300">Yes</Button>
+                                        <Button className="bg-green-400 rounded hover:bg-green-300">
+                                            Yes
+                                        </Button>
                                         <Button
                                             onClick={() => setDeleteAsk(false)}
                                             className="bg-red-400 rounded hover:bg-red-300"
@@ -250,16 +262,30 @@ export function Post({ postId }: { postId: number }) {
             {/* CONTENT */}
             <h3 className="text-lg font-semibold mt-2">{p.title}</h3>
 
-            {p.images.length > 0 && p.images[mainImageIdx] ? (
-                <div className="flex flex-col items-center w-full h-auto">
-                    <Image
-                        src={p.images[mainImageIdx].imageUrl}
-                        alt="Imagen de muestra"
-                        width={1024}
-                        height={1024}
-                    />
+            {p.images.length > 1 && (
+                <div className="flex flex-col items-center gap-2 w-full">
+                    {p.images.map(
+                        (img: PostApiOk["images"][number], index: number) =>
+                            index !== 0 ? (
+                                <div
+                                    key={img.id}
+                                    className="flex flex-col items-center w-full h-auto"
+                                >
+                                    <Link href={`/showpost?post_id=${img.post_id}`}>
+                                        <Image
+                                            src={img.imageUrl}
+                                            alt={`Imagen ${index}`}
+                                            width={1024}
+                                            height={1024}
+                                        />
+                                        <p className="text-white">Index: {index}</p>
+                                    </Link>
+                                </div>
+                            ) : null
+                    )}
                 </div>
-            ) : null}
+            )}
+
 
             <div className="w-full max-w-[800px] p-2">
                 <pre className="text-white w-full whitespace-pre-wrap break-words">
@@ -273,7 +299,12 @@ export function Post({ postId }: { postId: number }) {
                         index !== 0 ? (
                             <div key={img.id} className="flex flex-col items-center w-full h-auto">
                                 <Link href={`/showpost?post_id=${img.post_id}`}>
-                                    <Image src={img.imageUrl} alt={`Imagen ${index}`} width={1024} height={1024} />
+                                    <Image
+                                        src={img.imageUrl}
+                                        alt={`Imagen ${index}`}
+                                        width={1024}
+                                        height={1024}
+                                    />
                                     <p className="text-white">Index: {index}</p>
                                 </Link>
                             </div>
@@ -284,5 +315,8 @@ export function Post({ postId }: { postId: number }) {
         </div>
     );
 }
+
+
+
 
 

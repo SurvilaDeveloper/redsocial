@@ -1,9 +1,17 @@
+// src/components/custom/postList.tsx
+
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { PostCard } from "./postCard";
 
-export default function PostList({ session, userId }: { session: any; userId: number }) {
+export default function PostList({
+    session,
+    userId,
+}: {
+    session: any;
+    userId: number;
+}) {
     const [posts, setPosts] = useState<Post[]>([]);
     const [page, setPage] = useState(1);
     const [loading, setLoading] = useState(false);
@@ -12,13 +20,23 @@ export default function PostList({ session, userId }: { session: any; userId: nu
     const observer = useRef<IntersectionObserver | null>(null);
     const lastPostRef = useRef<HTMLDivElement | null>(null);
 
+    // 🔹 Overlay de detalle (estilo Instagram)
+    const [detailOpen, setDetailOpen] = useState(false);
+    const [detailPost, setDetailPost] = useState<Post | null>(null);
+    const [detailLoading, setDetailLoading] = useState(false);
+    const [detailError, setDetailError] = useState<string | null>(null);
+
+    // 🔹 Carga de posts del propio usuario
     useEffect(() => {
         async function fetchPosts() {
             if (!hasMore) return;
 
             setLoading(true);
             try {
-                const res = await fetch(`/api/user-posts?user_id=${userId}&page=${page}`, { cache: "no-store" });
+                const res = await fetch(
+                    `/api/user-posts?user_id=${userId}&page=${page}`,
+                    { cache: "no-store" }
+                );
                 const data = await res.json();
 
                 const newPosts: Post[] = data?.allPosts ?? [];
@@ -28,10 +46,14 @@ export default function PostList({ session, userId }: { session: any; userId: nu
                 } else {
                     setPosts((prev) => {
                         const existingIds = new Set(prev.map((p) => p.id));
-                        const unique = newPosts.filter((p) => !existingIds.has(p.id));
+                        const unique = newPosts.filter(
+                            (p) => !existingIds.has(p.id)
+                        );
                         return [...prev, ...unique];
                     });
                 }
+            } catch (error) {
+                console.error("Error cargando posts del muro:", error);
             } finally {
                 setLoading(false);
             }
@@ -40,12 +62,15 @@ export default function PostList({ session, userId }: { session: any; userId: nu
         fetchPosts();
     }, [page, userId, hasMore]);
 
+    // 🔹 Infinite scroll
     useEffect(() => {
         if (!hasMore) return;
 
         observer.current?.disconnect();
         observer.current = new IntersectionObserver((entries) => {
-            if (entries[0]?.isIntersecting && !loading) setPage((prev) => prev + 1);
+            if (entries[0]?.isIntersecting && !loading) {
+                setPage((prev) => prev + 1);
+            }
         });
 
         const el = lastPostRef.current;
@@ -54,17 +79,135 @@ export default function PostList({ session, userId }: { session: any; userId: nu
         return () => observer.current?.disconnect();
     }, [posts, hasMore, loading]);
 
+    // 🔹 Como este es "Mi muro", el viewer siempre es el dueño
+    const visiblePosts = useMemo(
+        () =>
+            posts.filter((p) => {
+                // por las dudas, reforzamos que sean tus posts
+                if (p.user_id !== userId) return false;
+                return true;
+            }),
+        [posts, userId]
+    );
+
+    // 🔹 Abrir detalle: acá sí pegamos a /api/posts/:id para traer comentarios, etc.
+    const handleOpenDetail = async (postId: number) => {
+        setDetailOpen(true);
+        setDetailLoading(true);
+        setDetailError(null);
+        setDetailPost(null);
+
+        try {
+            const res = await fetch(`/api/posts/${postId}`, {
+                cache: "no-store",
+            });
+            const data = await res.json().catch(() => null);
+
+            if (!res.ok || !data?.data) {
+                throw new Error(data?.error || "No se pudo cargar el post");
+            }
+
+            setDetailPost(data.data as Post);
+        } catch (err: any) {
+            console.error("Error cargando detalle de post (mywall):", err);
+            setDetailError(err?.message ?? "Error cargando el post");
+        } finally {
+            setDetailLoading(false);
+        }
+    };
+
+    const handleCloseDetail = () => {
+        setDetailOpen(false);
+        setDetailPost(null);
+        setDetailError(null);
+    };
+
     return (
-        <div className="flex flex-col items-center space-y-4 w-[700px]">
-            {posts.map((post, index) => (
-                <div key={post.id} ref={index === posts.length - 1 ? lastPostRef : null}>
-                    {/* ✅ no tocamos PostCard; le pasamos session */}
-                    <PostCard session={session} post={post} />
+        <div
+            id="PostListMyWall"
+            className="
+                relative
+                flex
+                flex-col
+                w-full
+                gap-4"
+        >
+            {/* Feed de tu muro */}
+            {visiblePosts.map((post, index) => (
+                <div
+                    key={post.id}
+                    className="w-full"
+                    ref={index === visiblePosts.length - 1 ? lastPostRef : null}
+                >
+                    <PostCard
+                        session={session}
+                        post={post}
+                        variant="card"
+                        openCommentsInPage={false}   // 👈 igual que home: no navega
+                        enablePolling={false}        // 👈 nada de polling en el feed
+                        enableOwnerControls={true}   // 👈 acá SÍ ves editar/ocultar/visibilidad
+                        onOpenDetail={handleOpenDetail} // 👈 abre overlay con detalle
+                    />
                 </div>
             ))}
-            {loading && <p>Cargando...</p>}
-            {!hasMore && <p className="text-center text-xs opacity-70">No hay más posts</p>}
+
+            {loading && (
+                <p className="text-xs text-slate-200 mt-2">Cargando...</p>
+            )}
+            {!hasMore && (
+                <p className="text-center text-xs opacity-70 text-slate-300 mt-2">
+                    No hay más posts
+                </p>
+            )}
+
+            {/* Overlay tipo Instagram para ver el post completo con comentarios */}
+            {detailOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80">
+                    <div className="relative w-full max-w-5xl max-h-[90vh] bg-slate-900 rounded-xl overflow-hidden shadow-2xl pt-10">
+                        {/* Botón cerrar, flotando arriba sin tapar la toolbar del post */}
+                        <button
+                            type="button"
+                            onClick={handleCloseDetail}
+                            className="absolute top-2 right-3 md:top-3 md:right-4 z-20 px-3 py-1 text-xs rounded-full bg-black/80 text-slate-100 hover:bg-black"
+                        >
+                            ✕ Cerrar
+                        </button>
+
+                        {/* Contenido del detalle */}
+                        {detailLoading && (
+                            <div className="flex items-center justify-center h-[60vh] text-slate-200 text-sm">
+                                Cargando post...
+                            </div>
+                        )}
+
+                        {detailError && !detailLoading && (
+                            <div className="p-4 text-red-400 text-sm">
+                                {detailError}
+                            </div>
+                        )}
+
+                        {detailPost && !detailLoading && !detailError && (
+                            <div className="h-[90vh] overflow-y-auto">
+                                <PostCard
+                                    session={session}
+                                    post={detailPost}
+                                    variant="detail"
+                                    openCommentsInPage={false}
+                                    enablePolling={false}
+                                    enableOwnerControls={true}
+                                />
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+
         </div>
     );
 }
+
+
+
+
+
 

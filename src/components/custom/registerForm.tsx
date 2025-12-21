@@ -24,12 +24,11 @@ import Image from "next/image";
 import { uploadProfileImage } from "@/lib/cloudinary-functions";
 
 const RegisterForm = () => {
-    const [image, setImage] = useState<File | null>(null); // Estado para la imagen
-    const [preview, setPreview] = useState<string | null>("/user.jpg"); // Vista previa
+    const [image, setImage] = useState<File | null>(null);
+    const [preview, setPreview] = useState<string | null>("/user.jpg");
     const [error, setError] = useState<string | null>(null);
     const [isPending, startTransition] = useTransition();
     const router = useRouter();
-    const inputsCss = "flex items-center rounded h-6";
 
     const form = useForm<z.infer<typeof signUpSchema>>({
         resolver: zodResolver(signUpSchema),
@@ -41,7 +40,6 @@ const RegisterForm = () => {
         mode: "onChange",
     });
 
-    // Manejar selección de imagen
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0] || null;
         setImage(file);
@@ -60,7 +58,6 @@ const RegisterForm = () => {
         startTransition(async () => {
             let uploadedImage: { url: string; publicId: string } | null = null;
 
-            // 1) Si hay imagen, la subimos a Cloudinary
             if (image) {
                 try {
                     uploadedImage = await uploadProfileImage(image);
@@ -70,7 +67,6 @@ const RegisterForm = () => {
                 }
             }
 
-            // 2) Llamamos a la server action SIEMPRE (con o sin imagen)
             const response = await registerAction(values, uploadedImage);
 
             if (response.error) {
@@ -78,9 +74,6 @@ const RegisterForm = () => {
                 return;
             }
 
-            // 3) Si todo salió bien:
-            //    - De momento lo mandamos a login,
-            //    - y usamos el query `emailsend=true` como ya hacías.
             router.push("/login?emailsend=true");
             router.refresh();
         });
@@ -89,114 +82,150 @@ const RegisterForm = () => {
     return (
         <div className="w-full">
             <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                <form
+                    onSubmit={form.handleSubmit(onSubmit)}
+                    className="space-y-6"
+                >
+                    {/* Email */}
                     <FormField
                         control={form.control}
                         name="email"
                         render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Email</FormLabel>
+                            <FormItem className="space-y-1.5">
+                                <FormLabel className="text-xs text-slate-200">
+                                    Email
+                                </FormLabel>
                                 <FormControl>
                                     <Input
-                                        className={inputsCss}
+                                        className="rounded-md bg-slate-900/40 border-slate-600 text-slate-100 placeholder:text-slate-500 h-9"
                                         placeholder="email"
                                         type="email"
                                         {...field}
                                     />
                                 </FormControl>
-                                <FormDescription>Enter your email</FormDescription>
-                                <FormMessage />
+                                <FormDescription className="text-[11px] text-slate-400">
+                                    Enter your email
+                                </FormDescription>
+                                <FormMessage className="text-[11px]" />
                             </FormItem>
                         )}
                     />
+
+                    {/* Password */}
                     <FormField
                         control={form.control}
                         name="password"
                         render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Password</FormLabel>
+                            <FormItem className="space-y-1.5">
+                                <FormLabel className="text-xs text-slate-200">
+                                    Password
+                                </FormLabel>
                                 <FormControl>
                                     <Input
-                                        className={inputsCss}
+                                        className="rounded-md bg-slate-900/40 border-slate-600 text-slate-100 placeholder:text-slate-500 h-9"
                                         placeholder="password"
                                         type="password"
                                         {...field}
                                     />
                                 </FormControl>
-                                <FormDescription>Enter your password</FormDescription>
-                                <FormMessage />
+                                <FormDescription className="text-[11px] text-slate-400">
+                                    Enter your password
+                                </FormDescription>
+                                <FormMessage className="text-[11px]" />
                             </FormItem>
                         )}
                     />
+
+                    {/* Name */}
                     <FormField
                         control={form.control}
                         name="name"
                         render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Name</FormLabel>
+                            <FormItem className="space-y-1.5">
+                                <FormLabel className="text-xs text-slate-200">
+                                    Name
+                                </FormLabel>
                                 <FormControl>
                                     <Input
-                                        className={inputsCss}
+                                        className="rounded-md bg-slate-900/40 border-slate-600 text-slate-100 placeholder:text-slate-500 h-9"
                                         placeholder="name"
                                         type="text"
                                         {...field}
                                     />
                                 </FormControl>
-                                <FormDescription>Enter your name</FormDescription>
-                                <FormMessage />
+                                <FormDescription className="text-[11px] text-slate-400">
+                                    Enter your name
+                                </FormDescription>
+                                <FormMessage className="text-[11px]" />
                             </FormItem>
                         )}
                     />
 
-                    <div className="flex flex-row items-center w-full gap-10">
-                        {/* Campo para subir la imagen */}
-                        <FormItem>
+                    {/* Imagen de perfil */}
+                    <div className="flex flex-col md:flex-row md:items-center w-full gap-4 md:gap-6 mt-2">
+                        <FormItem className="md:flex-1">
                             <FormLabel
-                                className={
-                                    "flex justify-center items-center rounded w-60 h-12 border-solid border border-green-500 bg-green-200 hover:bg-green-300 cursor-pointer"
-                                }
+                                className="
+                                    flex justify-center items-center 
+                                    rounded-md w-full md:w-60 h-10 
+                                    border border-emerald-500 
+                                    bg-emerald-900/40 
+                                    hover:bg-emerald-800/60 
+                                    text-emerald-100 text-xs font-medium
+                                    cursor-pointer
+                                    transition-colors
+                                "
                                 htmlFor="profileImage"
                             >
                                 Subir una imagen de perfil
                             </FormLabel>
-                            <FormControl className={"flex rounded items-center h-6"}>
+                            <FormControl>
                                 <input
                                     id="profileImage"
-                                    placeholder="Profile Picture"
-                                    className={"hidden"}
+                                    className="hidden"
                                     type="file"
                                     accept="image/*"
                                     onChange={handleImageChange}
                                 />
                             </FormControl>
-                            <FormMessage />
+                            <FormDescription className="text-[11px] text-slate-400 mt-1">
+                                Opcional, puedes cambiarla más tarde.
+                            </FormDescription>
+                            <FormMessage className="text-[11px]" />
                         </FormItem>
 
-                        {/* Vista previa de la imagen */}
                         {preview && (
-                            <div className="mt-2">
-                                <p>Vista previa:</p>
-                                <div className="w-[96px] aspect-square relative overflow-hidden rounded-full">
+                            <div className="mt-1 md:mt-0 flex flex-col items-center gap-1">
+                                <p className="text-[11px] text-slate-400">
+                                    Vista previa:
+                                </p>
+                                <div className="w-[80px] md:w-[96px] aspect-square relative overflow-hidden rounded-full border border-slate-600 bg-slate-950">
                                     <Image
                                         src={preview}
                                         alt="Vista previa de la imagen de perfil"
-                                        width={100}
-                                        height={100}
-                                        className="object-cover rounded-full border-dotted border-2 border-gray-500"
+                                        fill
+                                        sizes="96px"
+                                        className="object-cover"
                                     />
                                 </div>
                             </div>
                         )}
                     </div>
 
-                    {error && <FormMessage>{error}</FormMessage>}
+                    {/* Error general */}
+                    {error && (
+                        <FormMessage className="text-[11px] text-red-300 bg-red-950/40 border border-red-700 px-3 py-2 rounded-md">
+                            {error}
+                        </FormMessage>
+                    )}
 
+                    {/* Submit */}
                     <Button
                         type="submit"
                         disabled={isPending}
-                        className="bg-slate-500"
+                        className="w-full rounded-md bg-sky-600 hover:bg-sky-500 text-sm font-semibold mt-2"
                     >
-                        Submit
+                        Crear cuenta
                     </Button>
                 </form>
             </Form>
@@ -205,4 +234,5 @@ const RegisterForm = () => {
 };
 
 export default RegisterForm;
+
 

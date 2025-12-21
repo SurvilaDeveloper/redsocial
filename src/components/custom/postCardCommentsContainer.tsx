@@ -1,17 +1,25 @@
 // src/components/custom/postCardCommentsContainer.tsx
 "use client";
 
-import { Dispatch, SetStateAction, MutableRefObject, useState } from "react";
+import {
+    Dispatch,
+    SetStateAction,
+    MutableRefObject,
+    useState,
+    useEffect,
+} from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { ThumbsUp, ThumbsDown } from "lucide-react";
 import AutoResizeTextarea from "./AutoResizeTextarea";
 import PostCardCommentsResponsesContainer from "./postCardCommetsResponsesContainer";
-
 
 type LocalPostComment = PostComment & {
     __optimistic?: boolean;
     __error?: string | null;
 };
+
+type CommentReaction = "LIKE" | "UNLIKE" | null;
 
 interface PostCardCommentsContainerProps {
     session: any;
@@ -42,6 +50,7 @@ interface PostCardCommentsContainerProps {
         disabled: boolean;
         autoExpandOnNew?: boolean;
         autoScrollOnNew?: boolean;
+        onCreated?: (created: PostCommentResponse) => void;
     }>;
 }
 
@@ -70,7 +79,7 @@ const PostCardCommentsContainer = ({
     );
 
     return (
-        <div className="mt-3 flex flex-col gap-3 max-h-[500px] overflow-y-auto">
+        <div className="mt-3 flex flex-col gap-3 h-auto overflow-y-auto border border-blue-500">
             {/* 🔹 Textarea para comentar el post */}
             <div className="mb-2">
                 {sessionUserId != null ? (
@@ -122,7 +131,9 @@ const PostCardCommentsContainer = ({
                     className="border border-neutral-800 rounded-md p-2 scroll-mt-24"
                 >
                     {comment.__optimistic && (
-                        <div className="text-[11px] text-gray-400 mb-1">Enviando…</div>
+                        <div className="text-[11px] text-gray-400 mb-1">
+                            Enviando…
+                        </div>
                     )}
 
                     <SingleCommentWithReply
@@ -134,7 +145,12 @@ const PostCardCommentsContainer = ({
                         sessionUserId={sessionUserId}
                         commentId={comment.id}
                         commentUser={comment.user}
+                        // 🔹 iniciales para likes/unlikes/reacción
+                        likesCount={comment.likesCount ?? 0}
+                        unlikesCount={comment.unlikesCount ?? 0}
+                        userReaction={comment.userReaction ?? null}
                     />
+
                     <PostCardCommentsResponsesContainer
                         commentId={comment.id}
                         responses={comment.responses ?? []}
@@ -151,16 +167,16 @@ const PostCardCommentsContainer = ({
                                     c.id === comment.id
                                         ? {
                                             ...c,
-                                            responses: [...(c.responses ?? []), created],
+                                            responses: [
+                                                ...(c.responses ?? []),
+                                                created,
+                                            ],
                                         }
                                         : c
                                 )
                             );
                         }}
                     />
-
-
-
                 </div>
             ))}
 
@@ -176,8 +192,7 @@ const PostCardCommentsContainer = ({
 export default PostCardCommentsContainer;
 
 /* ============================================================
-   Componente interno: un solo comentario + textarea de respuesta
-   (es básicamente tu componente anterior, renombrado)
+   Componente interno: un solo comentario + respuesta + like/unlike
    ============================================================ */
 
 const SingleCommentWithReply = ({
@@ -189,6 +204,9 @@ const SingleCommentWithReply = ({
     sessionUserId,
     commentId,
     commentUser,
+    likesCount,
+    unlikesCount,
+    userReaction,
 }: {
     disabled?: boolean;
     onClickExpand: () => void;
@@ -199,23 +217,46 @@ const SingleCommentWithReply = ({
     sessionUserId: number | null;
     commentId: number;
     commentUser?: MiniUser | null;
+
+    likesCount: number;
+    unlikesCount: number;
+    userReaction: CommentReaction;
 }) => {
+    // 👉 Estado para RESPUESTAS
     const [reply, setReply] = useState("");
-    const [loading, setLoading] = useState(false);
+    const [replyLoading, setReplyLoading] = useState(false);
     const [msg, setMsg] = useState<string | null>(null);
+
+    // 👉 Estado para REACCIONES (like/unlike)
+    const [reaction, setReaction] = useState<CommentReaction>(userReaction);
+    const [likesCountState, setLikesCountState] =
+        useState<number>(likesCount);
+    const [unlikesCountState, setUnlikesCountState] =
+        useState<number>(unlikesCount);
+    const [reactionLoading, setReactionLoading] = useState(false);
+
+    // Sincronizar cuando el comentario se refresca por polling
+    useEffect(() => {
+        setReaction(userReaction);
+        setLikesCountState(likesCount);
+        setUnlikesCountState(unlikesCount);
+    }, [commentId, userReaction, likesCount, unlikesCount]);
 
     const canSubmit =
         !disabled &&
         isLogged &&
         sessionUserId != null &&
         reply.trim().length > 0 &&
-        !loading;
+        !replyLoading;
+
+    const canReact =
+        !disabled && isLogged && sessionUserId != null && !reactionLoading;
 
     const submit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!canSubmit) return;
 
-        setLoading(true);
+        setReplyLoading(true);
         setMsg(null);
 
         try {
@@ -230,20 +271,99 @@ const SingleCommentWithReply = ({
 
             if (!res.ok) {
                 const data = await res.json().catch(() => null);
-                throw new Error(data?.error || "No se pudo guardar la respuesta");
+                throw new Error(
+                    data?.error || "No se pudo guardar la respuesta"
+                );
             }
 
             setReply("");
             setMsg("Respuesta guardada ✅");
-            // Antes tenías onCreated?, pero en tu PostCard original nunca lo usabas,
-            // así que lo dejamos fuera para simplificar.
         } catch (err: any) {
             setMsg(err?.message ?? "Error");
         } finally {
-            setLoading(false);
+            setReplyLoading(false);
         }
     };
 
+    // ---------- Reacciones: helpers ----------
+    const updateCountsOptimistic = (
+        prev: CommentReaction,
+        next: CommentReaction
+    ) => {
+        setLikesCountState((prevLikes) => {
+            let v = prevLikes;
+            if (prev === "LIKE") v -= 1;
+            if (next === "LIKE") v += 1;
+            return v < 0 ? 0 : v;
+        });
+
+        setUnlikesCountState((prevUnlikes) => {
+            let v = prevUnlikes;
+            if (prev === "UNLIKE") v -= 1;
+            if (next === "UNLIKE") v += 1;
+            return v < 0 ? 0 : v;
+        });
+    };
+
+    const sendReaction = async (next: CommentReaction) => {
+        if (!canReact) return;
+
+        const prev = reaction;
+
+        // UI optimista
+        setReaction(next);
+        updateCountsOptimistic(prev, next);
+        setReactionLoading(true);
+
+        try {
+            const res = await fetch(
+                `/api/post-comments/${commentId}/reaction`,
+                {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ type: next }),
+                }
+            );
+
+            const data = await res.json().catch(() => null);
+
+            if (!res.ok) {
+                // revertir si falla
+                updateCountsOptimistic(next, prev);
+                setReaction(prev);
+                console.error(
+                    data?.error || "Error en reacción de comentario"
+                );
+                return;
+            }
+
+            if (data?.counts) {
+                setLikesCountState(data.counts.likes ?? 0);
+                setUnlikesCountState(data.counts.unlikes ?? 0);
+            }
+            if (typeof data?.userReaction !== "undefined") {
+                setReaction(data.userReaction as CommentReaction);
+            }
+        } catch (err) {
+            updateCountsOptimistic(next, prev);
+            setReaction(prev);
+            console.error(err);
+        } finally {
+            setReactionLoading(false);
+        }
+    };
+
+    const handleLike = () => {
+        const next: CommentReaction = reaction === "LIKE" ? null : "LIKE";
+        sendReaction(next);
+    };
+
+    const handleUnlike = () => {
+        const next: CommentReaction = reaction === "UNLIKE" ? null : "UNLIKE";
+        sendReaction(next);
+    };
+
+    // ---------- Render ----------
     const name = commentUser?.name ?? "Usuario";
     const imageUrl = commentUser?.imageUrl ?? null;
     const userId = commentUser?.id ?? null;
@@ -307,7 +427,7 @@ const SingleCommentWithReply = ({
                     </div>
                 )}
 
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                     <div className="text-sm leading-5">
                         {/* Nombre */}
                         {userId ? (
@@ -320,11 +440,16 @@ const SingleCommentWithReply = ({
                                 {name}: &rarr;
                             </Link>
                         ) : (
-                            <span className="text-gray-200 font-medium">{name}</span>
+                            <span className="text-gray-200 font-medium">
+                                {name}
+                            </span>
                         )}
 
                         {disabled && (
-                            <span className="text-[11px] text-gray-400"> · Enviando…</span>
+                            <span className="text-[11px] text-gray-400">
+                                {" "}
+                                · Enviando…
+                            </span>
                         )}
 
                         {/* Texto del comentario */}
@@ -336,19 +461,57 @@ const SingleCommentWithReply = ({
                             title={commentTitle}
                             className={[
                                 "text-gray-200 font-normal whitespace-pre-wrap break-words",
-                                disabled ? "cursor-not-allowed" : "cursor-pointer",
+                                disabled
+                                    ? "cursor-not-allowed"
+                                    : "cursor-pointer",
                             ].join(" ")}
                         >
                             {" "}
                             {shownDesc}
                         </span>
                     </div>
+
+                    {/* ⭐ Barra de reacciones del comentario */}
+                    <div className="mt-1 flex flex-row items-center gap-2 text-[11px]">
+                        <button
+                            type="button"
+                            onClick={handleLike}
+                            disabled={!canReact}
+                            className={`flex flex-row items-center gap-1 px-2 py-0.5 rounded border ${reaction === "LIKE"
+                                ? "bg-green-700 border-green-400 text-white"
+                                : "bg-transparent border-gray-600 text-gray-300"
+                                } ${!canReact
+                                    ? "opacity-50 cursor-not-allowed"
+                                    : "cursor-pointer"
+                                }`}
+                        >
+                            <ThumbsUp className="w-3 h-3" />
+                            <span>{likesCountState}</span>
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={handleUnlike}
+                            disabled={!canReact}
+                            className={`flex flex-row items-center gap-1 px-2 py-0.5 rounded border ${reaction === "UNLIKE"
+                                ? "bg-red-700 border-red-400 text-white"
+                                : "bg-transparent border-gray-600 text-gray-300"
+                                } ${!canReact
+                                    ? "opacity-50 cursor-not-allowed"
+                                    : "cursor-pointer"
+                                }`}
+                        >
+                            <ThumbsDown className="w-3 h-3" />
+                            <span>{unlikesCountState}</span>
+                        </button>
+                    </div>
                 </div>
             </div>
 
             {disabled && (
                 <div className="mt-2 text-xs text-gray-400">
-                    Esperando confirmación… (no se puede responder todavía)
+                    Esperando confirmación… (no se puede responder ni
+                    reaccionar todavía)
                 </div>
             )}
 
@@ -370,7 +533,7 @@ const SingleCommentWithReply = ({
                                     disabled={!canSubmit}
                                     className="px-3 py-1.5 rounded-md bg-neutral-800 text-gray-100 border border-neutral-700 disabled:opacity-50"
                                 >
-                                    {loading ? "Guardando..." : "Responder"}
+                                    {replyLoading ? "Guardando..." : "Responder"}
                                 </button>
                                 {msg && (
                                     <span
@@ -395,3 +558,4 @@ const SingleCommentWithReply = ({
         </div>
     );
 };
+

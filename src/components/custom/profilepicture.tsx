@@ -1,20 +1,24 @@
-"use client"
+// src/components/custom/profilepicture.tsx
+"use client";
 
-import { Session } from 'next-auth';
-import Image from 'next/image';
+import { Session } from "next-auth";
+import Image from "next/image";
 
 const ProfilePicture = ({ session }: { session: Session }) => {
+    const src = session?.user?.image || "/user.jpg";
+
     return (
-        <div className="w-8 aspect-square relative overflow-hidden rounded-full">
+        <div className="w-8 h-8 relative overflow-hidden rounded-full">
             <Image
-                src={session?.user?.image || '/user.jpg'} // URL de la imagen o un placeholder
+                src={src}
                 alt="Profile Picture"
-                width={32} // Ajusta el tamaño según lo necesario
-                height={32}
-                className="rounded-full"
+                fill
+                sizes="32px"
+                className="object-cover rounded-full"
             />
         </div>
     );
 };
 
 export default ProfilePicture;
+

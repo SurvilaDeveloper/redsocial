@@ -1,3 +1,5 @@
+//src/app/api/friendship/route.ts
+
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import auth from "@/auth";

@@ -2,12 +2,29 @@
 
 type PostVisibility = 1 | 2 | 3 | 4;
 
+type PostReaction = "LIKE" | "UNLIKE" | null;
+
+interface PostRelations {
+    following: boolean;
+    isFollower: boolean;
+    isFriend: boolean;
+
+    // NUEVO:
+    likesCount?: number;
+    unlikesCount?: number;
+    userReaction?: PostReaction;
+}
+
 interface MiniUser {
     id: number;
     name: string;
     imageUrl: string | null;
     imagePublicId?: string | null;
 }
+
+// global.d.ts
+
+type CommentReaction = "LIKE" | "UNLIKE" | null;
 
 interface PostCommentResponse {
     id: number;
@@ -16,6 +33,11 @@ interface PostCommentResponse {
     who_responses: number;
     active?: number | null;
     user?: MiniUser; // viene del include
+
+    // ⭐ NUEVO:
+    likesCount?: number;
+    unlikesCount?: number;
+    userReaction?: CommentReaction;
 }
 
 interface PostComment {
@@ -25,10 +47,14 @@ interface PostComment {
     post_id: number;
     who_comments: number;
     active?: number | null;
-    user?: MiniUser; // viene del include
-    responses?: PostCommentResponse[]; // ✅ clave
-}
+    user?: MiniUser;
+    responses?: PostCommentResponse[];
 
+    // ⭐ NUEVO
+    likesCount?: number;
+    unlikesCount?: number;
+    userReaction?: CommentReaction;
+}
 
 interface Post {
     id: number;
@@ -44,11 +70,9 @@ interface Post {
     active: number; // 1/0
     visibility: PostVisibility;
 
-    relations: {
-        following: boolean;
-        isFollower: boolean;
-        isFriend: boolean;
-    };
+    // ⬇⬇⬇ CAMBIO ACÁ
+    relations: PostRelations;
+    // ⬆⬆⬆ antes era un objeto inline
 
     userData?: {
         id: number;
@@ -64,6 +88,14 @@ interface Post {
         imagePublicId: string;
         index: number;
         active?: number | null;
+
+        // ⭐ NUEVO, opcional:
+        likesCount?: number;
+        unlikesCount?: number;
+        userReaction?: ImageReaction;
     }[];
+
+    commentsCount?: number; // 👈 nuevo: cantidad de comentarios (para el feed)
 }
+
 

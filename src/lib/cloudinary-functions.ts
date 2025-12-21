@@ -1,6 +1,4 @@
-
-
-
+//src/lib/cloudinary-functions.ts
 
 export async function uploadProfileImage(file: File) {
     const signatureRes = await fetch("/api/cloudinary-sign-user");
@@ -24,7 +22,7 @@ export async function uploadProfileImage(file: File) {
         publicId: data.public_id as string, // Guarda esto si luego necesitas eliminar la imagen
     };
 }
-
+/*
 export async function uploadPostImage(file: File) {
     // 1. Obtener la firma desde el backend
     const signatureRes = await fetch("/api/cloudinary-sign");
@@ -48,6 +46,30 @@ export async function uploadPostImage(file: File) {
     return {
         url: data.secure_url as string,
         publicId: data.public_id as string, // Guarda esto si luego necesitas eliminar la imagen
+    };
+}
+*/
+// src/lib/cloudinary-functions.ts
+
+export async function uploadPostImage(file: File) {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const res = await fetch("/api/upload-post-image", {
+        method: "POST",
+        body: formData,
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+        console.error("Error upload-post-image:", data);
+        throw new Error(data?.error || "Error subiendo imagen");
+    }
+
+    return {
+        url: data.url as string,
+        publicId: data.publicId as string,
     };
 }
 

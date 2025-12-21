@@ -20,9 +20,8 @@ import { loginAction } from "@/actions/auth-action";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import GoogleSigninButton from "./googleSigninButton";
-import { LogoutButton } from "./logoutButton";
 import { useSession } from "next-auth/react";
-import { signIn } from "next-auth/react"; // 👈 IMPORTANTE: signIn del cliente
+import { signIn } from "next-auth/react";
 import { useGlobalContext } from "@/context/globalcontext";
 import Link from "next/link";
 import { cfg } from "@/config";
@@ -40,12 +39,11 @@ const LoginForm = ({
 }) => {
     const { l } = useGlobalContext();
     const { update } = useSession();
-    const [error, setError] = useState<string | null>(null); // usar string minúscula
+    const [error, setError] = useState<string | null>(null);
     const [email, setEmail] = useState<string | undefined>(undefined);
     const [isPending, startTransition] = useTransition();
     const router = useRouter();
 
-    // 1. Define your form.
     const form = useForm<z.infer<typeof loginSchema>>({
         resolver: zodResolver(loginSchema),
         defaultValues: {
@@ -55,37 +53,35 @@ const LoginForm = ({
         mode: "onChange",
     });
 
-    // 2. Submit handler.
     async function onSubmit(values: z.infer<typeof loginSchema>) {
         setError(null);
         setEmail(undefined);
 
         startTransition(async () => {
-            // Primero: validamos credenciales y estado con la server action
             const response = await loginAction(values);
 
             if (response.error) {
-                setError("ERROR en loginForm que viene de loginAction: " + response.error);
+                setError(
+                    "ERROR en loginForm que viene de loginAction: " +
+                    response.error
+                );
                 if (response.email) {
                     setEmail(response.email);
                 }
                 return;
             }
 
-            // Si loginAction dice que está todo bien, ahora sí hacemos signIn en el cliente
             const result = await signIn("credentials", {
                 email: values.email,
                 password: values.password,
-                redirect: false, // manejamos la redirección a mano
+                redirect: false,
             });
 
-            // Por si algo falla en signIn (credenciales, provider, etc.)
             if (result?.error) {
                 setError("Error al iniciar sesión: " + result.error);
                 return;
             }
 
-            // Actualizar sesión y redirigir
             await update();
             router.push("/");
             router.refresh();
@@ -106,114 +102,143 @@ const LoginForm = ({
             const data = await res.json();
             if (!res.ok) {
                 setError("Error al reenviar el email: " + data.error);
-            } else {
-                // Podés mostrar un mensaje de éxito si querés
-                // setError("Email de verificación reenviado correctamente.");
             }
         } catch (error) {
-            setError("Error al conectar con el servidor para reenviar el email.");
+            setError(
+                "Error al conectar con el servidor para reenviar el email."
+            );
         }
     }
 
     return (
-        <div className="w-full">
-            {isVerified && <p>Email verificado, ahora te puedes loguear</p>}
+        <div className="w-full space-y-4">
+            {/* Mensajes superiores */}
+            {isVerified && (
+                <p className="text-xs text-emerald-300 bg-emerald-950/40 border border-emerald-700 px-3 py-2 rounded-md text-center">
+                    Email verificado, ahora te puedes loguear.
+                </p>
+            )}
 
             {emailsend && (
-                <p className="flex justify-center text-ms text-green-800 border-green-800 border-solid border rounded">
-                    Email de verificacion enviado
+                <p className="text-xs text-emerald-300 bg-emerald-950/40 border border-emerald-700 px-3 py-2 rounded-md text-center">
+                    Email de verificación enviado.
                 </p>
             )}
 
             {message === "hastobeadmin" && (
-                <p className="flex justify-center text-ms text-green-800 border-green-800 border-solid border rounded">
+                <p className="text-xs text-amber-300 bg-amber-950/40 border border-amber-700 px-3 py-2 rounded-md text-center">
                     {cfg.TEXTS.adminmessage}
                 </p>
             )}
 
             {message === "hastologtopost" && (
-                <p className="flex justify-center text-ms text-green-800 border-green-800 border-solid border rounded">
+                <p className="text-xs text-amber-300 bg-amber-950/40 border border-amber-700 px-3 py-2 rounded-md text-center">
                     {cfg.TEXTS.tologmessage}
                 </p>
             )}
 
             <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                <form
+                    onSubmit={form.handleSubmit(onSubmit)}
+                    className="space-y-6"
+                >
                     <FormField
                         control={form.control}
                         name="email"
                         render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Email</FormLabel>
+                            <FormItem className="space-y-1.5">
+                                <FormLabel className="text-xs text-slate-200">
+                                    Email
+                                </FormLabel>
                                 <FormControl>
                                     <Input
-                                        className="rounded"
+                                        className="rounded-md bg-slate-900/40 border-slate-600 text-slate-100 placeholder:text-slate-500"
                                         placeholder="email"
                                         type="email"
                                         {...field}
                                     />
                                 </FormControl>
-                                <FormDescription>Enter your email</FormDescription>
-                                <FormMessage />
+                                <FormDescription className="text-[11px] text-slate-400">
+                                    Enter your email
+                                </FormDescription>
+                                <FormMessage className="text-[11px]" />
                             </FormItem>
                         )}
                     />
+
                     <FormField
                         control={form.control}
                         name="password"
                         render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Password</FormLabel>
+                            <FormItem className="space-y-1.5">
+                                <FormLabel className="text-xs text-slate-200">
+                                    Password
+                                </FormLabel>
                                 <FormControl>
                                     <Input
-                                        className="rounded"
+                                        className="rounded-md bg-slate-900/40 border-slate-600 text-slate-100 placeholder:text-slate-500"
                                         placeholder="password"
                                         type="password"
                                         {...field}
                                     />
                                 </FormControl>
-                                <FormDescription>Enter your password</FormDescription>
-                                <FormMessage />
+                                <FormDescription className="text-[11px] text-slate-400">
+                                    Enter your password
+                                </FormDescription>
+                                <FormMessage className="text-[11px]" />
                             </FormItem>
                         )}
                     />
 
-                    {error && <FormMessage>{error}</FormMessage>}
-
-                    {tokenExpired === "true" && (
-                        <FormMessage>{cfg.TEXTS.tokenExpired}</FormMessage>
+                    {/* Errores generales */}
+                    {error && (
+                        <FormMessage className="text-[11px] text-red-300 bg-red-950/40 border border-red-700 px-3 py-2 rounded-md">
+                            {error}
+                        </FormMessage>
                     )}
 
+                    {tokenExpired === "true" && (
+                        <FormMessage className="text-[11px] text-amber-300 bg-amber-950/40 border border-amber-700 px-3 py-2 rounded-md">
+                            {cfg.TEXTS.tokenExpired}
+                        </FormMessage>
+                    )}
+
+                    {/* Reenviar email de verificación */}
                     {(email || tokenExpired) && (
                         <Button
-                            type="button" // 👈 para que NO envíe el formulario
-                            className="bg-blue-300 w-full rounded"
+                            type="button"
+                            className="w-full rounded-md bg-blue-600 hover:bg-blue-500 text-xs font-medium"
                             onClick={resendEmail}
                         >
-                            Enviar nuevamente el email con el enlace de verificación
+                            Enviar nuevamente el email con el enlace de
+                            verificación
                         </Button>
                     )}
 
+                    {/* Submit */}
                     <Button
                         type="submit"
                         disabled={isPending}
-                        className="bg-blue-300 w-full rounded text-xl hover:bg-blue-400"
+                        className="w-full rounded-md bg-sky-600 hover:bg-sky-500 text-sm font-semibold"
                     >
-                        Submit
+                        Ingresar
                     </Button>
                 </form>
             </Form>
 
-            <GoogleSigninButton />
+            <div className="mt-4 space-y-3">
+                <GoogleSigninButton />
 
-            <Link
-                href="/register"
-                className="flex justify-center items-center bg-green-300 w-full h-12 rounded hover:bg-green-400"
-            >
-                {cfg.TEXTS.createNewAccount}
-            </Link>
+                <Link
+                    href="/register"
+                    className="flex justify-center items-center bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-semibold w-full h-10 rounded-md text-sm"
+                >
+                    {cfg.TEXTS.createNewAccount}
+                </Link>
+            </div>
         </div>
     );
 };
 
 export default LoginForm;
+
