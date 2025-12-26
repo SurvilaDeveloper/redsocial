@@ -10,6 +10,7 @@ import { useSession } from "next-auth/react";
 import { cfg } from "@/config";
 import ChangeAccount from "../dev/changeAccount";
 import { useRouter, usePathname } from "next/navigation";
+import MainMenuMobileMenu from "./MainMenuMobileMenu";
 
 const Navbar = () => {
     const { l } = useGlobalContext();
@@ -88,6 +89,7 @@ const Navbar = () => {
             {/* Bloque derecho: idioma + perfil */}
             <div className="flex items-center gap-4 md:gap-6">
                 <LanguageSwitcher />
+                <MainMenuMobileMenu />
                 <NavbarProfile />
             </div>
         </nav>

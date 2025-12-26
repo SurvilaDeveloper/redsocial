@@ -57,19 +57,23 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         async jwt({ token, user, account }) {
             if (account?.provider === "google") {
-                token.role = "user"; // Define un rol predeterminado
+                token.role = "user";
             }
+
             if (user) {
                 token.id = user.id;
-                token.role = user.role || token.role; // Si es credencial, toma el rol
+                token.role = user.role || token.role;
+                token.sessionVersion = user.sessionVersion; // 👈 CLAVE
             }
+
             return token;
         },
 
         async session({ session, token }) {
             if (session.user) {
-                session.user.id = token.id as string; // Propaga el ID
-                session.user.role = token.role as string; // Propaga el rol
+                session.user.id = token.id as string;
+                session.user.role = token.role as string;
+                session.user.sessionVersion = token.sessionVersion as number; // 👈
             }
             return session;
         },

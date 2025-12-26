@@ -28,14 +28,15 @@ export async function GET(req: NextRequest) {
         );
     }
 
-    // ✅ MyWall: SOLO el dueño puede pedir sus posts
+    //✅ MyWall: SOLO el dueño puede pedir sus posts
+    /*
     if (!viewerId || Number.isNaN(viewerId) || viewerId !== userId) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
-
+*/
     // ✅ Solo posts del owner (puede ver activos e inactivos)
     const posts = await prisma.post.findMany({
-        where: { user_id: userId },
+        where: { user_id: userId, deletedAt: null, active: 1 },
         orderBy: { createdAt: "desc" },
         skip: (page - 1) * pageSize,
         take: pageSize,
@@ -138,7 +139,3 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ allPosts: shaped });
 }
-
-
-
-

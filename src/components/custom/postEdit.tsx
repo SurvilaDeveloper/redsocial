@@ -2,15 +2,22 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import EditPostForm from "./editPostForm";
-import { useSession } from "next-auth/react";
 
-export function PostEdit({ postId }: { postId: number }) {
+type PostEditProps = {
+    postId: number;
+    session: any | null;
+};
+
+export function PostEdit({ postId, session }: PostEditProps) {
     const [post, setPost] = useState<Post | null>(null);
     const [isOwner, setIsOwner] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const { data: session, status } = useSession();
+    const [loading, setLoading] = useState(true);
+
+    const viewerId =
+        session?.user?.id != null ? Number(session.user.id) : null;
 
     useEffect(() => {
         let cancelled = false;
@@ -18,6 +25,8 @@ export function PostEdit({ postId }: { postId: number }) {
         async function fetchPost() {
             try {
                 setError(null);
+                setLoading(true);
+
                 const res = await fetch(`/api/posts/${postId}`, {
                     method: "GET",
                     cache: "no-store",
@@ -28,6 +37,7 @@ export function PostEdit({ postId }: { postId: number }) {
                 if (!res.ok || !json?.data) {
                     if (!cancelled) {
                         setError(json?.error ?? "No se pudo cargar el post");
+                        setPost(null);
                     }
                     return;
                 }
@@ -36,11 +46,6 @@ export function PostEdit({ postId }: { postId: number }) {
 
                 if (!cancelled) {
                     setPost(data);
-
-                    const viewerId =
-                        session?.user?.id != null
-                            ? Number(session.user.id)
-                            : null;
 
                     setIsOwner(
                         viewerId != null &&
@@ -52,21 +57,37 @@ export function PostEdit({ postId }: { postId: number }) {
                 console.error("Error al obtener el post:", err);
                 if (!cancelled) {
                     setError("Error al obtener el post");
+                    setPost(null);
+                }
+            } finally {
+                if (!cancelled) {
+                    setLoading(false);
                 }
             }
         }
 
+        // si no hay sesión, igual intentamos cargar,
+        // pero luego abajo bloqueamos edición
         fetchPost();
 
         return () => {
             cancelled = true;
         };
-    }, [postId, session?.user?.id]);
+    }, [postId, viewerId]);
 
-    if (status === "loading" && !post) {
+    // 🔒 Sin sesión no debería poder editar (doble protección)
+    if (!session?.user?.id) {
+        return (
+            <div className="w-full rounded-xl border border-yellow-500/60 bg-yellow-950/40 px-4 py-3 text-sm text-yellow-100">
+                Debes iniciar sesión para editar un post.
+            </div>
+        );
+    }
+
+    if (loading && !post) {
         return (
             <div className="w-full flex items-center justify-center py-10 text-sm text-slate-300">
-                Cargando sesión...
+                Cargando post...
             </div>
         );
     }
@@ -82,7 +103,18 @@ export function PostEdit({ postId }: { postId: number }) {
     if (!post) {
         return (
             <div className="w-full flex items-center justify-center py-10 text-sm text-slate-300">
-                Cargando post...
+                No se encontró el post.
+            </div>
+        );
+    }
+
+    // 🚯 Si el post está eliminado (en papelera), no dejamos editarlo
+    const deletedAt = (post as any).deletedAt as string | null | undefined;
+    if (deletedAt) {
+        return (
+            <div className="w-full rounded-xl border border-red-500/60 bg-red-950/40 px-4 py-3 text-sm text-red-200">
+                Este post está en la papelera (eliminado). Primero debes
+                restaurarlo desde la papelera para poder editarlo.
             </div>
         );
     }
@@ -103,7 +135,7 @@ export function PostEdit({ postId }: { postId: number }) {
                 description={post.description}
                 postId={post.id}
             />
-
         </div>
     );
 }
+

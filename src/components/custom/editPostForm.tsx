@@ -28,6 +28,7 @@ import {
     uploadPostImage,
 } from "@/lib/cloudinary-functions";
 
+
 // Usa el tipo de la imagen que ya está definido en Post (global.d.ts)
 type ImageProps = NonNullable<Post["images"]>[number];
 

@@ -2,6 +2,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import auth from "@/auth";
+import { getRelationshipState } from "@/lib/relationship";
+
 
 type PostReaction = "LIKE" | "UNLIKE" | null;
 type CommentReaction = "LIKE" | "UNLIKE" | null;
@@ -155,33 +157,41 @@ export async function GET(
     const ownerId = post.user_id;
 
     let following = false;
-    let isFriend = false;
+    //let isFriend = false;
     const isLogged = viewerId !== null;
     const isOwner = viewerId !== null && viewerId === ownerId;
+    /*
+        if (viewerId) {
+            const [viewerFollowing, viewerFriends] = await Promise.all([
+                prisma.follow.findMany({
+                    where: { followerId: viewerId, followingId: ownerId },
+                    select: { followingId: true },
+                }),
+                prisma.friendship.findMany({
+                    where: {
+                        friend_response: 1,
+                        OR: [
+                            { friend_one: viewerId, friend_two: ownerId },
+                            { friend_two: viewerId, friend_one: ownerId },
+                        ],
+                    },
+                    select: { friend_one: true, friend_two: true },
+                }),
+            ]);
+    
+            following = viewerFollowing.length > 0;
+            if (viewerFriends.length > 0) {
+                isFriend = true;
+            }
+        }
+    */
+    let relState = 0;
 
     if (viewerId) {
-        const [viewerFollowing, viewerFriends] = await Promise.all([
-            prisma.follow.findMany({
-                where: { followerId: viewerId, followingId: ownerId },
-                select: { followingId: true },
-            }),
-            prisma.friendship.findMany({
-                where: {
-                    friend_response: 1,
-                    OR: [
-                        { friend_one: viewerId, friend_two: ownerId },
-                        { friend_two: viewerId, friend_one: ownerId },
-                    ],
-                },
-                select: { friend_one: true, friend_two: true },
-            }),
-        ]);
-
-        following = viewerFollowing.length > 0;
-        if (viewerFriends.length > 0) {
-            isFriend = true;
-        }
+        relState = await getRelationshipState(viewerId, ownerId);
     }
+    const isFriend = relState === 8;
+
 
     const isFollower = false;
 
@@ -222,11 +232,12 @@ export async function GET(
     const relations = {
         following,
         isFollower,
-        isFriend,
+        relState, // 👈 CLAVE
         likesCount,
         unlikesCount,
         userReaction,
     };
+
 
     // Imágenes con reacciones
     const imagesWithReactions = (post.images ?? []).map((img) => {

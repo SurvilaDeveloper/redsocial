@@ -22,7 +22,8 @@ const FriendButton = ({
 
     // 👉 Estilos base para el “chip”
     const baseChip =
-        "inline-flex items-center rounded-full border px-3 py-1 text-[11px] leading-none whitespace-nowrap";
+        "inline-flex items-center rounded-full border px-2 py-[2px] text-[10px] leading-none whitespace-nowrap";
+
 
     const sendReqChip =
         baseChip +

@@ -4,16 +4,16 @@ type PostVisibility = 1 | 2 | 3 | 4;
 
 type PostReaction = "LIKE" | "UNLIKE" | null;
 
-interface PostRelations {
+type PostRelations = {
     following: boolean;
     isFollower: boolean;
     isFriend: boolean;
+    relState: number; // 👈 AGREGAR
+    likesCount: number;
+    unlikesCount: number;
+    userReaction: PostReaction;
+};
 
-    // NUEVO:
-    likesCount?: number;
-    unlikesCount?: number;
-    userReaction?: PostReaction;
-}
 
 interface MiniUser {
     id: number;
@@ -21,8 +21,6 @@ interface MiniUser {
     imageUrl: string | null;
     imagePublicId?: string | null;
 }
-
-// global.d.ts
 
 type CommentReaction = "LIKE" | "UNLIKE" | null;
 
@@ -70,6 +68,8 @@ interface Post {
     active: number; // 1/0
     visibility: PostVisibility;
 
+    deletedAt?: string | null; // 🆕 <- importante
+
     // ⬇⬇⬇ CAMBIO ACÁ
     relations: PostRelations;
     // ⬆⬆⬆ antes era un objeto inline
@@ -97,5 +97,7 @@ interface Post {
 
     commentsCount?: number; // 👈 nuevo: cantidad de comentarios (para el feed)
 }
+
+
 
 

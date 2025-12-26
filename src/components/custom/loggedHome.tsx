@@ -24,7 +24,7 @@ const LoggedHome = ({ session }: { session: any }) => {
         >
             {/* Aside izquierdo: sólo en pantallas grandes */}
             <aside className="hidden lg:block w-[220px] xl:w-[260px]">
-                <AsideLeft>
+                <AsideLeft session={session}>
                     {/* Más adelante, cuando ListSelect esté listo, lo descomentás */}
                     {/* <ListSelect /> */}
                     <></>
@@ -53,7 +53,7 @@ const LoggedHome = ({ session }: { session: any }) => {
 
             {/* Aside derecho: sólo en pantallas extra grandes */}
             <aside className="hidden xl:block w-[260px]">
-                <AsideRight>
+                <AsideRight session={session}>
                     <></>
                 </AsideRight>
             </aside>

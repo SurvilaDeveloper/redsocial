@@ -25,7 +25,7 @@ const MyWallPage = async () => {
             className="
                 flex 
                 flex-col 
-                min-h-[calc(100vh-3.5rem)]  /* resto de la altura bajo la navbar (aprox) */
+                min-h-[calc(100vh-3.5rem)]
                 md:min-h-[calc(100vh-4rem)]
                 text-slate-100
             "
@@ -41,19 +41,19 @@ const MyWallPage = async () => {
             <div className="flex flex-1 w-full gap-4">
                 {/* Aside izquierdo: sólo en pantallas grandes */}
                 <aside className="hidden lg:block w-[220px] xl:w-[260px]">
-                    <AsideLeft><></></AsideLeft>
+                    <AsideLeft session={session}></AsideLeft>
                 </aside>
 
                 {/* Columna central de posts */}
                 <main className="w-full flex-1 flex justify-center">
                     <div className="w-full max-w-[720px] py-3">
-                        <PostList session={session} userId={userId} />
+                        <PostList session={session} userId={userId} viewerType="owner" comingFrom="mywall" />
                     </div>
                 </main>
 
                 {/* Aside derecho: sólo en pantallas grandes */}
                 <aside className="hidden xl:block w-[260px]">
-                    <AsideRight><></></AsideRight>
+                    <AsideRight session={session}></AsideRight>
                 </aside>
             </div>
         </div>
@@ -62,6 +62,7 @@ const MyWallPage = async () => {
 
 export default MyWallPage;
 
+// reescrita
 
 
 

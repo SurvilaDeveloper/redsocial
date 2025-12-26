@@ -4,7 +4,6 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { ThumbsUp, ThumbsDown } from "lucide-react";
 
 type ImageReaction = "LIKE" | "UNLIKE" | null;
@@ -23,15 +22,16 @@ interface PostImageProps {
     };
     sessionUserId: number | null;
     isFirst: boolean;
+    /** 🆕 Callback opcional para abrir detalle de imagen */
+    onOpenImageDetail?: (imageId: number, postId: number) => void;
 }
 
 export default function PostImageCard({
     image,
     sessionUserId,
     isFirst,
+    onOpenImageDetail,
 }: PostImageProps) {
-    const router = useRouter();
-
     const [reaction, setReaction] = useState<ImageReaction>(
         image.userReaction ?? null
     );
@@ -140,8 +140,9 @@ export default function PostImageCard({
             }
         >
             <div
+
                 onDoubleClick={() =>
-                    router.push(`/showpostcard?post_id=${image.post_id}`)
+                    onOpenImageDetail?.(image.id, image.post_id)
                 }
                 className="relative w-full h-full cursor-zoom-in select-none"
             >
@@ -160,9 +161,6 @@ export default function PostImageCard({
                     className={`object-contain transition-opacity duration-300 ${isImageLoaded ? "opacity-100" : "opacity-0"
                         }`}
                     draggable={false}
-                    // 🔴 ANTES:
-                    // onLoadingComplete={() => setIsImageLoaded(true)}
-                    // ✅ AHORA:
                     onLoad={() => setIsImageLoaded(true)}
                 />
             </div>
@@ -174,8 +172,8 @@ export default function PostImageCard({
                     onClick={handleLike}
                     disabled={!canReact}
                     className={`flex flex-row items-center gap-1 text-[10px] px-2 py-1 rounded border ${reaction === "LIKE"
-                            ? "bg-green-700 border-green-400 text-white"
-                            : "bg-transparent border-gray-500 text-gray-300"
+                        ? "bg-green-700 border-green-400 text-white"
+                        : "bg-transparent border-gray-500 text-gray-300"
                         } ${!canReact
                             ? "opacity-50 cursor-not-allowed"
                             : "cursor-pointer"
@@ -190,8 +188,8 @@ export default function PostImageCard({
                     onClick={handleUnlike}
                     disabled={!canReact}
                     className={`flex flex-row items-center gap-1 text-[10px] px-2 py-1 rounded border ${reaction === "UNLIKE"
-                            ? "bg-red-700 border-red-400 text-white"
-                            : "bg-transparent border-gray-500 text-gray-300"
+                        ? "bg-red-700 border-red-400 text-white"
+                        : "bg-transparent border-gray-500 text-gray-300"
                         } ${!canReact
                             ? "opacity-50 cursor-not-allowed"
                             : "cursor-pointer"
@@ -204,5 +202,30 @@ export default function PostImageCard({
         </div>
     );
 }
+/*
+---
+
+### ¿Y el futuro detalle de imagen?
+
+Cuando más adelante hagas una page tipo `/image/[id]`, lo único que tenés que hacer es, desde el padre (por ejemplo donde usás `PostImageCard`):
+
+```tsx
+import { useRouter } from "next/navigation";
+
+// ...
+
+const router = useRouter();
+
+// ...
+
+<PostImageCard
+  image={img}
+  sessionUserId={sessionUserId}
+  isFirst={index === 0}
+  onOpenImageDetail={(imageId, postId) => {
+    router.push(`/image/${imageId}`); // o `/post/${postId}/image/${imageId}`
+  }}
+/>
+*/
 
 

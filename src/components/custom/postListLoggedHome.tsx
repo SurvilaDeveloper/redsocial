@@ -30,6 +30,8 @@ export default function PostListLoggedHome({ session }: { session: any }) {
                 });
                 const data = await res.json();
 
+                console.log('data:', data);
+
                 const newPosts: Post[] = data?.allPosts ?? [];
 
                 if (!newPosts.length) {
@@ -70,7 +72,7 @@ export default function PostListLoggedHome({ session }: { session: any }) {
                 if (post.visibility === 1) return true;
                 if (post.visibility === 2) return isLogged;
 
-                const isFriend = Boolean(post.relations?.isFriend);
+                const isFriend = Boolean(post.relations?.relState === 8);
                 const following = Boolean(post.relations?.following);
 
                 if (post.visibility === 3)
@@ -111,6 +113,7 @@ export default function PostListLoggedHome({ session }: { session: any }) {
                 cache: "no-store",
             });
             const data = await res.json().catch(() => null);
+            console.log('detalle post data:', data);
 
             if (!res.ok || !data?.data) {
                 throw new Error(data?.error || "No se pudo cargar el post");
@@ -161,6 +164,7 @@ export default function PostListLoggedHome({ session }: { session: any }) {
                         enablePolling={false}           // 👈 nada de polling en feed
                         enableOwnerControls={false}
                         onOpenDetail={handleOpenDetail} // 👈 abre overlay
+                        comingFrom="home"
                     />
                 </div>
             ))}
@@ -220,6 +224,7 @@ export default function PostListLoggedHome({ session }: { session: any }) {
                                     openCommentsInPage={false}
                                     enablePolling={false}  // si querés refresco auto, podés poner true
                                     enableOwnerControls={false}
+                                    comingFrom="home"
                                 />
                             </div>
                         )}

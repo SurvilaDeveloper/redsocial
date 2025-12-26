@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
 
         // 2) Procesar con sharp (ajustá a gusto)
         const processedBuffer = await sharp(inputBuffer)
-            .resize(256, null, { withoutEnlargement: true }) // máx 1600px de ancho
+            .resize(256, null, { withoutEnlargement: true }) // máx 256px de ancho
             .jpeg({ quality: 80 }) // compresión
             .toBuffer();
 

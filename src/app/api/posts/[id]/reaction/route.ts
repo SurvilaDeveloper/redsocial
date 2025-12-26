@@ -11,7 +11,7 @@ interface Body {
 
 export async function POST(
     req: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     const session = await auth();
     const userIdRaw = session?.user?.id;
@@ -24,7 +24,7 @@ export async function POST(
     }
 
     const userId = Number(userIdRaw);
-    const postId = Number(params.id);
+    const postId = Number((await params).id);
 
     if (!Number.isFinite(postId)) {
         return NextResponse.json(

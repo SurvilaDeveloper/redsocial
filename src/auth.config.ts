@@ -72,6 +72,7 @@ const authConfig: NextAuthConfig = {
                     email: user.email,
                     image: user.imageUrl,
                     role: user.role || "",
+                    sessionVersion: user.sessionVersion, // 🔑 CLAVE
                 };
             },
         }),

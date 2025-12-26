@@ -1,5 +1,5 @@
 // src/types/post-api.ts
-import type { post as PostModel, image as ImageModel } from "@prisma/client";
+import type { Post as PostModel, Image as ImageModel } from "@prisma/client";
 
 export type PostRelations = {
     isFriend: boolean;

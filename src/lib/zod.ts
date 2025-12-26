@@ -1,91 +1,190 @@
-import { date, datetimeRegex, object, string } from "zod"
-import z from "zod";
+// src/lib/zod.ts
+import { z } from "zod";
 
-export const loginSchema = object({
-    email: string({ required_error: "Email is required" })
+/* -------------------------------------------------------------------------- */
+/*                                   AUTH                                     */
+/* -------------------------------------------------------------------------- */
+
+export const loginSchema = z.object({
+    email: z
+        .string({ required_error: "Email is required" })
         .min(1, "Email is required")
         .email("Invalid email"),
-    password: string({ required_error: "Password is required" })
+
+    password: z
+        .string({ required_error: "Password is required" })
         .min(1, "Password is required")
         .min(4, "Password must be more than 4 characters")
         .max(32, "Password must be less than 32 characters"),
-})
+});
 
-export const signUpSchema = object({
-    email: string({ required_error: "Email is required" })
+export const signUpSchema = z.object({
+    email: z
+        .string({ required_error: "Email is required" })
         .min(1, "Email is required")
         .email("Invalid email"),
-    password: string({ required_error: "Password is required" })
+
+    password: z
+        .string({ required_error: "Password is required" })
         .min(1, "Password is required")
         .min(4, "Password must be more than 4 characters")
         .max(32, "Password must be less than 32 characters"),
-    name: string({ required_error: "Username is required" })
+
+    name: z
+        .string({ required_error: "Username is required" })
         .min(1, "Name is required")
         .max(32, "Name must be less than 32 characters"),
+});
+
+/* -------------------------------------------------------------------------- */
+/*                                   POSTS                                    */
+/* -------------------------------------------------------------------------- */
+
+export const postSchema = z.object({
+    title: z
+        .string()
+        .max(100, "Máximo 100 caracteres"),
+
+    description: z
+        .string()
+        .min(3, "El post debe tener entre 3 y 1000 caracteres")
+        .max(1000, "Máximo 1000 caracteres"),
+});
+
+/* -------------------------------------------------------------------------- */
+/*                              SHARED HELPERS                                */
+/* -------------------------------------------------------------------------- */
+
+// string | null | undefined
+// trim + max + convierte "" → null
+const optNullableTrimmed = (max: number) =>
+    z
+        .string()
+        .trim()
+        .max(max)
+        .optional()
+        .nullable()
+        .transform((v) => (v == null || v === "" ? null : v));
+
+// teléfono genérico
+const optNullablePhone = () =>
+    z
+        .string()
+        .trim()
+        .max(30)
+        .optional()
+        .nullable()
+        .transform((v) => (v == null || v === "" ? null : v));
+
+/* -------------------------------------------------------------------------- */
+/*                                  PROFILE                                   */
+/* -------------------------------------------------------------------------- */
+
+export const profileSchema = z.object({
+    nick: optNullableTrimmed(50).refine(
+        (v) => v == null || v.length >= 2,
+        "El nick debe tener al menos 2 caracteres"
+    ),
+
+    bio: optNullableTrimmed(500),
+
+    phoneNumber: optNullablePhone(),
+    movilNumber: optNullablePhone(),
+
+    // string datetime (ISO) | null | undefined
+    birthday: z.union([z.string().datetime(), z.null()]).optional(),
+
+    visibility: z.number().int().min(0).max(2).optional(),
+
+    darkModeEnabled: z.boolean().optional(),
+    emailNotifications: z.boolean().optional(),
+    pushNotifications: z.boolean().optional(),
+
+    country: optNullableTrimmed(100),
+    province: optNullableTrimmed(100),
+    city: optNullableTrimmed(100),
+
+    countryId: z.number().int().positive().nullable().optional(),
+    provinceId: z.number().int().positive().nullable().optional(),
+    cityId: z.number().int().positive().nullable().optional(),
+
+    street: optNullableTrimmed(127),
+    number: optNullableTrimmed(7),
+    department: optNullableTrimmed(7),
+    mail_code: optNullableTrimmed(10),
+
+    website: optNullableTrimmed(127),
+
+    language: optNullableTrimmed(3),
+    occupation: optNullableTrimmed(100),
+    company: optNullableTrimmed(100),
+
+    twitterHandle: optNullableTrimmed(100),
+    facebookHandle: optNullableTrimmed(100),
+    instagramHandle: optNullableTrimmed(100),
+    linkedinHandle: optNullableTrimmed(100),
+    githubHandle: optNullableTrimmed(100),
+});
+
+/* -------------------------------------------------------------------------- */
+/*                                   TYPES                                    */
+/* -------------------------------------------------------------------------- */
+
+export type ProfileFormValues = z.infer<typeof profileSchema>;
+
+/* -------------------------------------------------------------------------- */
+/*                                   CONFIGURATION                            */
+/* -------------------------------------------------------------------------- */
+
+
+export const configurationSchema = z.object({
+    profileImageVisibility: z.number().int().min(1).max(4),
+    coverImageVisibility: z.number().int().min(1).max(4),
+    fullProfileVisibility: z.number().int().min(1).max(4),
+
+    wallVisibility: z.number().int().min(1).max(4),
+    postsVisibility: z.number().int().min(1).max(4),
+    postCommentsVisibility: z.number().int().min(1).max(4),
+    postRepliesVisibility: z.number().int().min(1).max(4),
+
+    mediaVisibility: z.number().int().min(1).max(4),
+    mediaCommentsVisibility: z.number().int().min(1).max(4),
+    mediaRepliesVisibility: z.number().int().min(1).max(4),
+
+    friendsListVisibility: z.number().int().min(2).max(4),
+    followersListVisibility: z.number().int().min(1).max(4),
+    followingListVisibility: z.number().int().min(1).max(4),
+
+    likesVisibility: z.number().int().min(1).max(4),
+    privateMessagesVisibility: z.number().int().min(2).max(4),
 })
 
-export const postSchema = object({
-    title: string().max(100, "Máximo 100 caracteres"),
-    description: string().min(3, "El post debe tener entre 3 y 1000 caracteres").max(1000, "Máximo 1000 caracteres"),
-});
+export const changePasswordSchema = z
+    .object({
+        currentPassword: z
+            .string()
+            .min(1, "La contraseña actual es obligatoria"),
 
+        newPassword: z
+            .string()
+            .min(6, "La nueva contraseña debe tener al menos 6 caracteres"),
 
-export const profileSchema = object({
-    nick: string().max(32, "Máximo 32 caracteres").optional().or(z.literal("")),
-    bio: string().max(500, "Máximo 500 caracteres").optional().or(z.literal("")),
-    phoneNumber: string()
-        .regex(/^\d{7,15}$/, "Número de teléfono inválido")
-        .optional()
-        .or(z.literal("")),
-    movilNumber: string()
-        .regex(/^\d{7,15}$/, "Número de teléfono inválido")
-        .optional()
-        .or(z.literal("")),
-    birthday: z
-        .preprocess((arg) => (typeof arg === "string" && arg !== "" ? new Date(arg) : arg), z.date().optional()),
-    website: string().url("URL inválida").optional().or(z.literal("")),
-    occupation: string().max(100, "Máximo 100 caracteres").optional().or(z.literal("")),
-    company: string().max(100, "Máximo 100 caracteres").optional().or(z.literal("")),
-    twitterHandle: string()
-        .regex(/^@([A-Za-z0-9_]{1,15})$/, "El handle de Twitter debe empezar con '@' y contener solo letras, números y guiones bajos.")
-        .optional()
-        .or(z.literal("")),
-    facebookHandle: string()
-        .regex(/^(https?:\/\/)?(www\.)?facebook\.com\/[A-Za-z0-9.]{5,}$/, "El enlace de Facebook debe ser válido.")
-        .optional()
-        .or(z.literal("")),
-    instagramHandle: string()
-        .regex(/^(https?:\/\/)?(www\.)?instagram\.com\/[A-Za-z0-9_.]{1,30}$/, "El enlace de Instagram debe ser válido.")
-        .optional()
-        .or(z.literal("")),
-    linkedinHandle: string()
-        .regex(/^https:\/\/(www\.)?linkedin\.com\/in\/[A-Za-z0-9-]{3,50}$/, "El enlace de LinkedIn debe ser válido.")
-        .optional()
-        .or(z.literal("")),
-    githubHandle: string()
-        .regex(/^https:\/\/(www\.)?github\.com\/[A-Za-z0-9-]+$/, "El enlace de GitHub debe ser válido.")
-        .optional()
-        .or(z.literal("")),
-    youtubeHandle: string()
-        .regex(
-            /^(https?:\/\/)?(www\.)?(youtube\.com\/(watch\?v=|shorts\/|channel\/|c\/|user\/)|youtu\.be\/)[A-Za-z0-9_-]+\/?$/,
-            "El enlace de YouTube debe ser válido (video o canal)."
-        )
-        .optional()
-        .or(z.literal("")),
-    country: string().max(127, "Máximo 127 caracteres").optional().or(z.literal("")),
-    province: string().max(127, "Máximo 127 caracteres").optional().or(z.literal("")),
-    city: string().max(127, "Máximo 127 caracteres").optional().or(z.literal("")),
-    street: string().max(127, "Máximo 127 caracteres").optional().or(z.literal("")),
-    number: string().max(7, "Máximo 7 caracteres").optional().or(z.literal("")),
-    department: string().max(7, "Máximo 7 caracteres").optional().or(z.literal("")),
-    mailCode: string()
-        .regex(/^[A-Za-z0-9\s-]{3,10}$/, "Código postal inválido")
-        .optional()
-        .or(z.literal("")),
-
-});
-
+        confirmPassword: z.string(),
+    })
+    .refine(
+        (data) => data.newPassword !== data.currentPassword,
+        {
+            path: ["newPassword"],
+            message: "La nueva contraseña debe ser diferente a la actual",
+        }
+    )
+    .refine(
+        (data) => data.newPassword === data.confirmPassword,
+        {
+            path: ["confirmPassword"],
+            message: "Las contraseñas no coinciden",
+        }
+    );
 
 
 

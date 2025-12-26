@@ -133,15 +133,15 @@ const PostFormWall = () => {
                 border border-slate-800 
                 bg-slate-900/80 
                 shadow-md 
-                px-3 py-3 
-                md:px-4 md:py-4 
-                mb-3
+                px-3 py-2 
+                md:px-4 md:py-3 
+                mb-2
             "
         >
             <Form {...form}>
                 <form
                     onSubmit={form.handleSubmit(onSubmit)}
-                    className="space-y-3"
+                    className="space-y-2"
                 >
                     {/* Título */}
                     <FormField
@@ -149,7 +149,7 @@ const PostFormWall = () => {
                         name="title"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel className="text-xs text-slate-300">
+                                <FormLabel className="text-[11px] text-slate-400 leading-none">
                                     Título
                                 </FormLabel>
                                 <FormControl>
@@ -158,17 +158,18 @@ const PostFormWall = () => {
                                         type="text"
                                         {...field}
                                         className="
-                                            h-9
-                                            text-sm
+                                            h-8
+                                            text-[13px]
                                             bg-slate-950
                                             border-slate-700
                                             focus-visible:ring-blue-500
-                                        "
+                                            "
                                     />
                                 </FormControl>
                                 <div
                                     className={`
-                                        mt-1 text-[11px] text-right
+                                        mt-[2px] text-[10px]
+
                                         ${counterClass(titleValue.length, TITLE_MAX)}
                                     `}
                                 >
@@ -185,7 +186,7 @@ const PostFormWall = () => {
                         name="description"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel className="text-xs text-slate-300">
+                                <FormLabel className="text-[11px] text-slate-400 leading-none">
                                     Descripción
                                 </FormLabel>
                                 <FormControl>
@@ -194,7 +195,7 @@ const PostFormWall = () => {
                                         {...field}
                                         className="
                                             text-sm
-                                            min-h-[80px]
+                                            min-h-[64px]
                                             bg-slate-950
                                             border-slate-700
                                             focus-visible:ring-blue-500
@@ -203,7 +204,8 @@ const PostFormWall = () => {
                                 </FormControl>
                                 <div
                                     className={`
-                                        mt-1 text-[11px] text-right
+                                        mt-[2px] text-[10px]
+
                                         ${counterClass(descValue.length, DESC_MAX)}
                                     `}
                                 >
@@ -216,11 +218,11 @@ const PostFormWall = () => {
 
                     {/* Imagen + botones */}
                     <FormItem>
-                        <FormLabel className="text-xs text-slate-300">
+                        <FormLabel className="text-[11px] text-slate-400 leading-none">
                             Imagen (opcional)
                         </FormLabel>
                         <FormControl>
-                            <div className="flex flex-wrap items-center gap-2">
+                            <div className="flex flex-wrap items-center gap-1">
                                 {/* input real (oculto) */}
                                 <Input
                                     ref={fileInputRef}
@@ -235,9 +237,9 @@ const PostFormWall = () => {
                                         type="button"
                                         onClick={openFilePicker}
                                         className="
-                                            h-8 
-                                            px-3 
-                                            text-xs 
+                                            h-7 
+                                            px-2 
+                                            text-[11px] 
                                             bg-slate-600 
                                             text-white 
                                             rounded-md 
@@ -253,9 +255,9 @@ const PostFormWall = () => {
                                             type="button"
                                             onClick={openFilePicker}
                                             className="
-                                                h-8 
-                                                px-3 
-                                                text-xs 
+                                            h-7 
+                                            px-2 
+                                            text-[11px] 
                                                 bg-slate-600 
                                                 text-white 
                                                 rounded-md 
@@ -274,9 +276,9 @@ const PostFormWall = () => {
                                             variant="outline"
                                             onClick={clearImage}
                                             className="
-                                                h-8 
-                                                px-3 
-                                                text-xs 
+                                            h-7 
+                                            px-2 
+                                            text-[11px] 
                                                 rounded-md 
                                                 border-slate-600 
                                                 text-slate-200
@@ -329,9 +331,9 @@ const PostFormWall = () => {
                             type="submit"
                             disabled={isPending}
                             className="
-                                h-9 
-                                px-4 
-                                text-sm 
+                                h-7 
+                                px-2 
+                                text-[11px] 
                                 rounded-md 
                                 bg-blue-600 
                                 hover:bg-blue-500 

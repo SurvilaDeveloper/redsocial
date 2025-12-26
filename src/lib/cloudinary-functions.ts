@@ -1,55 +1,26 @@
 //src/lib/cloudinary-functions.ts
-
 export async function uploadProfileImage(file: File) {
-    const signatureRes = await fetch("/api/cloudinary-sign-user");
-    const { signature, timestamp, apiKey, cloudName, folder } = await signatureRes.json();
-
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("api_key", apiKey);
-    formData.append("timestamp", timestamp.toString());
-    formData.append("signature", signature);
-    formData.append("folder", folder);
 
-    const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+    const res = await fetch("/api/upload-profile-image", {
         method: "POST",
         body: formData,
     });
 
     const data = await res.json();
+
+    if (!res.ok) {
+        console.error("Error upload-profile-image:", data);
+        throw new Error(data?.error || "Error subiendo imagen de perfil");
+    }
+
     return {
-        url: data.secure_url as string,
-        publicId: data.public_id as string, // Guarda esto si luego necesitas eliminar la imagen
+        url: data.url as string,
+        publicId: data.publicId as string,
     };
 }
-/*
-export async function uploadPostImage(file: File) {
-    // 1. Obtener la firma desde el backend
-    const signatureRes = await fetch("/api/cloudinary-sign");
-    const { signature, timestamp, apiKey, cloudName, folder } = await signatureRes.json();
 
-    // 2. Crear el FormData con los datos necesarios
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("api_key", apiKey);
-    formData.append("timestamp", timestamp.toString());
-    formData.append("signature", signature);
-    formData.append("folder", folder); // Agregar la carpeta donde se guardará la imagen
-
-    // 3. Subir la imagen a Cloudinary
-    const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
-        method: "POST",
-        body: formData,
-    });
-
-    const data = await res.json();
-    return {
-        url: data.secure_url as string,
-        publicId: data.public_id as string, // Guarda esto si luego necesitas eliminar la imagen
-    };
-}
-*/
-// src/lib/cloudinary-functions.ts
 
 export async function uploadPostImage(file: File) {
     const formData = new FormData();

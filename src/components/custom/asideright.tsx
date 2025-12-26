@@ -1,23 +1,35 @@
 // src/components/custom/asideright.tsx
 import { ReactNode } from "react";
 
-const AsideRight = ({ children }: { children: ReactNode }) => {
-    return (
-        <div
-            id="AsideRight"
-            className="
-                h-full
-                w-full
-                flex
-                flex-col
-                gap-4
-                text-sm
-                text-slate-200
-            "
-        >
-            {children}
-        </div>
-    );
+type AsideRightProps = {
+    session: any | null;
+    children?: ReactNode;
 };
 
+function AsideRight({ session, children }: AsideRightProps) {
+    const hasSession = Boolean(session?.user?.id);
+
+    return (
+        <div className="h-full w-full px-2 py-3 text-sm text-slate-100">
+            {hasSession ? (
+                <>
+                    <p className="text-xs text-slate-300 mb-2">
+                        AsideRight: usuario logueado. Por ahora muestra este párrafo. Luego irán otros componentes acá.
+                    </p>
+                    {children}
+                </>
+            ) : (
+                <>
+                    <p className="text-xs text-slate-400">
+                        No hay sesión. Luego irán componentes para usuarios no logueados en este lugar.
+                    </p>
+                    {children}
+                </>
+            )}
+        </div>
+    );
+}
+
 export default AsideRight;
+
+

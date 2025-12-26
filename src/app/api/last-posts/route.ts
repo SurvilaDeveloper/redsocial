@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import auth from "@/auth";
+import { getRelationshipState } from "@/lib/relationship";
 
 type PostReaction = "LIKE" | "UNLIKE" | null;
 type ImageReaction = "LIKE" | "UNLIKE" | null;
@@ -130,16 +131,24 @@ export async function GET(req: NextRequest) {
             const following = viewerId
                 ? followingSet.has(post.user_id)
                 : false;
-            const isFriend = viewerId ? friendSet.has(post.user_id) : false;
+            const relState = viewerId
+                ? await getRelationshipState(viewerId, post.user_id)
+                : 0;
+
             const isFollower = false;
+            const isFriend = relState === 8;
 
             let canView = false;
             if (isOwner) canView = true;
             else if (post.visibility === 1) canView = true;
             else if (post.visibility === 2) canView = isLogged;
+
+
             else if (post.visibility === 3)
                 canView = isLogged && (isFriend || following);
-            else if (post.visibility === 4) canView = isLogged && isFriend;
+            else if (post.visibility === 4)
+                canView = isLogged && isFriend;
+
 
             if ((post.active ?? 1) !== 1) continue;
             if (!canView) continue;
@@ -165,10 +174,13 @@ export async function GET(req: NextRequest) {
                 following,
                 isFollower,
                 isFriend,
+                relState, // 👈 AHORA SÍ
                 likesCount,
                 unlikesCount,
                 userReaction,
             };
+
+
 
             const imagesWithReactions = (post.images ?? []).map((img: any) => {
                 const imgLikes: number = img._count?.image_like ?? 0;
@@ -211,6 +223,7 @@ export async function GET(req: NextRequest) {
                     imageUrl: post.user?.imageUrl,
                     imagePublicId: post.user?.imagePublicId,
                 },
+
                 relations,
             });
 

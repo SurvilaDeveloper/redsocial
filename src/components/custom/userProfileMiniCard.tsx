@@ -47,32 +47,29 @@ const UserProfileMiniCard = ({
     userName,
     profileImageUrl,
     isFollower = false,
-    isFriend = false,
     following,
+    relState, // 👈 NUEVO
 }: {
     session: any;
     userId: number;
     userName: string;
     profileImageUrl: string | null;
     isFollower?: boolean;
-    isFriend?: boolean;
     following: boolean;
+    relState: number;
 }) => {
+
     // 🔹 Estado local basado en lo que YA viene del backend (relations)
     const [isFollowerState] = useState<boolean>(Boolean(isFollower));
-    const [isFriendState, setIsFriendState] = useState<boolean>(Boolean(isFriend));
+    //const [isFriendState, setIsFriendState] = useState<boolean>(Boolean(isFriend));
     const [followingState, setFollowingState] = useState<boolean>(Boolean(following));
 
     // 🔹 Estado para el botón de amistad (texto + acciones)
     const [buttonFriendshipParamsState, setButtonFriendshipParams] =
-        useState<ButtonFriendshipParams>(() => {
-            if (isFriend) {
-                // estado "son amigos" (approx relState = 8)
-                return buttonParamsFromRelState(8);
-            }
-            // estado por defecto: todavía no son amigos
-            return buttonParamsFromRelState(1);
-        });
+        useState<ButtonFriendshipParams>(() =>
+            buttonParamsFromRelState(relState)
+        );
+
 
     const [requestPopup, setRequestPopup] = useState(false);
     const [requestPopupMenu, setRequestPopupMenu] = useState(false);
@@ -112,12 +109,12 @@ const UserProfileMiniCard = ({
 
             const result = await response.json();
             console.log("result en friendButton: ", result);
+
             if (response.ok) {
                 if (typeof result.relState === "number") {
                     setButtonFriendshipParams(
                         buttonParamsFromRelState(result.relState)
                     );
-                    setIsFriendState(result.relState === 8);
                 }
             } else {
                 console.error("Error en la API:", result.error);
@@ -125,8 +122,10 @@ const UserProfileMiniCard = ({
         } catch (error) {
             console.error("Error de red:", error);
         }
+
         setRequestPopup(false);
     };
+
 
     const switchRequestPopup = () => {
         setRequestPopup((v) => !v);
@@ -142,12 +141,12 @@ const UserProfileMiniCard = ({
 
             const result = await response.json();
             console.log("result en friendButton (menu): ", result);
+
             if (response.ok) {
                 if (typeof result.relState === "number") {
                     setButtonFriendshipParams(
                         buttonParamsFromRelState(result.relState)
                     );
-                    setIsFriendState(result.relState === 8);
                 }
             } else {
                 console.error("Error en la API:", result.error);
@@ -155,8 +154,10 @@ const UserProfileMiniCard = ({
         } catch (error) {
             console.error("Error de red:", error);
         }
+
         setRequestPopupMenu(false);
     };
+
 
     const switchRequestPopupMenu = () => {
         setRequestPopupMenu((v) => !v);
@@ -167,22 +168,23 @@ const UserProfileMiniCard = ({
     };
 
     return (
-        <div className="flex flex-col w-full gap-1 text-slate-100">
+        <div className="flex flex-col w-full  gap-1 text-slate-100">
             {/* Nombre */}
-            <span className="text-[14px] font-bold leading-tight">
+            <span className="text-[12px] font-semibold leading-none">
+
                 {userName}
             </span>
 
             {/* Avatar + botones */}
-            <div className="flex flex-row items-center w-full gap-2">
-                <Link href={`/wall?user=${userId}`}>
-                    <div className="w-8 h-8 relative overflow-hidden rounded-full border border-slate-600 bg-slate-800 flex items-center justify-center">
+            <div className="flex flex-row items-center w-full gap-1">
+                <Link href={`/wall/${userId}`}>
+                    <div className="w-7 h-7 relative overflow-hidden rounded-full border border-slate-600 bg-slate-800 flex items-center justify-center">
                         {profileImageUrl ? (
                             <Image
                                 src={profileImageUrl}
                                 alt="imagen de perfil"
-                                width={32}
-                                height={32}
+                                width={28}
+                                height={28}
                                 className="w-full h-full object-cover"
                             />
                         ) : (
@@ -194,9 +196,9 @@ const UserProfileMiniCard = ({
                 </Link>
 
                 {session && session.user.id != userId && (
-                    <div className="flex flex-1 flex-col gap-1 ml-1">
+                    <div className="flex flex-1 flex-row gap-[2px] ml-1 justify-between">
                         {/* Fila: botón de amistad + badge "Te sigue" */}
-                        <div className="flex flex-row flex-wrap items-center gap-1">
+                        <div className="flex flex-row flex-wrap items-center gap-[2px]">
                             <FriendButton
                                 userId={userId}
                                 buttonParams={buttonFriendshipParamsState}
@@ -216,7 +218,7 @@ const UserProfileMiniCard = ({
                         </div>
 
                         {/* Fila: seguir / menú (alineado a la derecha) */}
-                        <div className="flex flex-row items-center justify-end gap-1">
+                        <div className="flex flex-row items-center justify-end gap-[2px]">
                             <FollowButton
                                 userId={userId}
                                 following={followingState}

@@ -6,6 +6,7 @@ import { loginSchema, signUpSchema } from "@/lib/zod";
 import { signIn } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { issueVerificationEmail } from "@/lib/verificationEmail";
 
 type ActionResponse = {
     success?: true;
@@ -55,11 +56,6 @@ export const loginAction = async (
             return { error: "Contraseña incorrecta." };
         }
 
-        // 👇 IMPORTANTE:
-        // Aquí NO llamamos a signIn. Solo confirmamos que las credenciales son válidas.
-        // En el cliente, luego de recibir success: true,
-        // vas a llamar a signIn("credentials", { email, password, ... }).
-
         return { success: true, email: user.email };
     } catch (error: unknown) {
         console.error("Error en loginAction:", error);
@@ -75,9 +71,7 @@ export const registerAction = async (
     try {
         const parsed = signUpSchema.safeParse(values);
         if (!parsed.success) {
-            const validationError = parsed.error.errors
-                .map((err) => err.message)
-                .join(", ");
+            const validationError = parsed.error.errors.map((err) => err.message).join(", ");
             return { error: `Datos inválidos: ${validationError}` };
         }
 
@@ -86,7 +80,6 @@ export const registerAction = async (
         const existingUser = await prisma.user.findUnique({
             where: { email: data.email },
         });
-
         if (existingUser) {
             return { error: "El usuario ya existe." };
         }
@@ -100,16 +93,16 @@ export const registerAction = async (
                 password: hashedPassword,
                 imageUrl: image?.url ?? null,
                 imagePublicId: image?.publicId ?? null,
-                // Si querés que entre ya verificado, podrías hacer:
-                // emailVerified: new Date(),
+                emailVerified: null, // importante para que loginAction lo bloquee
             },
         });
 
-        // Igual que en loginAction:
-        // NO hacemos signIn acá. Solo devolvemos success.
-        // En el cliente, después de registrar, podés:
-        // - o redirigir al login,
-        // - o hacer signIn("credentials", { email, password, ... }).
+        // ✅ mandar mail de verificación automáticamente al registrarse
+        const issued = await issueVerificationEmail(data.email);
+        if (!issued.ok) {
+            // Usuario creado pero no se pudo mandar mail (no rompas el registro)
+            console.warn("[registerAction] No se pudo emitir verificación:", issued.error);
+        }
 
         return { success: true, email: data.email };
     } catch (error: unknown) {

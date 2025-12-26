@@ -1,38 +1,74 @@
-//src/middleware.ts
+// src/middleware.ts
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 
 export async function middleware(req: NextRequest) {
+    const token = await getToken({
+        req,
+        secret: process.env.AUTH_SECRET,
+    });
 
-    const token = await getToken({ req, secret: process.env.AUTH_SECRET });
+    const pathname = req.nextUrl.pathname;
 
-    // Verifica si la ruta es /newpost o una subruta de /newpost
-    if (req.nextUrl.pathname.startsWith("/newpost")) {
-        if (!token) {
-            return NextResponse.redirect(new URL("/login?message=hastologtopost", req.url));
-        } else {
-            return NextResponse.next();
+    // 🔒 Rutas que requieren login
+    const protectedRoutes =
+        pathname.startsWith("/dashboard") ||
+        pathname.startsWith("/admin") ||
+        pathname.startsWith("/newpost");
+
+    if (protectedRoutes && !token) {
+        return NextResponse.redirect(
+            new URL("/login?message=hastologin", req.url)
+        );
+    }
+
+    // 🔑 Si hay token → validar sessionVersion
+    if (token) {
+        try {
+            const res = await fetch(
+                `${req.nextUrl.origin}/api/auth/session-version`,
+                {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ userId: token.id }),
+                }
+            );
+
+            if (!res.ok) {
+                return NextResponse.redirect(
+                    new URL("/login?message=sessioninvalid", req.url)
+                );
+            }
+
+            const data = await res.json();
+
+            // 🚨 INVALIDAR SESIÓN
+            if (data.sessionVersion !== token.sessionVersion) {
+                return NextResponse.redirect(
+                    new URL("/login?message=sessionexpired", req.url)
+                );
+            }
+        } catch {
+            return NextResponse.redirect(
+                new URL("/login?message=sessionerror", req.url)
+            );
         }
     }
 
-    // Verifica si el usuario está autenticado
-    if (!token) {
-        return NextResponse.redirect(new URL("/login?message=hastobeadmin", req.url));
+    // 👮‍♂️ Control de rol
+    if (pathname.startsWith("/admin") && token?.role !== "admin") {
+        return NextResponse.redirect(
+            new URL("/login?message=hastobeadmin", req.url)
+        );
     }
 
-    // Verifica el rol del usuario
-    if (token.role !== "admin") {
-        return NextResponse.redirect(new URL("/login?message=hastobeadmin", req.url)); // Cambia esta ruta según tu lógica
-    }
-
-    // Permite el acceso si pasa ambas verificaciones
     return NextResponse.next();
 }
 
-// Configuración de las rutas protegidas
 export const config = {
-    matcher: ["/dashboard/:path*", "/admin/:path*", "/newpost/:path*"], // Aplica el middleware a /dashboard y sus subrutas
+    matcher: ["/dashboard/:path*", "/admin/:path*", "/newpost/:path*", "/wall/:path*", "/mywall/:path*"],
 };
+
 
 

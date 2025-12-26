@@ -44,12 +44,42 @@ model Account {
   @@map("account")
 }
 
+model PasswordChangeRequest {
+  id              Int       @id @default(autoincrement())
+  userId          Int
+  token           String    @unique
+  newPasswordHash String
+  expiresAt       DateTime
+  confirmedAt     DateTime?
+  createdAt       DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model SecurityLog {
+  id        Int      @id @default(autoincrement())
+  userId    Int?
+  type      String
+  ip        String?
+  userAgent String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([type])
+}
+
 model User {
   id                Int       @id @default(autoincrement())
   nick              String?   @unique(map: "username_UNIQUE")
   email             String    @unique(map: "User_email_key")
   name              String
   password          String?
+  sessionVersion    Int       @default(1)
   role              UserRole? @default(user)
   emailVerified     DateTime?
   imageUrl          String?
@@ -62,25 +92,32 @@ model User {
   active            Int?      @default(1) @db.TinyInt
 
   // Información de perfil extendida
-  bio              String?   @db.VarChar(500)
-  phoneNumber      String?   @unique
-  movilNumber      String?   @unique
-  birthday         DateTime?
-  location         String?   @db.VarChar(255)
-  country          String?   @db.VarChar(127)
-  province         String?   @db.VarChar(127)
-  city             String?   @db.VarChar(127)
-  street           String?   @db.VarChar(127)
-  number           String?   @db.VarChar(7)
-  department       String?   @db.VarChar(7)
-  mail_code        String?   @db.VarChar(10)
-  website          String?   @db.VarChar(127)
-  language         String?   @db.VarChar(3)
-  occupation       String?   @db.VarChar(100)
-  company          String?   @db.VarChar(100)
-  dataVerifiedCode String?   @db.VarChar(31)
-  dataVerified     Int?      @default(0) @db.TinyInt
-  visibility       Int?      @default(1) @db.TinyInt
+  bio         String?   @db.VarChar(500)
+  phoneNumber String?   @unique
+  movilNumber String?   @unique
+  birthday    DateTime?
+  location    String?   @db.VarChar(255)
+  // ✅ existentes (no tocar aún)
+  country     String?   @db.VarChar(127)
+  province    String?   @db.VarChar(127)
+  city        String?   @db.VarChar(127)
+
+  // ✅ nuevos IDs (migración)
+  countryId  Int?
+  provinceId Int?
+  cityId     Int?
+
+  street           String? @db.VarChar(127)
+  number           String? @db.VarChar(7)
+  department       String? @db.VarChar(7)
+  mail_code        String? @db.VarChar(10)
+  website          String? @db.VarChar(127)
+  language         String? @db.VarChar(3)
+  occupation       String? @db.VarChar(100)
+  company          String? @db.VarChar(100)
+  dataVerifiedCode String? @db.VarChar(31)
+  dataVerified     Int?    @default(0) @db.TinyInt
+  visibility       Int?    @default(1) @db.TinyInt
 
   // Configuraciones de seguridad
   twoFactorEnabled    Boolean?  @default(false)
@@ -118,8 +155,10 @@ model User {
   friendsReceived  Friendship[] @relation("FriendshipTwo")
 
   // Métodos de pago o facturación
-  stripeCustomerId             String?
-  paypalEmail                  String?
+  stripeCustomerId String?
+  paypalEmail      String?
+
+  // Otras relaciones
   productListingComments       ProductListingComment[]
   productListingLikes          ProductListingLike[]
   productListingUnlikes        ProductListingUnlike[]
@@ -145,8 +184,45 @@ model User {
   serviceListingMediaUnlikes   ServiceListingMediaUnlike[]
   serviceListingCommentLikes   ServiceListingCommentLike[]
   serviceListingCommentUnlikes ServiceListingCommentUnlike[]
+  configuration                Configuration?
+  passwordChangeRequests       PasswordChangeRequest[]
+  securityLogs                 SecurityLog[]
 
   @@map("user")
+}
+
+model Configuration {
+  id Int @id @default(autoincrement())
+
+  userId Int  @unique
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // ---- Perfil ----
+  profileImageVisibility Int @default(1)
+  coverImageVisibility   Int @default(1)
+  fullProfileVisibility  Int @default(1)
+
+  // ---- Muro y contenido ----
+  wallVisibility         Int @default(1)
+  postsVisibility        Int @default(1)
+  postCommentsVisibility Int @default(1)
+  postRepliesVisibility  Int @default(1)
+
+  mediaVisibility         Int @default(1)
+  mediaCommentsVisibility Int @default(1)
+  mediaRepliesVisibility  Int @default(1)
+
+  // ---- Relaciones ----
+  friendsListVisibility   Int @default(2)
+  followersListVisibility Int @default(1)
+  followingListVisibility Int @default(1)
+
+  // ---- Interacciones ----
+  likesVisibility           Int @default(1)
+  privateMessagesVisibility Int @default(2)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Friendship {

@@ -1,0 +1,9 @@
+export const SecurityEvent = {
+    PASSWORD_CHANGE_REQUESTED: "PASSWORD_CHANGE_REQUESTED",
+    PASSWORD_CHANGE_CONFIRMED: "PASSWORD_CHANGE_CONFIRMED",
+    PASSWORD_CHANGE_FAILED: "PASSWORD_CHANGE_FAILED",
+    PASSWORD_CHANGE_EXPIRED: "PASSWORD_CHANGE_EXPIRED",
+} as const;
+
+export type SecurityEventType =
+    (typeof SecurityEvent)[keyof typeof SecurityEvent];

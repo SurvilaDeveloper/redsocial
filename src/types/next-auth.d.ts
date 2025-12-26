@@ -1,19 +1,34 @@
-import { DefaultSession } from "next-auth";
-import "next-auth/jwt";
+// src/types/next-auth.d.ts
 
+import { DefaultSession } from "next-auth";
+
+/* ===========================
+   NextAuth main module
+   =========================== */
 declare module "next-auth" {
     interface User {
-        role: string; // Incluye el rol en el objeto User
+        id: string;
+        role: string;
+        sessionVersion: number;
     }
 
     interface Session {
         user: {
-            id: string; // Asegúrate de incluir `id` si lo estás pasando
-            role: string; // Incluye `role` en la sesión del usuario
+            id: string;
+            role: string;
+            sessionVersion: number;
         } & DefaultSession["user"];
     }
+}
 
+/* ===========================
+   JWT module
+   =========================== */
+declare module "next-auth/jwt" {
     interface JWT {
-        role: string; // Añade el rol al token JWT
+        id?: string;
+        role?: string;
+        sessionVersion?: number;
     }
 }
+

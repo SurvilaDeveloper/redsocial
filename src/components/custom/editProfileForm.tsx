@@ -1,8 +1,16 @@
-"use client"
+// src/components/custom/editProfileForm.tsx
+"use client";
 
+import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { profileSchema } from "@/lib/zod"; // Asegúrate de importar tu esquema correctamente
-//import { Input, Label, Button, Form, FormField, FormItem, FormControl, FormMessage } from "@shadcn/ui"; // Asumiendo que tienes estos componentes de ShadCN
+import { CalendarIcon, Earth, Phone } from "lucide-react";
+
+import { profileSchema } from "@/lib/zod";
+import { cn } from "@/lib/utils";
+
 import {
     Form,
     FormControl,
@@ -12,820 +20,1004 @@ import {
     FormLabel,
     FormMessage,
 } from "@/components/ui/form";
+
 import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from "@/components/ui/popover"
-import { CalendarIcon } from "lucide-react"
-import { Calendar } from "@/components/ui/calendar"
-import { Phone } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "../ui/label";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { Textarea } from "../ui/textarea";
-import Image from "next/image";
-import { useState } from "react";
-import { cn } from "@/lib/utils"
-import { format } from "date-fns"
-import Link from "next/link";
-import countries from "@/lib/countries";
-import { Earth } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+
+import { ProfileMe } from "@/types/profile";
+
+import countriesData from "@/data/geodata/countries.json";
+import statesRaw from "@/data/geodata/states_by_country.json"
+import citiesRaw from "@/data/geodata/cities_by_state.json"
+
+import VisibilitySelect from "./VisibilitySelect";
+import {
+    VISIBILITY_SELECT_1,
+    VISIBILITY_SELECT_2,
+} from "@/lib/visibility-options";
 
 
-// Componente del formulario de perfil
-const ProfileForm = ({
-    user
-}: {
-    user: {
-        nick: string,
-        bio: string,
-        phoneNumber: string,
-        movilNumber: string,
-        birthday: Date,
-        occupation: string,
-        company: string,
-        twitterHandle: string,
-        facebookHandle: string,
-        instagramHandle: string,
-        linkedinHandle: string,
-        githubHandle: string,
-        youtubeHandle: string,
-        country: string,
-        province: string,
-        city: string,
-        street: string,
-        number: string,
-        department: string,
-        mailCode: string,
 
-    }
-}
-) => {
-    const [preview, setPreview] = useState<string | null>("/user.jpg"); // Estado para la vista previa
-    const [wallPreview, setWallPreview] = useState<string | null>("/wall.jpg");
+/* -------------------------------------------------------------------------- */
+/*                                   TYPES                                    */
+/* -------------------------------------------------------------------------- */
+
+type GeoOption = { id: number; name: string };
+type StatesByCountry = Record<number, GeoOption[]>;
+type CitiesByState = Record<number, GeoOption[]>;
+
+const statesData = statesRaw as StatesByCountry;
+const citiesData = citiesRaw as CitiesByState;
+
+type PageId = "personal" | "location" | "behavior" | "configuration" | "validation";
+
+/**
+ * Extensión local del schema para IDs geográficos (solo frontend)
+ */
+type ProfileFormValues = {
+    countryId: number | null;
+    provinceId: number | null;
+    cityId: number | null;
+} & Omit<
+    ReturnType<typeof profileSchema.parse>,
+    never
+>;
+
+/* -------------------------------------------------------------------------- */
+/*                                 COMPONENT                                  */
+/* -------------------------------------------------------------------------- */
+
+export default function ProfileForm({ user }: { user: ProfileMe }) {
+
+    console.log("user:", user);
+
+    const [preview] = useState<string | null>(user.imageUrl ?? "/user.jpg");
+    const [wallPreview] = useState<string | null>(user.imageWallUrl ?? "/wall.jpg");
+
     const [discardAsk, setDiscardAsk] = useState(false);
-    const [page, setPage] = useState("personal") // personal, behavior, configuration, validation
+
+    const [page, setPage] = useState<PageId>("personal");
+
+    const [saveError, setSaveError] = useState<string | null>(null);
+    const [saveOk, setSaveOk] = useState<string | null>(null);
+    const [saving, setSaving] = useState(false);
+
+    const [configuration, setConfiguration] = useState({
+        profileImageVisibility: user.configuration?.profileImageVisibility ?? 1,
+        coverImageVisibility: user.configuration?.coverImageVisibility ?? 1,
+        fullProfileVisibility: user.configuration?.fullProfileVisibility ?? 1,
+
+        wallVisibility: user.configuration?.wallVisibility ?? 1,
+        postsVisibility: user.configuration?.postsVisibility ?? 1,
+        postCommentsVisibility: user.configuration?.postCommentsVisibility ?? 1,
+        postRepliesVisibility: user.configuration?.postRepliesVisibility ?? 1,
+
+        mediaVisibility: user.configuration?.mediaVisibility ?? 1,
+        mediaCommentsVisibility: user.configuration?.mediaCommentsVisibility ?? 1,
+        mediaRepliesVisibility: user.configuration?.mediaRepliesVisibility ?? 1,
+
+        friendsListVisibility: user.configuration?.friendsListVisibility ?? 2,
+        followersListVisibility: user.configuration?.followersListVisibility ?? 1,
+        followingListVisibility: user.configuration?.followingListVisibility ?? 1,
+
+        likesVisibility: user.configuration?.likesVisibility ?? 1,
+        privateMessagesVisibility: user.configuration?.privateMessagesVisibility ?? 2,
+    });
 
 
-    const form = useForm<z.infer<typeof profileSchema>>({
+    /* ----------------------------- GEO DATA -------------------------------- */
+
+    const [countries, setCountries] = useState<GeoOption[]>([]);
+    const [states, setStates] = useState<GeoOption[]>([]);
+    const [cities, setCities] = useState<GeoOption[]>([]);
+
+
+
+    const [geoLoading, setGeoLoading] = useState({
+        countries: false,
+        states: false,
+        cities: false,
+    });
+
+    const toggleDiscardAsk = () => {
+        setDiscardAsk((prev) => !prev);
+    };
+
+    const renderVisibilitySelect = (
+        key: keyof typeof configuration,
+        label: string,
+        options: typeof VISIBILITY_SELECT_1
+    ) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-center">
+            <Label className="text-sm">{label}</Label>
+            <VisibilitySelect
+                value={configuration[key]}
+                options={options}
+                onChange={(value) =>
+                    setConfiguration((prev) => ({ ...prev, [key]: value }))
+                }
+            />
+        </div>
+    );
+
+
+    /* ---------------------------- FORM SETUP -------------------------------- */
+
+    const defaultValues = useMemo<ProfileFormValues>(
+        () => ({
+            nick: user.nick ?? null,
+            bio: user.bio ?? null,
+            phoneNumber: user.phoneNumber ?? null,
+            movilNumber: user.movilNumber ?? null,
+            birthday: user.birthday ?? null,
+
+            visibility: user.visibility ?? 1,
+            darkModeEnabled: user.darkModeEnabled ?? false,
+            emailNotifications: user.emailNotifications ?? true,
+            pushNotifications: user.pushNotifications ?? true,
+
+            countryId: user.countryId ?? null,
+            provinceId: user.provinceId ?? null,
+            cityId: user.cityId ?? null,
+
+            country: user.country ?? null,
+            province: user.province ?? null,
+            city: user.city ?? null,
+
+            street: user.street ?? null,
+            number: user.number ?? null,
+            department: user.department ?? null,
+            mail_code: user.mail_code ?? null,
+
+            website: user.website ?? null,
+            language: user.language ?? null,
+            occupation: user.occupation ?? null,
+            company: user.company ?? null,
+
+            twitterHandle: user.twitterHandle ?? null,
+            facebookHandle: user.facebookHandle ?? null,
+            instagramHandle: user.instagramHandle ?? null,
+            linkedinHandle: user.linkedinHandle ?? null,
+            githubHandle: user.githubHandle ?? null,
+        }),
+        [user]
+    );
+
+    const form = useForm<ProfileFormValues>({
         resolver: zodResolver(profileSchema),
-        defaultValues: {
-            nick: user.nick || "",
-            bio: user.bio || "",
-            phoneNumber: user.phoneNumber || "",
-            movilNumber: user.movilNumber || "",
-            birthday: user.birthday || undefined,
-            occupation: user.occupation || "",
-            company: user.company || "",
-            twitterHandle: user.twitterHandle || "",
-            facebookHandle: user.facebookHandle || "",
-            instagramHandle: user.instagramHandle || "",
-            linkedinHandle: user.linkedinHandle || "",
-            githubHandle: user.githubHandle || "",
-            youtubeHandle: user.youtubeHandle || "",
-            country: user.country || "",
-            province: user.province || "",
-            city: user.city || "",
-            street: user.street || "",
-            number: user.number || "",
-            department: user.department || "",
-            mailCode: user.mailCode || "",
-
-        },
+        defaultValues,
         mode: "onChange",
     });
 
-    const onSubmit = (data: any) => {
-        console.log("Form data", data);
-    };
+    const countryId = form.watch("countryId");
+    const provinceId = form.watch("provinceId");
 
-    const discardChangesAndExit = () => {
-        discardAsk ? setDiscardAsk(false) : setDiscardAsk(true)
+    // Habilitar el select de ciudad si hay provinceId seleccionado o valor por defecto cargado
+    const provinceAvailable = provinceId ?? defaultValues.provinceId;
+    const effectiveProvinceId = provinceId ?? defaultValues.provinceId;
+
+
+    /* ------------------------------ GEO API --------------------------------- */
+
+    useEffect(() => {
+        setCountries(countriesData);
+    }, []);
+
+
+    useEffect(() => {
+        setCities([]);
+        // Solo limpiar cityId si el usuario cambió la provincia manualmente
+        if (provinceId !== defaultValues.provinceId) {
+            form.setValue("cityId", null);
+        }
+
+        if (!provinceId && !defaultValues.provinceId) return;
+
+        const effectiveProvinceId = provinceId ?? defaultValues.provinceId;
+
+        // Para cargar ciudades
+        const newCities = effectiveProvinceId !== null
+            ? citiesData[effectiveProvinceId] ?? []
+            : [];
+        setCities(newCities);
+
+    }, [provinceId, form]);
+
+
+    useEffect(() => {
+        const effectiveCountryId = countryId ?? defaultValues.countryId;
+
+        if (effectiveCountryId == null) {
+            setStates([]);
+            return;
+        }
+
+        const newStates = statesData[effectiveCountryId] ?? [];
+        setStates(newStates);
+    }, [countryId, defaultValues.countryId]);
+
+
+    useEffect(() => {
+        const effectiveProvinceId = provinceId ?? defaultValues.provinceId;
+        if (!effectiveProvinceId) {
+            setCities([]);
+            return;
+        }
+        const newCities = citiesData[effectiveProvinceId] ?? [];
+        setCities(newCities);
+    }, [provinceId, defaultValues.provinceId]);
+
+
+    /* ------------------------------ SUBMIT ---------------------------------- */
+
+    async function onSubmit(values: ProfileFormValues) {
+        setSaveError(null);
+        setSaveOk(null);
+        setSaving(true);
+
+        try {
+            // Obtener nombres de país, provincia y ciudad según los IDs
+            const countryName = values.countryId
+                ? countriesData.find(c => c.id === values.countryId)?.name ?? null
+                : null;
+
+            const provinceName = (values.countryId && values.provinceId)
+                ? statesData[values.countryId]?.find(s => s.id === values.provinceId)?.name ?? null
+                : null;
+
+            const cityName = (values.provinceId && values.cityId)
+                ? citiesData[values.provinceId]?.find(ci => ci.id === values.cityId)?.name ?? null
+                : null;
+
+            // Valores a enviar al backend
+            const valuesToSend = {
+                ...values,
+                country: countryName,
+                province: provinceName,
+                city: cityName,
+            };
+
+            const res = await fetch("/api/profile/me", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(valuesToSend),
+            });
+
+            const json = await res.json().catch(() => null);
+
+            if (!res.ok) {
+                setSaveError(json?.error ?? "Error actualizando perfil");
+                return;
+            }
+
+            setSaveOk("Perfil actualizado ✅");
+        } catch (err) {
+            console.error(err);
+            setSaveError("Error actualizando perfil");
+        } finally {
+            setSaving(false);
+        }
     }
 
-    const personal = () => {
-        setPage("personal")
-    }
 
-    const location = () => {
-        setPage("location")
-    }
 
-    const behavior = () => {
-        setPage("behavior")
-    }
+    /* ------------------------------- UI ------------------------------------- */
 
-    const configuration = () => {
-        setPage("configuration")
-    }
-
-    const validation = () => {
-        setPage("validation")
-    }
+    const tabs: { id: PageId; label: string }[] = [
+        { id: "personal", label: "Datos personales" },
+        { id: "location", label: "Ubicación" },
+        { id: "behavior", label: "Conducta" },
+        { id: "configuration", label: "Configuración" },
+        { id: "validation", label: "Validación de cuenta" },
+    ];
 
     return (
-        <div className="flex flex-col">
-            <div className="flex flex-row justify-stretch" id="flaps">
-                <Button onClick={personal} className="border border-black w-full rounded-t-[6px]">Datos personales</Button>
-                <Button onClick={location} className="border border-black w-full rounded-t-[6px]">Ubicación</Button>
-                <Button onClick={behavior} className="border border-black w-full rounded-t-[6px]">Conducta</Button>
-                <Button onClick={configuration} className="border border-black w-full rounded-t-[6px]">Configuración</Button>
-                <Button onClick={validation} className="border border-black w-full rounded-t-[6px]">Validación de cuenta</Button>
+        <div className="flex flex-col gap-4">
+            {/* Tabs */}
+            <div className="flex flex-col sm:flex-row rounded-lg border border-slate-800 bg-slate-950/80 overflow-hidden">
+                {tabs.map((tab) => (
+                    <button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => setPage(tab.id)}
+                        className={cn(
+                            "flex-1 px-3 py-2 text-xs sm:text-sm font-medium border-b sm:border-b-0 sm:border-r border-slate-800/70 focus:outline-none",
+                            page === tab.id
+                                ? "bg-emerald-900/40 text-emerald-200"
+                                : "bg-slate-950/0 text-slate-300 hover:bg-slate-900/70"
+                        )}
+                    >
+                        {tab.label}
+                    </button>
+                ))}
             </div>
 
             <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="">
-
-                    {page === "personal" &&
-                        <div className="border border-black px-2 w-[768px]">
-
-                            {/* Campo para subir la imagen del muro*/}
-                            <div className="flex flex-col items-center w-full gap-6">
-                                {/* Vista previa de la imagen del muro*/}
-                                {preview && (
-                                    <div className="mt-2">
-
-                                        {wallPreview &&
-                                            <Image
-                                                src={wallPreview}
-                                                alt="Vista previa de la imagen del muro"
-                                                width={768}
-                                                height={256}
-                                                className="object-cover border-dotted border-2 border-gray-500 w-[768px] h-[256px]"
-                                            />
-                                        }
-
-                                        <FormItem>
-                                            <FormLabel
-                                                className={"flex justify-center items-center rounded-full w-auto px-4 mx-4 h-12 border-solid border border-green-500 bg-green-200 hover:bg-green-300 absolute top-56"}
-                                            >
-                                                Elegir la imagen del muro
-                                            </FormLabel>
-                                            <FormControl className={"flex  rounded items-center h-6"}>
-                                                <input
-                                                    placeholder="Profile Picture"
-                                                    className={"rounded items-center hidden h-10"}
-                                                    type="file"
-                                                    accept="image/*"
-                                                //onChange={handleImageChange}
-                                                />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    </div>
-                                )}
-
-
-                            </div>
-                            {/* Campo para subir la imagen */}
-                            <div className="flex flex-row items-center justify-center w-full gap-10">
-                                <FormItem>
-                                    <FormLabel
-                                        className={"flex justify-center items-center rounded w-60 h-12 border-solid border border-green-500 bg-green-200 hover:bg-green-300"}
-                                    >
-                                        Cambiar la imagen de perfil
-                                    </FormLabel>
-                                    <FormControl className={"flex  rounded items-center h-6"}>
-                                        <input
-                                            placeholder="Profile Picture"
-                                            className={"rounded items-center hidden h-10"}
-                                            type="file"
-                                            accept="image/*"
-                                        //onChange={handleImageChange}
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                    {/* ================== PESTAÑA PERSONAL ================== */}
+                    {page === "personal" && (
+                        <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4 md:p-6 space-y-6">
+                            {/* Imagen de muro */}
+                            <div className="flex flex-col gap-3">
+                                <p className="text-xs text-slate-400">Imagen de portada de tu muro</p>
+                                <div className="relative w-full aspect-[3/1] max-h-64 border-2 border-dashed border-slate-700 rounded-xl overflow-hidden bg-black/60 flex items-center justify-center">
+                                    {wallPreview && (
+                                        <Image
+                                            src={wallPreview}
+                                            alt="Vista previa de la imagen del muro"
+                                            fill
+                                            className="object-cover"
                                         />
+                                    )}
+
+                                    <FormItem>
+                                        <FormLabel className="absolute bottom-3 left-1/2 -translate-x-1/2 inline-flex items-center justify-center px-4 py-2 rounded-full border border-emerald-500 bg-emerald-600/90 hover:bg-emerald-500 text-xs font-medium text-slate-50 cursor-pointer">
+                                            Elegir imagen del muro
+                                        </FormLabel>
+                                        <FormControl>
+                                            <input type="file" accept="image/*" className="hidden" />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                </div>
+                            </div>
+
+                            {/* Imagen de perfil */}
+                            <div className="flex flex-col md:flex-row items-center md:items-start gap-4 md:gap-8">
+                                <FormItem className="flex flex-col items-center gap-2">
+                                    <FormLabel className="inline-flex items-center justify-center px-4 py-2 rounded-md border border-emerald-500 bg-emerald-600/90 hover:bg-emerald-500 text-xs font-medium text-slate-50 cursor-pointer">
+                                        Cambiar imagen de perfil
+                                    </FormLabel>
+                                    <FormControl>
+                                        <input type="file" accept="image/*" className="hidden" />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
-                                {/* Vista previa de la imagen */}
-                                {preview && (
-                                    <div className="mt-2">
 
+                                {preview && (
+                                    <div className="flex items-center justify-center">
                                         <Image
                                             src={preview}
                                             alt="Vista previa de la imagen de perfil"
-                                            width={100}
-                                            height={100}
-                                            className="object-cover rounded-full border-dotted border-2 mb-4 border-gray-500"
+                                            width={112}
+                                            height={112}
+                                            className="object-cover rounded-full border-2 border-dashed border-slate-500 bg-black"
                                         />
                                     </div>
                                 )}
                             </div>
-                            <hr className="mb-4 border-black"></hr>
 
-                            {/* Nick */}
-                            <FormField
-                                control={form.control}
-                                name="nick"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <div className="flex flex-row gap-4 items-center">
-                                            <Label htmlFor="nick">Pseudónimo</Label>
-                                            <FormControl>
-                                                <Input
-                                                    className="w-[280px] h-8 rounded-[4px] bg-slate-100 border-gray-500"
-                                                    {...field}
-                                                    id="nick"
-                                                    placeholder="Ingresa tu Nick"
-                                                />
-                                            </FormControl>
-
-                                        </div>
-
-                                        <FormMessage className="text-red-700">.</FormMessage>
-                                    </FormItem>
-                                )}
-                            />
-                            <hr className="mb-4 border-black"></hr>
-                            {/* Bio */}
-                            <FormField
-                                control={form.control}
-                                name="bio"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <Label htmlFor="bio">Texto de presentación</Label>
-                                        <FormControl>
-                                            <Textarea
-                                                className="h-8 rounded-[4px] border-gray-500 bg-slate-100"
-                                                {...field} id="bio"
-                                                placeholder="Cuéntanos algo sobre ti" />
-                                        </FormControl>
-                                        <FormMessage className="text-red-700">.</FormMessage>
-                                    </FormItem>
-                                )}
-                            />
-                            <hr className="mb-4 border-black"></hr>
-
-                            {/* Occupation */}
-                            <FormField
-                                control={form.control}
-                                name="occupation"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <div className="flex flex-row gap-4 items-center">
-                                            <Label htmlFor="occupation">Ocupación</Label>
-                                            <FormControl>
-                                                <Input
-                                                    className="w-[280px] h-8 rounded-[4px] bg-slate-100 border-gray-500"
-                                                    {...field}
-                                                    id="occupation"
-                                                    placeholder="¿Cúál es tu ocupación?"
-                                                />
-                                            </FormControl>
-
-                                        </div>
-
-                                        <FormMessage className="text-red-700">.</FormMessage>
-                                    </FormItem>
-                                )}
-                            />
-                            <hr className="mb-4 border-black"></hr>
-
-                            {/* company */}
-                            <FormField
-                                control={form.control}
-                                name="company"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <div className="flex flex-row gap-4 items-center">
-                                            <Label htmlFor="company">Companía</Label>
-                                            <FormControl>
-                                                <Input
-                                                    className="w-[280px] h-8 rounded-[4px] bg-slate-100 border-gray-500"
-                                                    {...field}
-                                                    id="company"
-                                                    placeholder="A qué companía perteneces"
-                                                />
-                                            </FormControl>
-
-                                        </div>
-
-                                        <FormMessage className="text-red-700">.</FormMessage>
-                                    </FormItem>
-                                )}
-                            />
-                            <hr className="mb-4 border-black"></hr>
-
-                            {/* Phone Number */}
-                            <FormField
-                                control={form.control}
-                                name="phoneNumber"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <div className="flex flex-row gap-4 items-center">
-                                            <Label htmlFor="phoneNumber">Número de teléfono fijo</Label>
-                                            <Phone className="w-[24px] h-[24px]"></Phone>
-                                            <FormControl>
-                                                <Input
-                                                    className="w-[280px] h-8 rounded-[4px] bg-slate-100 border-gray-500"
-                                                    {...field}
-                                                    id="phoneNumber"
-                                                    placeholder="Número de teléfono"
-                                                />
-                                            </FormControl>
-                                        </div>
-
-                                        <FormMessage className="text-red-700">.</FormMessage>
-                                    </FormItem>
-                                )}
-                            />
-                            <hr className="mb-4 border-black"></hr>
-
-                            {/* Movil Phone Number */}
-                            <FormField
-                                control={form.control}
-                                name="movilNumber"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <div className="flex flex-row gap-4 items-center">
-                                            <Label htmlFor="movilNumber">Número de teléfono móvil</Label>
-                                            <Image src="/whatsapp.svg" alt="whatsapplogo" width={24} height={24}></Image>
-                                            <FormControl>
-                                                <Input
-                                                    className="w-[280px] h-8 rounded-[4px] bg-slate-100 border-gray-500"
-                                                    {...field}
-                                                    id="movilNumber"
-                                                    placeholder="Número de teléfono móvil"
-                                                />
-                                            </FormControl>
-                                        </div>
-
-                                        <FormMessage className="text-red-700">.</FormMessage>
-                                    </FormItem>
-                                )}
-                            />
-                            <hr className="mb-4 border-black"></hr>
-                            {/* Birthday */}
-
-
-                            {/* Birthday datepicker */}
-
-                            <FormField
-                                control={form.control}
-                                name="birthday"
-                                render={({ field }) => (
-                                    <FormItem className="flex flex-col">
-                                        <div className="flex flex-row gap-4 items-center">
-                                            <FormLabel>Fecha de nacimiento</FormLabel>
-                                            <Popover >
-                                                <PopoverTrigger asChild className="w-[280px] h-8 rounded-[4px] bg-slate-100 border-gray-500">
-                                                    <FormControl>
-                                                        <Button
-                                                            variant={"outline"}
-                                                            className={cn(
-                                                                "w-[240px] pl-3 text-left font-normal",
-                                                                !field.value && "text-muted-foreground"
-                                                            )}
-                                                        >
-                                                            {field.value ? (
-                                                                format(field.value, "PPP")
-                                                            ) : (
-                                                                <span>Pick a date</span>
-                                                            )}
-                                                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                                        </Button>
-                                                    </FormControl>
-                                                </PopoverTrigger>
-                                                <PopoverContent className="w-auto p-0 bg-white rounded-[6px]" align="start">
-                                                    <Calendar
-                                                        mode="single"
-                                                        selected={field.value}
-                                                        onSelect={(date) => {
-                                                            if (date) {
-                                                                // Mantiene el mes y año actuales al seleccionar un día
-                                                                const currentDate = field.value || new Date();
-                                                                field.onChange(new Date(currentDate.getFullYear(), currentDate.getMonth(), date.getDate()));
-                                                            }
-                                                        }}
-                                                        disabled={(date) =>
-                                                            date > new Date() || date < new Date("1900-01-01")
-                                                        }
-                                                        initialFocus
-                                                        components={{
-                                                            Caption: ({ displayMonth }) => {
-                                                                const selectedDate = field.value || displayMonth;
-                                                                const currentYear = selectedDate?.getFullYear() ?? new Date().getFullYear();
-                                                                const currentMonth = selectedDate?.getMonth() ?? new Date().getMonth();
-
-                                                                return (
-                                                                    <div className="flex gap-2 items-center justify-center">
-                                                                        {/* Selector de Mes */}
-                                                                        <select
-                                                                            value={currentMonth}
-                                                                            onChange={(e) =>
-                                                                                field.onChange(new Date(currentYear, Number(e.target.value), field.value?.getDate() || 1))
-                                                                            }
-                                                                            className="border rounded px-2 py-1"
-                                                                        >
-                                                                            {[
-                                                                                "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-                                                                                "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
-                                                                            ].map((month, index) => (
-                                                                                <option key={index} value={index}>
-                                                                                    {month}
-                                                                                </option>
-                                                                            ))}
-                                                                        </select>
-
-                                                                        {/* Selector de Año */}
-                                                                        <select
-                                                                            value={currentYear}
-                                                                            onChange={(e) =>
-                                                                                field.onChange(new Date(Number(e.target.value), currentMonth, field.value?.getDate() || 1))
-                                                                            }
-                                                                            className="border rounded px-2 py-1"
-                                                                        >
-                                                                            {Array.from({ length: 125 }, (_, i) => 1900 + i).map((year) => (
-                                                                                <option key={year} value={year}>
-                                                                                    {year}
-                                                                                </option>
-                                                                            ))}
-                                                                        </select>
-                                                                    </div>
-                                                                );
-                                                            },
-                                                        }}
+                            <div className="border-t border-slate-800/70 pt-4 space-y-4">
+                                {/* Nick */}
+                                <FormField
+                                    control={form.control}
+                                    name="nick"
+                                    render={({ field }) => (
+                                        <FormItem className="space-y-1">
+                                            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                                                <Label htmlFor="nick" className="sm:w-40 text-sm">
+                                                    Pseudónimo
+                                                </Label>
+                                                <FormControl>
+                                                    <Input
+                                                        id="nick"
+                                                        placeholder="Ingresa tu nick"
+                                                        className="bg-slate-950 border-slate-700 text-slate-100"
+                                                        {...field}
+                                                        value={field.value ?? ""}
                                                     />
-                                                </PopoverContent>
-                                            </Popover>
-                                        </div>
-                                        <FormDescription className="text-gray-500">
-                                            Your date of birth is used to calculate your age.
-                                        </FormDescription>
-                                        <FormMessage className="text-red-700" />
-                                    </FormItem>
-                                )}
-                            />
-                            <hr className="my-4 border-black"></hr>
+                                                </FormControl>
+                                            </div>
+                                            <FormMessage className="text-xs text-red-400" />
+                                        </FormItem>
+                                    )}
+                                />
 
-
-                            {/* Twitter */}
-                            <FormField
-                                control={form.control}
-                                name="twitterHandle"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <div className="flex flex-row gap-4 items-center">
-                                            <Image src="/x.svg" alt="xlogo" width={24} height={24}></Image>
-                                            <Label
-                                                className="w-20"
-                                                htmlFor="twitterHandle">Twitter</Label>
+                                {/* Bio */}
+                                <FormField
+                                    control={form.control}
+                                    name="bio"
+                                    render={({ field }) => (
+                                        <FormItem className="space-y-1">
+                                            <Label htmlFor="bio" className="text-sm">
+                                                Texto de presentación
+                                            </Label>
                                             <FormControl>
-                                                <Input
-                                                    className="w-[500px] h-8 rounded-[4px] bg-slate-100 border-gray-500"
+                                                <Textarea
+                                                    id="bio"
+                                                    placeholder="Contanos algo sobre vos..."
+                                                    className="bg-slate-950 border-slate-700 text-slate-100 min-h-[80px]"
                                                     {...field}
-                                                    id="twitterHandle"
-                                                    placeholder="Enlace de Twitter"
+                                                    value={field.value ?? ""}
                                                 />
                                             </FormControl>
-                                        </div>
-                                        <FormMessage className="text-red-700">.</FormMessage>
-                                    </FormItem>
-                                )}
-                            />
-                            <hr className="my-4 border-black"></hr>
+                                            <FormMessage className="text-xs text-red-400" />
+                                        </FormItem>
+                                    )}
+                                />
 
-                            {/* Facebook */}
-                            <FormField
-                                control={form.control}
-                                name="facebookHandle"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <div className="flex flex-row gap-4 items-center">
-                                            <Image src="/facebook.svg" alt="facebooklogo" width={24} height={24}></Image>
-                                            <Label
-                                                className="w-20"
-                                                htmlFor="facebookHandle">Facebook</Label>
-                                            <FormControl>
-                                                <Input className="w-[500px] h-8 rounded-[4px] bg-slate-100 border-gray-500"
-                                                    {...field}
-                                                    id="facebookHandle"
-                                                    placeholder="Enlace de Facebook"
-                                                />
-                                            </FormControl>
-                                        </div>
-                                        <FormMessage className="text-red-700">.</FormMessage>
-                                    </FormItem>
-                                )}
-                            />
-                            <hr className="my-4 border-black"></hr>
+                                {/* Ocupación */}
+                                <FormField
+                                    control={form.control}
+                                    name="occupation"
+                                    render={({ field }) => (
+                                        <FormItem className="space-y-1">
+                                            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                                                <Label htmlFor="occupation" className="sm:w-40 text-sm">
+                                                    Ocupación
+                                                </Label>
+                                                <FormControl>
+                                                    <Input
+                                                        id="occupation"
+                                                        placeholder="¿Cuál es tu ocupación?"
+                                                        className="bg-slate-950 border-slate-700 text-slate-100"
+                                                        {...field}
+                                                        value={field.value ?? ""}
+                                                    />
+                                                </FormControl>
+                                            </div>
+                                            <FormMessage className="text-xs text-red-400" />
+                                        </FormItem>
+                                    )}
+                                />
 
-                            {/* Youtube */}
-                            <FormField
-                                control={form.control}
-                                name="youtubeHandle"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <div className="flex flex-row gap-4 items-center">
-                                            <Image src="/youtube.svg" alt="youtubelogo" width={24} height={24}></Image>
-                                            <Label
-                                                className="w-20"
-                                                htmlFor="linkedinHandle">Youtube</Label>
-                                            <FormControl>
-                                                <Input className="w-[500px] h-8 rounded-[4px] bg-slate-100 border-gray-500"
-                                                    {...field}
-                                                    id="linkedinHandle"
-                                                    placeholder="Enlace de Youtube"
-                                                />
-                                            </FormControl>
-                                        </div>
-                                        <FormMessage className="text-red-700">.</FormMessage>
-                                    </FormItem>
-                                )}
-                            />
-                            <hr className="my-4 border-black"></hr>
+                                {/* Compañía */}
+                                <FormField
+                                    control={form.control}
+                                    name="company"
+                                    render={({ field }) => (
+                                        <FormItem className="space-y-1">
+                                            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                                                <Label htmlFor="company" className="sm:w-40 text-sm">
+                                                    Compañía
+                                                </Label>
+                                                <FormControl>
+                                                    <Input
+                                                        id="company"
+                                                        placeholder="¿En qué compañía trabajás?"
+                                                        className="bg-slate-950 border-slate-700 text-slate-100"
+                                                        {...field}
+                                                        value={field.value ?? ""}
+                                                    />
+                                                </FormControl>
+                                            </div>
+                                            <FormMessage className="text-xs text-red-400" />
+                                        </FormItem>
+                                    )}
+                                />
 
-                            {/* Instagram */}
-                            <FormField
-                                control={form.control}
-                                name="instagramHandle"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <div className="flex flex-row gap-4 items-center">
-                                            <Image src="/instagram.svg" alt="instagramlogo" width={24} height={24}></Image>
-                                            <Label
-                                                className="w-20"
-                                                htmlFor="instagramHandle">Instagram</Label>
-                                            <FormControl>
-                                                <Input className="w-[500px] h-8 rounded-[4px] bg-slate-100 border-gray-500"
-                                                    {...field}
-                                                    id="instagramHandle"
-                                                    placeholder="Enlace de Instagram"
-                                                />
-                                            </FormControl>
-                                        </div>
-                                        <FormMessage className="text-red-700">.</FormMessage>
-                                    </FormItem>
-                                )}
-                            />
-                            <hr className="my-4 border-black"></hr>
+                                {/* Teléfonos */}
+                                <div className="grid gap-4 md:grid-cols-2">
+                                    <FormField
+                                        control={form.control}
+                                        name="phoneNumber"
+                                        render={({ field }) => (
+                                            <FormItem className="space-y-1">
+                                                <div className="flex items-center gap-2">
+                                                    <Label htmlFor="phoneNumber" className="text-sm">
+                                                        Teléfono fijo
+                                                    </Label>
+                                                    <Phone className="w-4 h-4 text-slate-400" />
+                                                </div>
+                                                <FormControl>
+                                                    <Input
+                                                        id="phoneNumber"
+                                                        placeholder="Número de teléfono"
+                                                        className="bg-slate-950 border-slate-700 text-slate-100"
+                                                        {...field}
+                                                        value={field.value ?? ""}
+                                                    />
+                                                </FormControl>
+                                                <FormMessage className="text-xs text-red-400" />
+                                            </FormItem>
+                                        )}
+                                    />
 
-                            {/* LinkedIn */}
-                            <FormField
-                                control={form.control}
-                                name="linkedinHandle"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <div className="flex flex-row gap-4 items-center">
-                                            <Image src="/linkedin.svg" alt="linkedinlogo" width={24} height={24}></Image>
-                                            <Label
-                                                className="w-20"
-                                                htmlFor="linkedinHandle">LinkedIn</Label>
-                                            <FormControl>
-                                                <Input className="w-[500px] h-8 rounded-[4px] bg-slate-100 border-gray-500"
-                                                    {...field}
-                                                    id="linkedinHandle"
-                                                    placeholder="Enlace de LinkedIn"
-                                                />
-                                            </FormControl>
-                                        </div>
-                                        <FormMessage className="text-red-700">.</FormMessage>
-                                    </FormItem>
-                                )}
-                            />
-                            <hr className="my-4 border-black"></hr>
+                                    <FormField
+                                        control={form.control}
+                                        name="movilNumber"
+                                        render={({ field }) => (
+                                            <FormItem className="space-y-1">
+                                                <div className="flex items-center gap-2">
+                                                    <Label htmlFor="movilNumber" className="text-sm">
+                                                        Teléfono móvil
+                                                    </Label>
+                                                    <Image
+                                                        src="/whatsapp.svg"
+                                                        alt="WhatsApp"
+                                                        width={20}
+                                                        height={20}
+                                                        className="opacity-80"
+                                                    />
+                                                </div>
+                                                <FormControl>
+                                                    <Input
+                                                        id="movilNumber"
+                                                        placeholder="Número de celular"
+                                                        className="bg-slate-950 border-slate-700 text-slate-100"
+                                                        {...field}
+                                                        value={field.value ?? ""}
+                                                    />
+                                                </FormControl>
+                                                <FormMessage className="text-xs text-red-400" />
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
 
-                            {/* GitHub */}
-                            <FormField
-                                control={form.control}
-                                name="githubHandle"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <div className="flex flex-row gap-4 items-center">
-                                            <Image src="/github.svg" alt="githublogo" width={24} height={24}></Image>
-                                            <Label
-                                                className="w-20"
-                                                htmlFor="githubHandle">GitHub</Label>
-                                            <FormControl>
-                                                <Input className="w-[500px] h-8 rounded-[4px] bg-slate-100 border-gray-500"
-                                                    {...field}
-                                                    id="githubHandle"
-                                                    placeholder="Enlace de GitHub"
-                                                />
-                                            </FormControl>
-                                        </div>
-                                        <FormMessage className="text-red-700">.</FormMessage>
-                                    </FormItem>
-                                )}
-                            />
+                                {/* Fecha de nacimiento (ISO string en schema) */}
+                                <FormField
+                                    control={form.control}
+                                    name="birthday"
+                                    render={({ field }) => {
+                                        const max = new Date().toISOString().slice(0, 10);
+                                        const dateValue = field.value ? String(field.value).slice(0, 10) : "";
 
+                                        return (
+                                            <FormItem className="flex flex-col gap-1">
+                                                <FormLabel className="text-sm">Fecha de nacimiento</FormLabel>
+
+                                                <FormControl>
+                                                    <div className="relative w-full sm:w-[260px]">
+                                                        {dateValue === "" && (
+                                                            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">
+                                                                Seleccioná una fecha
+                                                            </span>
+                                                        )}
+
+                                                        <input
+                                                            type="date"
+                                                            value={dateValue}
+                                                            min="1900-01-01"
+                                                            max={max}
+                                                            onChange={(e) => {
+                                                                const v = e.target.value;
+                                                                if (!v) return field.onChange(null);
+                                                                field.onChange(
+                                                                    new Date(v + "T00:00:00.000Z").toISOString()
+                                                                );
+                                                            }}
+                                                            className={cn(
+                                                                "w-full h-9 rounded-md border bg-slate-950 border-slate-700 px-3 pr-9 text-sm",
+                                                                "text-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-700",
+                                                                dateValue === "" && "text-transparent"
+                                                            )}
+                                                        />
+
+                                                        <CalendarIcon className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 opacity-70 text-slate-300" />
+                                                    </div>
+                                                </FormControl>
+
+                                                <FormDescription className="text-xs text-slate-400">
+                                                    Sólo se muestra de forma aproximada (edad).
+                                                </FormDescription>
+                                                <FormMessage className="text-xs text-red-400" />
+                                            </FormItem>
+                                        );
+                                    }}
+                                />
+
+                                <hr className="border-slate-800/70" />
+
+                                {/* Redes sociales */}
+                                <div className="space-y-4">
+                                    {[
+                                        { name: "twitterHandle" as const, icon: "/x.svg", label: "Twitter" },
+                                        { name: "facebookHandle" as const, icon: "/facebook.svg", label: "Facebook" },
+                                        { name: "instagramHandle" as const, icon: "/instagram.svg", label: "Instagram" },
+                                        { name: "linkedinHandle" as const, icon: "/linkedin.svg", label: "LinkedIn" },
+                                        { name: "githubHandle" as const, icon: "/github.svg", label: "GitHub" },
+                                    ].map((f) => (
+                                        <FormField
+                                            key={f.name}
+                                            control={form.control}
+                                            name={f.name}
+                                            render={({ field }) => (
+                                                <FormItem className="space-y-1">
+                                                    <div className="flex items-center gap-2">
+                                                        <Image src={f.icon} alt={f.label} width={20} height={20} />
+                                                        <Label className="w-20 text-sm">{f.label}</Label>
+                                                        <FormControl>
+                                                            <Input
+                                                                placeholder={`Enlace de ${f.label}`}
+                                                                className="bg-slate-950 border-slate-700 text-slate-100"
+                                                                {...field}
+                                                                value={field.value ?? ""}
+                                                            />
+                                                        </FormControl>
+                                                    </div>
+                                                    <FormMessage className="text-xs text-red-400" />
+                                                </FormItem>
+                                            )}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
                         </div>
-                    }
-                    {page === "location" &&
-                        <div className="border border-black px-2 w-[768px]">pagina de ubicación
-                            {/*  país */}
-                            <FormField control={form.control} name="country" render={({ field }) => (
-                                <FormItem>
-                                    <div className="flex flex-row gap-4 items-center py-6">
-                                        <Earth width={24} height={24} />
-                                        <FormLabel className="w-20" htmlFor="country">País</FormLabel>
+                    )}
+
+                    {/* ================== PESTAÑA UBICACIÓN ================== */}
+                    {page === "location" && (
+                        <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4 md:p-6 space-y-4">
+                            <p className="text-xs text-slate-400 mb-2">
+                                Estos datos se usan para mostrar aproximadamente tu ubicación
+                                (nunca se muestra tu dirección exacta).
+                            </p>
+
+                            {/* País (countryId) */}
+                            <FormField
+                                control={form.control}
+                                name="countryId"
+                                render={({ field }) => (
+                                    <FormItem className="space-y-1">
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <Earth className="w-4 h-4 text-slate-400" />
+                                            <FormLabel className="text-sm">País</FormLabel>
+                                        </div>
                                         <FormControl>
-                                            <Select {...field} onValueChange={field.onChange}>
-                                                <SelectTrigger className="w-[200px] bg-white rounded-[6px] h-8">
-                                                    <SelectValue placeholder="Seleccione un país" />
+                                            <Select
+                                                value={field.value != null ? String(field.value) : ""}
+                                                onValueChange={(v) => field.onChange(v ? Number(v) : null)}
+                                            >
+                                                <SelectTrigger className="w-full sm:w-[260px] bg-slate-950 border-slate-700 text-slate-100 h-9">
+                                                    <SelectValue
+                                                        placeholder={geoLoading.countries ? "Cargando..." : "Seleccioná un país"}
+                                                    />
                                                 </SelectTrigger>
-                                                <SelectContent className="bg-white">
-                                                    {countries.map((country) => (
-                                                        <SelectItem key={country.country} value={country.country}>
-                                                            {country.country}
+                                                <SelectContent className="bg-slate-900 border-slate-700 text-slate-100 max-h-64">
+                                                    {countries.map((c) => (
+                                                        <SelectItem key={c.id} value={String(c.id)}>
+                                                            {c.name}
                                                         </SelectItem>
                                                     ))}
                                                 </SelectContent>
                                             </Select>
                                         </FormControl>
-                                    </div>
-                                    <FormMessage className="text-red-700" />
-                                </FormItem>
-                            )} />
-                            {/* Province */}
-                            <FormField
-                                control={form.control}
-                                name="province"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <div className="flex flex-row gap-4 items-center">
-
-                                            <Label
-                                                className="w-20"
-                                                htmlFor="province">Provincia</Label>
-                                            <FormControl>
-                                                <Input className="w-[500px] h-8 rounded-[4px] bg-slate-100 border-gray-500"
-                                                    {...field}
-                                                    id="province"
-                                                    placeholder="Ingrese su provincia o estado"
-                                                />
-                                            </FormControl>
-                                        </div>
-                                        <FormMessage className="text-red-700">.</FormMessage>
+                                        <FormMessage className="text-xs text-red-400" />
                                     </FormItem>
                                 )}
                             />
-                            {/* city */}
+
+                            {/* Provincia/Estado (provinceId) */}
                             <FormField
                                 control={form.control}
-                                name="city"
+                                name="provinceId"
                                 render={({ field }) => (
-                                    <FormItem>
-                                        <div className="flex flex-row gap-4 items-center">
-                                            <Label htmlFor="city">Ciudad</Label>
-                                            <FormControl>
-                                                <Input
-                                                    className="w-[280px] h-8 rounded-[4px] bg-slate-100 border-gray-500"
-                                                    {...field}
-                                                    id="city"
-                                                    placeholder="Tu ciudad"
-                                                />
-                                            </FormControl>
+                                    <FormItem className="space-y-1">
+                                        <Label className="text-sm">Provincia / Estado</Label>
+                                        <FormControl>
+                                            <Select
+                                                disabled={!countryId}
+                                                value={field.value != null ? String(field.value) : ""}
+                                                onValueChange={(v) => field.onChange(v ? Number(v) : null)}
+                                            >
+                                                <SelectTrigger className="w-full sm:w-[260px] bg-slate-950 border-slate-700 text-slate-100 h-9">
+                                                    <SelectValue
+                                                        placeholder={
+                                                            !countryId
+                                                                ? "Elegí país primero"
+                                                                : field.value
+                                                                    ? states.find(s => s.id === field.value)?.name ?? "Seleccioná una provincia / estado"
+                                                                    : "Seleccioná una provincia / estado"
+                                                        }
 
-                                        </div>
-
-                                        <FormMessage className="text-red-700">.</FormMessage>
+                                                    />
+                                                </SelectTrigger>
+                                                <SelectContent className="bg-slate-900 border-slate-700 text-slate-100 max-h-64">
+                                                    {states.map((s) => (
+                                                        <SelectItem key={s.id} value={String(s.id)}>
+                                                            {s.name}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </FormControl>
+                                        <FormMessage className="text-xs text-red-400" />
                                     </FormItem>
                                 )}
                             />
-                            <hr className="mb-4 border-black"></hr>
 
-                            {/* street */}
+                            {/* Ciudad (cityId) */}
                             <FormField
                                 control={form.control}
-                                name="street"
+                                name="cityId"
                                 render={({ field }) => (
-                                    <FormItem>
-                                        <div className="flex flex-row gap-4 items-center">
-                                            <Label htmlFor="street">Calle</Label>
+                                    <FormItem className="space-y-1">
+                                        <Label className="text-sm">Ciudad</Label>
+                                        <FormControl>
+                                            <Select
+                                                disabled={effectiveProvinceId === null}
+                                                value={field.value != null ? String(field.value) : ""}
+                                                onValueChange={(v) => field.onChange(v ? Number(v) : null)}
+                                            >
+
+
+
+                                                <SelectTrigger className="w-full sm:w-[260px] bg-slate-950 border-slate-700 text-slate-100 h-9">
+                                                    <SelectValue
+                                                        placeholder={
+                                                            !effectiveProvinceId
+                                                                ? "Elegí provincia primero"
+                                                                : field.value
+                                                                    ? cities.find(ci => ci.id === field.value)?.name ?? "Seleccioná una ciudad"
+                                                                    : defaultValues.city ?? "Seleccioná una ciudad"
+                                                        }
+
+                                                    />
+
+                                                </SelectTrigger>
+                                                <SelectContent className="bg-slate-900 border-slate-700 text-slate-100 max-h-64">
+                                                    {cities.map((ci) => (
+                                                        <SelectItem key={ci.id} value={String(ci.id)}>
+                                                            {ci.name}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </FormControl>
+                                        <FormMessage className="text-xs text-red-400" />
+                                    </FormItem>
+                                )}
+                            />
+
+                            <div className="grid gap-4 md:grid-cols-2">
+                                <FormField
+                                    control={form.control}
+                                    name="street"
+                                    render={({ field }) => (
+                                        <FormItem className="space-y-1">
+                                            <Label htmlFor="street" className="text-sm">
+                                                Calle
+                                            </Label>
                                             <FormControl>
                                                 <Input
-                                                    className="w-[280px] h-8 rounded-[4px] bg-slate-100 border-gray-500"
-                                                    {...field}
                                                     id="street"
-                                                    placeholder="Tu calle"
+                                                    placeholder="Calle"
+                                                    className="bg-slate-950 border-slate-700 text-slate-100"
+                                                    {...field}
+                                                    value={field.value ?? ""}
                                                 />
                                             </FormControl>
+                                            <FormMessage className="text-xs text-red-400" />
+                                        </FormItem>
+                                    )}
+                                />
 
-                                        </div>
-
-                                        <FormMessage className="text-red-700">.</FormMessage>
-                                    </FormItem>
-                                )}
-                            />
-                            <hr className="mb-4 border-black"></hr>
-
-                            {/* number */}
-                            <FormField
-                                control={form.control}
-                                name="number"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <div className="flex flex-row gap-4 items-center">
-                                            <Label htmlFor="number">Número</Label>
+                                <FormField
+                                    control={form.control}
+                                    name="number"
+                                    render={({ field }) => (
+                                        <FormItem className="space-y-1">
+                                            <Label htmlFor="number" className="text-sm">
+                                                Número
+                                            </Label>
                                             <FormControl>
                                                 <Input
-                                                    className="w-[280px] h-8 rounded-[4px] bg-slate-100 border-gray-500"
-                                                    {...field}
                                                     id="number"
-                                                    placeholder="Número de domicilio"
+                                                    placeholder="Número"
+                                                    className="bg-slate-950 border-slate-700 text-slate-100"
+                                                    {...field}
+                                                    value={field.value ?? ""}
                                                 />
                                             </FormControl>
+                                            <FormMessage className="text-xs text-red-400" />
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
 
-                                        </div>
-
-                                        <FormMessage className="text-red-700">.</FormMessage>
-                                    </FormItem>
-                                )}
-                            />
-                            <hr className="mb-4 border-black"></hr>
-
-                            {/* department */}
                             <FormField
                                 control={form.control}
                                 name="department"
                                 render={({ field }) => (
-                                    <FormItem>
-                                        <div className="flex flex-row gap-4 items-center">
-                                            <Label htmlFor="department">Departamento</Label>
-                                            <FormControl>
-                                                <Input
-                                                    className="w-[280px] h-8 rounded-[4px] bg-slate-100 border-gray-500"
-                                                    {...field}
-                                                    id="department"
-                                                    placeholder="Si es departamento, cuál?"
-                                                />
-                                            </FormControl>
-
-                                        </div>
-
-                                        <FormMessage className="text-red-700">.</FormMessage>
+                                    <FormItem className="space-y-1">
+                                        <Label htmlFor="department" className="text-sm">
+                                            Departamento / Piso
+                                        </Label>
+                                        <FormControl>
+                                            <Input
+                                                id="department"
+                                                placeholder="Ej: 2° B"
+                                                className="bg-slate-950 border-slate-700 text-slate-100"
+                                                {...field}
+                                                value={field.value ?? ""}
+                                            />
+                                        </FormControl>
+                                        <FormMessage className="text-xs text-red-400" />
                                     </FormItem>
                                 )}
                             />
-                            <hr className="mb-4 border-black"></hr>
 
-                            {/* mailCode */}
                             <FormField
                                 control={form.control}
-                                name="mailCode"
+                                name="mail_code"
                                 render={({ field }) => (
-                                    <FormItem>
-                                        <div className="flex flex-row gap-4 items-center">
-                                            <Label htmlFor="mailCode">Código postal</Label>
-                                            <FormControl>
-                                                <Input
-                                                    className="w-[280px] h-8 rounded-[4px] bg-slate-100 border-gray-500"
-                                                    {...field}
-                                                    id="mailCode"
-                                                    placeholder="Tu código postal"
-                                                />
-                                            </FormControl>
-
-                                        </div>
-
-                                        <FormMessage className="text-red-700">.</FormMessage>
+                                    <FormItem className="space-y-1">
+                                        <Label htmlFor="mail_code" className="text-sm">
+                                            Código postal
+                                        </Label>
+                                        <FormControl>
+                                            <Input
+                                                id="mail_code"
+                                                placeholder="Tu código postal"
+                                                className="bg-slate-950 border-slate-700 text-slate-100 max-w-xs"
+                                                {...field}
+                                                value={field.value ?? ""}
+                                            />
+                                        </FormControl>
+                                        <FormMessage className="text-xs text-red-400" />
                                     </FormItem>
                                 )}
                             />
                         </div>
-                    }
-                    {page === "behavior" &&
-                        <div className="border border-black px-2 w-[768px]">pagina conducta</div>
-                    }
-                    {page === "configuration" &&
-                        <div className="border border-black px-2 w-[768px]">pagina configuración</div>
-                    }
-                    {page === "validation" &&
-                        <div className="border border-black px-2 w-[768px]">pagina validation</div>
-                    }
+                    )}
+
+                    {/* ================== PESTAÑAS PENDIENTES ================== */}
+                    {page === "behavior" && (
+                        <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4 md:p-6 text-sm text-slate-300">
+                            <FormField
+                                control={form.control}
+                                name="visibility"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Visibilidad del muro</FormLabel>
+                                        <Select
+                                            value={String(field.value ?? 1)}
+                                            onValueChange={(v) => field.onChange(Number(v))}
+                                        >
+                                            <SelectTrigger className="w-[260px]">
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="0">Privado</SelectItem>
+                                                <SelectItem value="1">Público</SelectItem>
+                                                <SelectItem value="2">Solo seguidores</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </FormItem>
+                                )}
+                            />
+
+                        </div>
+                    )}
+
+                    {page === "configuration" && (
+                        <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4 md:p-6 space-y-6 text-sm text-slate-300">
+
+                            <h3 className="text-base font-semibold text-slate-100">Perfil</h3>
+                            {renderVisibilitySelect("profileImageVisibility", "Quiénes pueden ver tu imagen de perfil", VISIBILITY_SELECT_1)}
+                            {renderVisibilitySelect("coverImageVisibility", "Quiénes pueden ver tu imagen de portada", VISIBILITY_SELECT_1)}
+                            {renderVisibilitySelect("fullProfileVisibility", "Quiénes pueden ver tu perfil completo", VISIBILITY_SELECT_1)}
+
+                            <hr className="border-slate-800/70" />
+
+                            <h3 className="text-base font-semibold text-slate-100">Muro y publicaciones</h3>
+                            {renderVisibilitySelect("wallVisibility", "Quiénes pueden ver tu muro", VISIBILITY_SELECT_1)}
+                            {renderVisibilitySelect("postsVisibility", "Quiénes pueden ver tus posts", VISIBILITY_SELECT_1)}
+                            {renderVisibilitySelect("postCommentsVisibility", "Quiénes pueden ver los comentarios de tus posts", VISIBILITY_SELECT_1)}
+                            {renderVisibilitySelect("postRepliesVisibility", "Quiénes pueden ver las respuestas a los comentarios", VISIBILITY_SELECT_1)}
+
+                            <hr className="border-slate-800/70" />
+
+                            <h3 className="text-base font-semibold text-slate-100">Imágenes y videos</h3>
+                            {renderVisibilitySelect("mediaVisibility", "Quiénes pueden ver imágenes y videos", VISIBILITY_SELECT_1)}
+                            {renderVisibilitySelect("mediaCommentsVisibility", "Quiénes pueden ver los comentarios", VISIBILITY_SELECT_1)}
+                            {renderVisibilitySelect("mediaRepliesVisibility", "Quiénes pueden ver las respuestas", VISIBILITY_SELECT_1)}
+
+                            <hr className="border-slate-800/70" />
+
+                            <h3 className="text-base font-semibold text-slate-100">Relaciones</h3>
+                            {renderVisibilitySelect("friendsListVisibility", "Quiénes pueden ver tu lista de amigos", VISIBILITY_SELECT_2)}
+                            {renderVisibilitySelect("followersListVisibility", "Quiénes pueden ver tu lista de seguidores", VISIBILITY_SELECT_1)}
+                            {renderVisibilitySelect("followingListVisibility", "Quiénes pueden ver tu lista de seguidos", VISIBILITY_SELECT_1)}
+
+                            <hr className="border-slate-800/70" />
+
+                            <h3 className="text-base font-semibold text-slate-100">Interacciones</h3>
+                            {renderVisibilitySelect("likesVisibility", "Quiénes pueden ver los likes", VISIBILITY_SELECT_1)}
+                            {renderVisibilitySelect("privateMessagesVisibility", "Quiénes pueden enviarte mensajes privados", VISIBILITY_SELECT_2)}
+
+                            <Button
+                                type="button"
+                                onClick={async () => {
+                                    await fetch("/api/configuration", {
+                                        method: "PUT",
+                                        headers: { "Content-Type": "application/json" },
+                                        body: JSON.stringify(configuration),
+                                    });
+                                }}
+                                className="mt-4 bg-emerald-600 hover:bg-emerald-500"
+                            >
+                                Guardar configuración de privacidad
+                            </Button>
+
+                        </div>
+                    )}
 
 
-                    <div className="flex flex-row gap-10">
-                        {/* Submit button */}
-                        <Button type="submit" className="flex justify-center items-center rounded w-60 h-12 border-solid border border-green-500 bg-green-200 hover:bg-green-300">
-                            Guardar los cambios y salir
+                    {page === "validation" && (
+                        <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4 md:p-6 text-sm text-slate-300">
+                            <p>Estado de validación de cuenta.</p>
+                        </div>
+                    )}
+
+                    {/* Feedback de guardado */}
+                    {saveError && (
+                        <div className="rounded-lg border border-red-500/50 bg-red-950/40 px-3 py-2 text-sm text-red-200">
+                            {saveError}
+                        </div>
+                    )}
+                    {saveOk && (
+                        <div className="rounded-lg border border-emerald-500/40 bg-emerald-950/30 px-3 py-2 text-sm text-emerald-200">
+                            {saveOk}
+                        </div>
+                    )}
+
+                    {/* Botones */}
+                    <div className="flex flex-col sm:flex-row gap-3 sm:gap-6 pt-2">
+                        <Button
+                            type="submit"
+                            disabled={saving}
+                            className="flex-1 sm:flex-none sm:w-60 h-10 rounded-md bg-emerald-600 hover:bg-emerald-500 text-sm font-medium"
+                        >
+                            {saving ? "Guardando..." : "Guardar cambios y salir"}
                         </Button>
-                        {/* discard and exit */}
+
                         <Button
                             type="button"
-                            onClick={discardChangesAndExit}
-                            className="flex justify-center items-center rounded w-60 h-12 border-solid border border-green-500 bg-green-200 hover:bg-green-300">
+                            onClick={toggleDiscardAsk}
+                            variant="outline"
+                            className="flex-1 sm:flex-none sm:w-60 h-10 rounded-md border-amber-500/60 text-amber-100 bg-amber-900/40 hover:bg-amber-800/70 hover:text-amber-50 text-sm font-medium"
+                        >
                             Descartar cambios y salir
                         </Button>
-                        {discardAsk ? <div className="flex flex-col fixed left-96 bottom-10 bg-yellow-100 p-4 gap-4 rounded-[8px]">
-                            <p>Are you sure you want to discard changes and exit?</p>
-                            <div className="flex flex-row justify-between">
-                                <Link href="/" className="flex flex-row items-center bg-green-400 rounded hover:bg-green-300 px-2">Yes</ Link>
-                                <Button onClick={discardChangesAndExit} className="bg-red-400 rounded hover:bg-red-300">No, I do NOT want</Button>
-                            </div>
-                        </div> : <></>}
                     </div>
+
+                    {/* Confirm discard */}
+                    {discardAsk && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
+                            <div className="w-full max-w-sm rounded-xl bg-slate-900 border border-slate-700 p-4 space-y-3 text-sm text-slate-100">
+                                <p className="font-semibold">¿Descartar cambios?</p>
+                                <p className="text-xs text-slate-300">
+                                    Si salís sin guardar, se perderán los cambios.
+                                </p>
+                                <div className="flex justify-end gap-2 pt-2">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={toggleDiscardAsk}
+                                        className="h-8 px-3 text-xs border-slate-600 bg-slate-800/60 hover:bg-slate-700"
+                                    >
+                                        Volver
+                                    </Button>
+                                    <Link
+                                        href="/"
+                                        className="inline-flex items-center justify-center h-8 px-3 rounded-md bg-red-600 hover:bg-red-500 text-xs font-medium text-slate-50"
+                                    >
+                                        Descartar y salir
+                                    </Link>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </form>
             </Form>
         </div>
     );
-};
+}
 
-export default ProfileForm;
+
 
 
 

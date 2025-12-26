@@ -8,9 +8,13 @@ import { PostCard } from "./postCard";
 export default function PostList({
     session,
     userId,
+    viewerType,
+    comingFrom,
 }: {
     session: any;
     userId: number;
+    viewerType: "owner" | "user";
+    comingFrom?: "mywall" | "wall" | "home";
 }) {
     const [posts, setPosts] = useState<Post[]>([]);
     const [page, setPage] = useState(1);
@@ -33,11 +37,22 @@ export default function PostList({
 
             setLoading(true);
             try {
-                const res = await fetch(
-                    `/api/user-posts?user_id=${userId}&page=${page}`,
-                    { cache: "no-store" }
-                );
+                let res;
+                if (viewerType === "owner") {
+                    res = await fetch(
+                        `/api/owner-posts?user_id=${userId}&page=${page}`,
+                        { cache: "no-store" }
+                    );
+                } else {
+                    res = await fetch(
+                        `/api/user-posts?user_id=${userId}&page=${page}`,
+                        { cache: "no-store" }
+                    );
+                }
+
                 const data = await res.json();
+
+                console.log('data en postList:', data);
 
                 const newPosts: Post[] = data?.allPosts ?? [];
 
@@ -147,6 +162,7 @@ export default function PostList({
                         enablePolling={false}        // 👈 nada de polling en el feed
                         enableOwnerControls={true}   // 👈 acá SÍ ves editar/ocultar/visibilidad
                         onOpenDetail={handleOpenDetail} // 👈 abre overlay con detalle
+                        comingFrom={comingFrom}
                     />
                 </div>
             ))}
@@ -195,6 +211,7 @@ export default function PostList({
                                     openCommentsInPage={false}
                                     enablePolling={false}
                                     enableOwnerControls={true}
+                                    comingFrom={comingFrom}
                                 />
                             </div>
                         )}
