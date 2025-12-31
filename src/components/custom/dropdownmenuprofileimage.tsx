@@ -48,24 +48,24 @@ const DropDownMenuProfileImage = () => {
 
                     <DropdownMenuSeparator className="my-1 bg-slate-700/60" />
 
-                    <DropdownMenuItem className="text-sm px-2 py-1.5 cursor-pointer rounded-md focus:bg-slate-800 focus:text-slate-50 hover:bg-slate-800/80">
+                    <DropdownMenuItem asChild className="text-sm px-2 py-1.5 cursor-pointer rounded-md focus:bg-slate-800 focus:text-slate-50 hover:bg-slate-800/80">
                         <Link href="/editprofile" className="w-full">
                             {cfg.TEXTS.editProfile}
                         </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem className="text-sm px-2 py-1.5 cursor-pointer rounded-md focus:bg-slate-800 focus:text-slate-50 hover:bg-slate-800/80">
+                    <DropdownMenuItem asChild className="text-sm px-2 py-1.5 cursor-pointer rounded-md focus:bg-slate-800 focus:text-slate-50 hover:bg-slate-800/80">
                         <Link href="/editaccount" className="w-full">
                             {cfg.TEXTS.editAccount}
                         </Link>
                     </DropdownMenuItem>
 
-                    <DropdownMenuItem className="text-sm px-2 py-1.5 cursor-pointer rounded-md focus:bg-slate-800 focus:text-slate-50 hover:bg-slate-800/80">
+                    <DropdownMenuItem asChild className="text-sm px-2 py-1.5 cursor-pointer rounded-md focus:bg-slate-800 focus:text-slate-50 hover:bg-slate-800/80">
                         <Link href="/login" className="w-full">
                             {cfg.TEXTS.changeAccount}
                         </Link>
                     </DropdownMenuItem>
 
-                    <DropdownMenuItem className="text-sm px-2 py-1.5 cursor-pointer rounded-md focus:bg-slate-800 focus:text-slate-50 hover:bg-slate-800/80">
+                    <DropdownMenuItem asChild className="text-sm px-2 py-1.5 cursor-pointer rounded-md focus:bg-slate-800 focus:text-slate-50 hover:bg-slate-800/80">
                         <LogoutButton />
                     </DropdownMenuItem>
 
@@ -73,13 +73,13 @@ const DropDownMenuProfileImage = () => {
                         <>
                             <DropdownMenuSeparator className="my-1 bg-slate-700/60" />
 
-                            <DropdownMenuItem className="text-sm px-2 py-1.5 cursor-pointer rounded-md focus:bg-slate-800 focus:text-slate-50 hover:bg-slate-800/80">
+                            <DropdownMenuItem asChild className="text-sm px-2 py-1.5 cursor-pointer rounded-md focus:bg-slate-800 focus:text-slate-50 hover:bg-slate-800/80">
                                 <Link href="/dashboard" className="w-full">
                                     {cfg.TEXTS.panel}
                                 </Link>
                             </DropdownMenuItem>
 
-                            <DropdownMenuItem className="text-sm px-2 py-1.5 cursor-pointer rounded-md focus:bg-slate-800 focus:text-slate-50 hover:bg-slate-800/80">
+                            <DropdownMenuItem asChild className="text-sm px-2 py-1.5 cursor-pointer rounded-md focus:bg-slate-800 focus:text-slate-50 hover:bg-slate-800/80">
                                 <Link href="/admin" className="w-full">
                                     Admin Page
                                 </Link>

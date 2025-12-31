@@ -21,8 +21,7 @@ const LoginPage = async ({
     return (
         <div
             id="LoginPage"
-            className="
-                min-h-screen w-full 
+            className="w-full 
                 bg-slate-900 
                 text-slate-100 
                 flex flex-col items-center

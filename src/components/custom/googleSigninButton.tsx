@@ -14,29 +14,10 @@ export default function GoogleSigninButton() {
             action={googleSigninAction}
         >
             <button type="submit"
-                className=" bg-slate-300 w-full rounded my-4 flex justify-center items-center hover:bg-slate-400"
+                className=" bg-slate-300 w-full rounded my-4 flex justify-center items-center hover:bg-slate-400 text-black"
             >
                 <FcGoogle size={24} className="m-2" />{cfg.TEXTS.initWithGoogle}
             </button>
         </form>
     )
 }
-
-
-/*
-import { signIn } from "next-auth/react";
-
-const GoogleSigninButton = () => {
-    return (
-        <button
-            onClick={() => signIn("google")}
-            className="bg-blue-500 text-white px-4 py-2 rounded"
-        >
-            Iniciar sesión con Google
-        </button>
-    );
-};
-
-export default GoogleSigninButton;
-
-*/

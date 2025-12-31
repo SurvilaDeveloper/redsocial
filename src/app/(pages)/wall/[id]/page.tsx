@@ -19,30 +19,36 @@ const WallPage = async ({ params }: WallPageProps) => {
     // if (!Number.isFinite(wallUserId)) notFound();
 
     return (
-        <div className="flex flex-col min-h-[calc(100vh-3.5rem)] md:min-h-[calc(100vh-4rem)] text-slate-100">
-            <div className="flex flex-1 w-full gap-4">
-                {/* Aside izquierdo */}
-                <aside className="hidden lg:block w-[220px] xl:w-[260px]">
-                    <AsideLeft session={session} />
-                </aside>
+        <div className="
+        flex 
+        flex-col 
+        min-h-[calc(100vh-3.5rem)]  /* aprox alto disponible bajo la navbar en mobile */
+        md:min-h-[calc(100vh-4rem)]
+        text-slate-100
+        w-full
+        md:max-w-[33%]
+        md:min-w-[400px]
+        md:w-full">
+            {/* Aside izquierdo */}
+            <aside className="hidden md:block w-[220px] xl:w-[260px] fixed left-0 top-0 h-full pt-12">
+                <AsideLeft session={session} />
+            </aside>
 
-                {/* Columna central */}
-                <main className="w-full flex-1 flex justify-center">
-                    <div className="w-full max-w-[720px] py-3">
-                        {/* Header del muro */}
-                        <WallHeader session={session} userId={wallUserId} />
+            {/* Columna central */}
+            <div className="w-full max-w-[720px] py-0 space-y-4 px-2 md:px-0">
+                {/* Header del muro */}
+                <WallHeader session={session} userId={wallUserId} />
 
-                        {/* Posts */}
-                        <PostList session={session} userId={wallUserId} viewerType="user" comingFrom="wall" />
-                    </div>
-                </main>
-
-                {/* Aside derecho */}
-                <aside className="hidden xl:block w-[260px]">
-                    <AsideRight session={session} />
-                </aside>
+                {/* Posts */}
+                <PostList session={session} userId={wallUserId} viewerType="user" comingFrom="wall" />
             </div>
+
+            {/* Aside derecho */}
+            <aside className="hidden md:block w-[220px] xl:w-[260px] fixed right-4 top-0 h-full pt-12">
+                <AsideRight session={session} />
+            </aside>
         </div>
+
     );
 };
 

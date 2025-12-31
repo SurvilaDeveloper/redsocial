@@ -4,6 +4,14 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
 import authConfig from "./auth.config";
 import { cfg } from "./config";
+import { headers } from "next/headers";
+import { generateDeviceHash } from "./lib/device-fingerprint";
+import { logSecurityEvent } from "./lib/security-log";
+import { SecurityEventType } from "./lib/security-events";
+
+import crypto from "crypto";
+import { sendNewDeviceAlertEmail } from "./lib/email";
+
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
     ...authConfig, // Configuración de los providers
@@ -16,23 +24,26 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
     callbacks: {
         async signIn({ user, account }) {
+            if (!user?.id) return false;
+
+            /* ──────────────────────────────────────
+             * 1️⃣ LÓGICA EXISTENTE: GOOGLE LINKING
+             * ────────────────────────────────────── */
             if (account?.provider === "google") {
                 const existingUser = await prisma.user.findUnique({
                     where: { email: user.email! },
                 });
 
                 if (existingUser) {
-
-                    console.log("Usuario encontrado en callbacks: ", existingUser);
-                    // Verificar si la cuenta de Google ya está vinculada
                     const existingAccount = await prisma.account.findFirst({
-                        where: { provider: "google", providerAccountId: account.providerAccountId },
+                        where: {
+                            provider: "google",
+                            providerAccountId: account.providerAccountId,
+                        },
                     });
 
                     if (!existingAccount) {
-                        console.log("El usuario existe y no tiene cuenta vinculada: ");
                         try {
-                            // Vincula la cuenta de Google
                             await prisma.account.create({
                                 data: {
                                     userId: existingUser.id,
@@ -41,18 +52,142 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                                     type: "oauth",
                                 },
                             });
-                            console.log("Cuenta vinculada exitosamente.");
                         } catch (error) {
-                            console.error("Error al vincular la cuenta de Google:", error);
-                            return false; // Impide el inicio de sesión si hay un error
+                            console.error("Error al vincular Google:", error);
+                            return false;
                         }
                     }
-                } else {
-                    console.log("Usuario no encontrado.");
                 }
-                return true; // Permite el acceso
             }
-            return true; // Permitir el acceso
+
+            /* ──────────────────────────────────────
+             * 2️⃣ DETECCIÓN DE DISPOSITIVO NUEVO
+             * ────────────────────────────────────── */
+            const h = await headers();
+
+            const userAgent = h.get("user-agent") ?? "unknown";
+            const acceptLanguage = h.get("accept-language") ?? "unknown";
+            const ip =
+                h.get("x-forwarded-for")?.split(",")[0] ??
+                h.get("x-real-ip") ??
+                "::1";
+
+            // viene desde CredentialsProvider
+            const timezone = (user as any).timezone ?? "unknown";
+
+            const deviceHash = generateDeviceHash({
+                userAgent
+            });
+
+            // 🔐 asegurar usuario persistido (CRÍTICO PARA OAUTH)
+            const dbUser = await prisma.user.findUnique({
+                where: { email: user.email! },
+            });
+
+            if (!dbUser) {
+                // Primera vez OAuth → dejar continuar
+                return true;
+            }
+
+            const userId = dbUser.id;
+
+
+            const revokedDevice = await prisma.trustedDevice.findFirst({
+                where: {
+                    userId,
+                    deviceHash,
+                    revokedAt: {
+                        not: null,
+                    },
+                },
+            });
+
+            if (revokedDevice) {
+                await logSecurityEvent({
+                    userId,
+                    type: SecurityEventType.LOGIN_BLOCKED_REVOKED_DEVICE,
+                    ip,
+                    userAgent,
+                });
+
+                return false; // ⛔ BLOQUEO REAL
+            }
+
+
+            const existingDevice = await prisma.trustedDevice.findFirst({
+                where: {
+                    userId,
+                    deviceHash,
+                    revokedAt: null,
+                },
+            });
+
+
+            if (!existingDevice) {
+                // 🆕 dispositivo nuevo
+                const device = await prisma.trustedDevice.create({
+                    data: {
+                        userId,
+                        deviceHash,
+                        userAgent,
+                        acceptLanguage,
+                        timezone,
+                        ip,
+                    },
+                });
+
+                // 🔐 token para deshabilitar
+                const rawToken = crypto.randomBytes(32).toString("hex");
+                const tokenHash = crypto
+                    .createHash("sha256")
+                    .update(rawToken)
+                    .digest("hex");
+
+                const expiresAt = new Date(Date.now() + 1000 * 60 * 15); // 15 min
+
+                await prisma.deviceDisableToken.create({
+                    data: {
+                        userId,
+                        deviceId: device.id,
+                        tokenHash,
+                        expiresAt,
+                    },
+                });
+
+                await logSecurityEvent({
+                    userId,
+                    type: SecurityEventType.LOGIN_NEW_DEVICE,
+                    ip,
+                    userAgent,
+                    metadata: {
+                        timezone,
+                        acceptLanguage,
+                        provider: account?.provider ?? "credentials",
+                    },
+                });
+
+                // 📧 email de alerta
+                await sendNewDeviceAlertEmail({
+                    name: user.name ?? "Usuario",
+                    email: user.email!,
+                    userAgent,
+                    ip,
+                    timezone,
+                    disableUrl: `${process.env.NEXTAUTH_URL}/security/devices/disable?token=${rawToken}`,
+
+                });
+            } else {
+                // dispositivo conocido → actualizar uso
+                await prisma.trustedDevice.update({
+                    where: { id: existingDevice.id },
+                    data: {
+                        lastUsedAt: new Date(),
+                        ip,
+                    },
+                });
+            }
+
+            return true;
         },
 
         async jwt({ token, user, account }) {

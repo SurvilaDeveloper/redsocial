@@ -50,15 +50,15 @@ const EditPostPage = async ({ searchParams }: EditPostPageProps) => {
     return (
         <div
             className="
-                flex 
-                flex-col 
-                min-h-[calc(100vh-3.5rem)]
-                md:min-h-[calc(100vh-4rem)]
-                bg-slate-950
-                text-slate-100
-                pt-16
-                px-2
-                md:px-4
+flex 
+        flex-col 
+        min-h-[calc(100vh-3.5rem)]  /* aprox alto disponible bajo la navbar en mobile */
+        md:min-h-[calc(100vh-4rem)]
+        text-slate-100
+        w-full
+        md:max-w-[33%]
+        md:min-w-[400px]
+        md:w-full
             "
         >
             {/* Header */}
@@ -68,27 +68,24 @@ const EditPostPage = async ({ searchParams }: EditPostPageProps) => {
                 </h1>
             </header>
 
-            {/* Layout principal: asides + columna central */}
-            <div className="flex flex-1 w-full gap-4">
-                {/* Aside izquierdo: sólo en pantallas grandes */}
-                <aside className="hidden lg:block w-[220px] xl:w-[260px]">
-                    <AsideLeft session={session} />
-                </aside>
 
-                {/* Columna central */}
-                <main className="w-full flex-1 flex justify-center">
-                    <div className="w-full max-w-[720px] py-3">
-                        {/* 🔹 Pasamos también session a PostEdit */}
-                        <PostEdit postId={numericId} session={session} />
-                    </div>
-                </main>
+            {/* Aside izquierdo: sólo en pantallas grandes */}
+            <aside className="hidden md:block w-[220px] xl:w-[260px] fixed left-0 top-0 h-full pt-12">
+                <AsideLeft session={session} />
+            </aside>
 
-                {/* Aside derecho: sólo en pantallas grandes */}
-                <aside className="hidden xl:block w-[260px]">
-                    <AsideRight session={session} />
-                </aside>
+            {/* Columna central */}
+            <div className="w-full max-w-[720px] py-0 space-y-4 px-2 md:px-0">
+                {/* 🔹 Pasamos también session a PostEdit */}
+                <PostEdit postId={numericId} session={session} />
             </div>
+
+            {/* Aside derecho: sólo en pantallas grandes */}
+            <aside className="hidden md:block w-[220px] xl:w-[260px] fixed right-4 top-0 h-full pt-12">
+                <AsideRight session={session} />
+            </aside>
         </div>
+
     );
 };
 

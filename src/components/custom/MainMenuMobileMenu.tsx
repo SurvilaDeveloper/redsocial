@@ -2,10 +2,10 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { MAIN_MENU_ITEMS } from "./mainMenuConfig";
 import { MoreVertical, X } from "lucide-react";
+import { cfg } from "@/config";
 
 export function MainMenuMobileMenu() {
     const [open, setOpen] = useState(false);
@@ -20,7 +20,7 @@ export function MainMenuMobileMenu() {
     };
 
     return (
-        <div className="md:hidden relative">
+        <div className="lg:hidden relative">
             {/* Botón tres puntitos */}
             <button
                 type="button"

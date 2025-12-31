@@ -25,6 +25,7 @@ import { signIn } from "next-auth/react";
 import { useGlobalContext } from "@/context/globalcontext";
 import Link from "next/link";
 import { cfg } from "@/config";
+import { getClientTimezone } from "@/lib/client-timezone";
 
 const LoginForm = ({
     isVerified,
@@ -74,6 +75,7 @@ const LoginForm = ({
             const result = await signIn("credentials", {
                 email: values.email,
                 password: values.password,
+                timezone: getClientTimezone(),
                 redirect: false,
             });
 

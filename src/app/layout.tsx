@@ -36,7 +36,7 @@ export default function RootLayout({
         <GlobalProvider>
           <ClientSessionProvider>
             {/* Contenedor principal de la app */}
-            <div className="min-h-screen flex flex-col">
+            <div className="min-h-screen">
               <Navbar />
               {/* Main se encarga del layout interno de cada página */}
               <Main>

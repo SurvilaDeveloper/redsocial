@@ -93,6 +93,7 @@ export function PostCard({
 
     useEffect(() => {
         setCurrentPost(post);
+        console.log("post en postCardxx:", currentPost);
     }, [post.id]);
 
     // 🔹 estado local de comentarios
@@ -281,8 +282,6 @@ export function PostCard({
         currentPost.relations ?? {
             following: false,
             isFollower: false,
-            isFriend: false,
-            relState: 0, // 👈 IMPORTANTE
             likesCount: 0,
             unlikesCount: 0,
             userReaction: null,
@@ -291,7 +290,7 @@ export function PostCard({
 
     // ⭐ Estado local de reacción y contadores
     const [postReaction, setPostReaction] =
-        useState<PostReaction>(rel.userReaction ?? null);
+        useState<Reaction>(rel.userReaction ?? null);
     const [likesCount, setLikesCount] = useState<number>(
         rel.likesCount ?? 0
     );
@@ -316,8 +315,8 @@ export function PostCard({
     const canReact = Boolean(sessionUserId) && !reactionLoading;
 
     const updateCountsOptimistic = (
-        prev: PostReaction,
-        next: PostReaction
+        prev: Reaction,
+        next: Reaction
     ) => {
         setLikesCount((prevLikes) => {
             let v = prevLikes;
@@ -334,7 +333,7 @@ export function PostCard({
         });
     };
 
-    const sendReaction = async (next: PostReaction) => {
+    const sendReaction = async (next: Reaction) => {
         if (!canReact || !currentPost.id) return;
 
         const prev = postReaction;
@@ -367,7 +366,7 @@ export function PostCard({
                 setUnlikesCount(data.counts.unlikes ?? 0);
             }
             if (typeof data?.userReaction !== "undefined") {
-                setPostReaction(data.userReaction as PostReaction);
+                setPostReaction(data.userReaction as Reaction);
             }
         } catch (err) {
             updateCountsOptimistic(next, prev);
@@ -379,13 +378,13 @@ export function PostCard({
     };
 
     const handleLike = () => {
-        const next: PostReaction =
+        const next: Reaction =
             postReaction === "LIKE" ? null : "LIKE";
         sendReaction(next);
     };
 
     const handleUnlike = () => {
-        const next: PostReaction =
+        const next: Reaction =
             postReaction === "UNLIKE" ? null : "UNLIKE";
         sendReaction(next);
     };
@@ -571,13 +570,13 @@ export function PostCard({
 
             {/* === TOOLBAR DE DUEÑO (MyWall) === */}
             {enableOwnerControls && isOwner && !isDeleted && comingFrom === "mywall" && (
-                <div className="mb-2 flex flex-row items-center gap-2 w-full text-white bg-[rgb(62,62,62)] px-3 py-1 rounded-md">
+                <div className="mb-2 flex flex-row items-center gap-2 w-full h-6 text-white bg-[rgb(62,62,62)] px-3 py-1 rounded-md">
                     {/* Editar */}
                     <Link
                         href={`/editpost?post_id=${currentPost.id}`}
-                        className="flex flex-row items-center justify-center pr-2 hover:text-sky-300 transition-colors text-xs"
+                        className="flex flex-row items-center justify-center h-5 pr-2 hover:text-sky-300 transition-colors text-xs"
                     >
-                        <Pencil size={18} />
+                        <Pencil size={12} />
                         <span className="ml-1">Editar</span>
                     </Link>
 
@@ -586,16 +585,16 @@ export function PostCard({
                         type="button"
                         onClick={handleToggleActiveOwner}
                         disabled={ownerActionsLoading}
-                        className="flex flex-row items-center gap-1 text-[11px] px-2 py-1 rounded bg-slate-800 border border-slate-600 hover:bg-slate-700 disabled:opacity-50"
+                        className="flex flex-row items-center h-5 gap-1 text-[11px] px-2 py-1 rounded bg-slate-800 border border-slate-600 hover:bg-slate-700 disabled:opacity-50"
                     >
                         {isActive ? (
                             <>
-                                <EyeOffIcon size={16} />
+                                <EyeOffIcon size={12} />
                                 <span>Ocultar</span>
                             </>
                         ) : (
                             <>
-                                <EyeIcon size={16} />
+                                <EyeIcon size={12} />
                                 <span>Mostrar</span>
                             </>
                         )}
@@ -606,9 +605,9 @@ export function PostCard({
                         type="button"
                         onClick={() => setShowDeletePopup(true)}
                         disabled={ownerActionsLoading}
-                        className="flex flex-row items-center gap-1 text-[11px] px-2 py-1 rounded bg-red-800 border border-red-500 hover:bg-red-700 disabled:opacity-50"
+                        className="flex flex-row items-center h-5 gap-1 text-[11px] px-2 py-1 rounded bg-red-800 border border-red-500 hover:bg-red-700 disabled:opacity-50"
                     >
-                        <Trash2 size={16} />
+                        <Trash2 size={12} />
                         <span>Eliminar</span>
                     </button>
 
@@ -630,8 +629,8 @@ export function PostCard({
                             )}
                             {currentPost.visibility === 3 && (
                                 <div className="flex flex-row gap-0.5">
-                                    <Footprints size={14} />
-                                    <Handshake size={14} />
+                                    <Footprints size={16} />
+                                    <Handshake size={16} />
                                 </div>
                             )}
                             {currentPost.visibility === 4 && (
@@ -694,7 +693,7 @@ export function PostCard({
                 </div>
             )}
 
-            {/* Toolbar cuando está eliminado (solo dueño) */}
+            {/* Toolbar cuando está eliminado (solo dueño)*/}
             {enableOwnerControls && isOwner && isDeleted && (
                 <div className="mb-2 flex flex-row items-center gap-2 w-full text-red-200 bg-[rgb(64,20,20)] px-3 py-1 rounded-md">
                     <span className="text-xs font-semibold">
@@ -741,12 +740,12 @@ export function PostCard({
             )}
 
             {/* ====== HEADER (usuario + fecha + título) ====== */}
-            {currentPost.userData && (
+            {currentPost.user && (
                 <UserProfileMiniCard
                     session={session}
-                    userId={currentPost.userData.id}
-                    userName={currentPost.userData.name}
-                    profileImageUrl={currentPost.userData.imageUrl}
+                    userId={currentPost.user.id}
+                    userName={currentPost.user.name}
+                    profileImageUrl={currentPost.user.imageUrl ? currentPost.user.imageUrl : currentPost.user.image ? currentPost.user.image : null}
                     following={currentPost.relations.following}
                     isFollower={currentPost.relations.isFollower}
                     relState={currentPost.relations.relState} // 👈
@@ -754,9 +753,9 @@ export function PostCard({
 
             )}
 
-            <span className="text-[10px]">
+            <div className="text-[10px] h-[6px]">
                 {formatDate(currentPost.createdAt)}
-            </span>
+            </div>
 
             <h3
                 className={

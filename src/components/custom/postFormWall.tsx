@@ -37,11 +37,20 @@ const PostFormWall = () => {
     const [image, setImage] = useState<File | null>(null);
     const [preview, setPreview] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [expanded, setExpanded] = useState<boolean>(false);
 
     const [isPending, startTransition] = useTransition();
     const router = useRouter();
 
     const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+    const expandPostInput = () => {
+        setExpanded(true);
+    }
+
+    const collapsePostInput = () => {
+        setExpanded(false);
+    }
 
     const form = useForm<z.infer<typeof postSchema>>({
         resolver: zodResolver(postSchema),
@@ -128,115 +137,130 @@ const PostFormWall = () => {
         <div
             id="PostFormWall"
             className="
-                w-full 
-                rounded-xl 
-                border border-slate-800 
-                bg-slate-900/80 
+                w-full
+                rounded-sm 
+                border 
+                border-slate-800 
+                bg-[rgba(10,39,78,0.9)] 
                 shadow-md 
-                px-3 py-2 
-                md:px-4 md:py-3 
-                mb-2
-            "
+                px-1 py-1 
+                md:px-1 md:py-1 
+                mb-0
+                sticky 
+                top-10
+                md:top-12
+                z-50
+                "
+
         >
-            <Form {...form}>
-                <form
-                    onSubmit={form.handleSubmit(onSubmit)}
-                    className="space-y-2"
-                >
-                    {/* Título */}
-                    <FormField
-                        control={form.control}
-                        name="title"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel className="text-[11px] text-slate-400 leading-none">
-                                    Título
-                                </FormLabel>
-                                <FormControl>
-                                    <Input
-                                        placeholder="Título del post"
-                                        type="text"
-                                        {...field}
-                                        className="
-                                            h-8
-                                            text-[13px]
+            {expanded ? (
+                <div >
+                    <button
+                        type="button"
+                        onClick={collapsePostInput}
+                        className="text-slate-400 hover:text-slate-300 text-sm"
+                    >
+                        <X size={16} className="text-white" />
+                    </button>
+                    <Form {...form}>
+                        <form
+                            onSubmit={form.handleSubmit(onSubmit)}
+                            className="space-y-0.1"
+                        >
+                            {/* Título */}
+                            <FormField
+                                control={form.control}
+                                name="title"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel className="text-[11px] text-slate-400 leading-none">
+                                            Título
+                                        </FormLabel>
+                                        <FormControl>
+                                            <Input
+                                                placeholder="Título del post"
+                                                type="text"
+                                                {...field}
+                                                className="
+                                            h-6
+                                            text-[12px]
                                             bg-slate-950
                                             border-slate-700
                                             focus-visible:ring-blue-500
                                             "
-                                    />
-                                </FormControl>
-                                <div
-                                    className={`
+                                            />
+                                        </FormControl>
+                                        <div
+                                            className={`
                                         mt-[2px] text-[10px]
 
                                         ${counterClass(titleValue.length, TITLE_MAX)}
                                     `}
-                                >
-                                    {titleValue.length} / {TITLE_MAX}
-                                </div>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
+                                        >
+                                            {titleValue.length} / {TITLE_MAX}
+                                        </div>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
 
-                    {/* Descripción */}
-                    <FormField
-                        control={form.control}
-                        name="description"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel className="text-[11px] text-slate-400 leading-none">
-                                    Descripción
-                                </FormLabel>
-                                <FormControl>
-                                    <Textarea
-                                        placeholder="Escribe algo..."
-                                        {...field}
-                                        className="
-                                            text-sm
-                                            min-h-[64px]
+                            {/* Descripción */}
+                            <FormField
+                                control={form.control}
+                                name="description"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel className="text-[11px] text-slate-400 leading-none">
+                                            Descripción
+                                        </FormLabel>
+                                        <FormControl>
+                                            <Textarea
+                                                placeholder="Escribe algo..."
+                                                {...field}
+                                                className="
+                                            text-[12px]
+                                            min-h-[48px]
                                             bg-slate-950
                                             border-slate-700
                                             focus-visible:ring-blue-500
                                         "
-                                    />
-                                </FormControl>
-                                <div
-                                    className={`
+                                            />
+                                        </FormControl>
+                                        <div
+                                            className={`
                                         mt-[2px] text-[10px]
 
                                         ${counterClass(descValue.length, DESC_MAX)}
                                     `}
-                                >
-                                    {descValue.length} / {DESC_MAX}
-                                </div>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
+                                        >
+                                            {descValue.length} / {DESC_MAX}
+                                        </div>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
 
-                    {/* Imagen + botones */}
-                    <FormItem>
-                        <FormLabel className="text-[11px] text-slate-400 leading-none">
-                            Imagen (opcional)
-                        </FormLabel>
-                        <FormControl>
-                            <div className="flex flex-wrap items-center gap-1">
-                                {/* input real (oculto) */}
-                                <Input
-                                    ref={fileInputRef}
-                                    type="file"
-                                    accept="image/*"
-                                    onChange={handleImageChange}
-                                    className="hidden"
-                                />
+                            {/* Imagen + botones */}
+                            <FormItem>
+                                <FormLabel className="text-[11px] text-slate-400 leading-none">
+                                    Imagen (opcional)
+                                </FormLabel>
+                                <FormControl>
+                                    <div className="flex flex-wrap items-center gap-1">
+                                        {/* input real (oculto) */}
+                                        <Input
+                                            ref={fileInputRef}
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={handleImageChange}
+                                            className="hidden"
+                                        />
 
-                                {!preview ? (
-                                    <Button
-                                        type="button"
-                                        onClick={openFilePicker}
-                                        className="
+                                        {!preview ? (
+                                            <Button
+                                                type="button"
+                                                onClick={openFilePicker}
+                                                className="
                                             h-7 
                                             px-2 
                                             text-[11px] 
@@ -245,16 +269,16 @@ const PostFormWall = () => {
                                             rounded-md 
                                             hover:bg-blue-600
                                         "
-                                    >
-                                        <ImageIcon className="mr-1" size={16} />
-                                        Seleccionar imagen
-                                    </Button>
-                                ) : (
-                                    <>
-                                        <Button
-                                            type="button"
-                                            onClick={openFilePicker}
-                                            className="
+                                            >
+                                                <ImageIcon className="mr-1" size={16} />
+                                                Seleccionar imagen
+                                            </Button>
+                                        ) : (
+                                            <>
+                                                <Button
+                                                    type="button"
+                                                    onClick={openFilePicker}
+                                                    className="
                                             h-7 
                                             px-2 
                                             text-[11px] 
@@ -263,19 +287,19 @@ const PostFormWall = () => {
                                                 rounded-md 
                                                 hover:bg-blue-600
                                             "
-                                        >
-                                            <RefreshCcw
-                                                className="mr-1"
-                                                size={16}
-                                            />
-                                            Cambiar
-                                        </Button>
+                                                >
+                                                    <RefreshCcw
+                                                        className="mr-1"
+                                                        size={16}
+                                                    />
+                                                    Cambiar
+                                                </Button>
 
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            onClick={clearImage}
-                                            className="
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    onClick={clearImage}
+                                                    className="
                                             h-7 
                                             px-2 
                                             text-[11px] 
@@ -283,24 +307,24 @@ const PostFormWall = () => {
                                                 border-slate-600 
                                                 text-slate-200
                                             "
-                                        >
-                                            <X className="mr-1" size={16} />
-                                            Quitar
-                                        </Button>
-                                    </>
-                                )}
-                            </div>
-                        </FormControl>
-                        <FormMessage />
-                    </FormItem>
+                                                >
+                                                    <X className="mr-1" size={16} />
+                                                    Quitar
+                                                </Button>
+                                            </>
+                                        )}
+                                    </div>
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
 
-                    {/* Preview */}
-                    {preview && (
-                        <div className="mt-2 flex justify-center">
-                            <img
-                                src={preview}
-                                alt="vista previa"
-                                className="
+                            {/* Preview */}
+                            {preview && (
+                                <div className="mt-2 flex justify-center">
+                                    <img
+                                        src={preview}
+                                        alt="vista previa"
+                                        className="
                                     w-full 
                                     max-w-[400px] 
                                     rounded-lg 
@@ -308,29 +332,29 @@ const PostFormWall = () => {
                                     bg-black 
                                     object-contain
                                 "
-                            />
-                        </div>
-                    )}
+                                    />
+                                </div>
+                            )}
 
-                    {/* Error global */}
-                    {error && (
-                        <div className="mt-2 text-xs text-red-400">
-                            <p>{error}</p>
-                            <Link
-                                href="/login"
-                                className="underline text-red-300"
-                            >
-                                {cfg.TEXTS.acceder}
-                            </Link>
-                        </div>
-                    )}
+                            {/* Error global */}
+                            {error && (
+                                <div className="mt-2 text-xs text-red-400">
+                                    <p>{error}</p>
+                                    <Link
+                                        href="/login"
+                                        className="underline text-red-300"
+                                    >
+                                        {cfg.TEXTS.acceder}
+                                    </Link>
+                                </div>
+                            )}
 
-                    {/* Botón enviar */}
-                    <div className="pt-1 flex justify-end">
-                        <Button
-                            type="submit"
-                            disabled={isPending}
-                            className="
+                            {/* Botón enviar */}
+                            <div className="pt-1 flex justify-end">
+                                <Button
+                                    type="submit"
+                                    disabled={isPending}
+                                    className="
                                 h-7 
                                 px-2 
                                 text-[11px] 
@@ -339,12 +363,25 @@ const PostFormWall = () => {
                                 hover:bg-blue-500 
                                 disabled:opacity-60
                             "
-                        >
-                            {isPending ? "Publicando..." : "Publicar"}
-                        </Button>
-                    </div>
-                </form>
-            </Form>
+                                >
+                                    {isPending ? "Publicando..." : "Publicar"}
+                                </Button>
+                            </div>
+                        </form>
+                    </Form>
+                </div>
+            ) : (
+                <div className="h-8 text-[12px] bg-slate-950 text-slate-400 hover:text-slate-300 mb-0">
+                    <button
+                        type="button"
+                        onClick={expandPostInput}
+                        className="h-8 text-[12px] bg-slate-950 border border-slate-800 rounded-[4px] text-slate-400 hover:text-slate-300 w-full text-left px-2"
+                    >
+                        Escribe algo...
+                    </button>
+                </div>
+            )}
+
         </div>
     );
 };

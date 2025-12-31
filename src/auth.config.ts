@@ -8,19 +8,29 @@ import { loginSchema } from "./lib/zod";
 import { nanoid } from "nanoid";
 import { sendEmailVerification } from "./lib/email";
 import { cfg } from "./config";
-import { redirect } from "next/dist/server/api-utils";
+//import { redirect } from "next/dist/server/api-utils";
 
 
 const authConfig: NextAuthConfig = {
     providers: [
         // Provider de credenciales
         CredentialsProvider({
+            credentials: {
+                email: { label: "Email", type: "email" },
+                password: { label: "Password", type: "password" },
+                timezone: { label: "Timezone", type: "text" }, // 👈 NUEVO
+            },
             authorize: async (credentials) => {
                 const { data, success } = loginSchema.safeParse(credentials);
 
                 if (!success) {
                     throw new Error("Invalid credentials. (en auth-config.ts)");
                 }
+
+                const timezone =
+                    typeof credentials?.timezone === "string"
+                        ? credentials.timezone
+                        : null;
 
                 const user = await prisma.user.findUnique({
                     where: { email: data.email },
@@ -73,6 +83,7 @@ const authConfig: NextAuthConfig = {
                     image: user.imageUrl,
                     role: user.role || "",
                     sessionVersion: user.sessionVersion, // 🔑 CLAVE
+                    timezone, // 🔥 VIAJA AL CALLBACK signIn
                 };
             },
         }),

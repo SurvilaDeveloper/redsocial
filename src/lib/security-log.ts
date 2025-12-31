@@ -1,3 +1,5 @@
+//src/lib/security-log.ts
+
 import { prisma } from "@/lib/prisma";
 import { SecurityEventType } from "./security-events";
 
@@ -27,7 +29,8 @@ export async function logSecurityEvent({
             },
         });
     } catch (err) {
-        // ❗ NUNCA romper el flujo principal por un log
+        // Nunca romper el flujo principal
         console.error("SecurityLog error:", err);
     }
 }
+

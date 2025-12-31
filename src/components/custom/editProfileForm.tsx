@@ -60,7 +60,7 @@ type CitiesByState = Record<number, GeoOption[]>;
 const statesData = statesRaw as StatesByCountry;
 const citiesData = citiesRaw as CitiesByState;
 
-type PageId = "personal" | "location" | "behavior" | "configuration" | "validation";
+type PageId = "personal" | "location" | "socialnets";
 
 /**
  * Extensión local del schema para IDs geográficos (solo frontend)
@@ -317,15 +317,14 @@ export default function ProfileForm({ user }: { user: ProfileMe }) {
     const tabs: { id: PageId; label: string }[] = [
         { id: "personal", label: "Datos personales" },
         { id: "location", label: "Ubicación" },
-        { id: "behavior", label: "Conducta" },
-        { id: "configuration", label: "Configuración" },
-        { id: "validation", label: "Validación de cuenta" },
+        { id: "socialnets", label: "Redes sociales" }
+
     ];
 
     return (
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4 w-full">
             {/* Tabs */}
-            <div className="flex flex-col sm:flex-row rounded-lg border border-slate-800 bg-slate-950/80 overflow-hidden">
+            <div className="flex flex-col lg:flex-row rounded-lg border border-slate-800 bg-slate-950/80 overflow-hidden">
                 {tabs.map((tab) => (
                     <button
                         key={tab.id}
@@ -610,39 +609,7 @@ export default function ProfileForm({ user }: { user: ProfileMe }) {
 
                                 <hr className="border-slate-800/70" />
 
-                                {/* Redes sociales */}
-                                <div className="space-y-4">
-                                    {[
-                                        { name: "twitterHandle" as const, icon: "/x.svg", label: "Twitter" },
-                                        { name: "facebookHandle" as const, icon: "/facebook.svg", label: "Facebook" },
-                                        { name: "instagramHandle" as const, icon: "/instagram.svg", label: "Instagram" },
-                                        { name: "linkedinHandle" as const, icon: "/linkedin.svg", label: "LinkedIn" },
-                                        { name: "githubHandle" as const, icon: "/github.svg", label: "GitHub" },
-                                    ].map((f) => (
-                                        <FormField
-                                            key={f.name}
-                                            control={form.control}
-                                            name={f.name}
-                                            render={({ field }) => (
-                                                <FormItem className="space-y-1">
-                                                    <div className="flex items-center gap-2">
-                                                        <Image src={f.icon} alt={f.label} width={20} height={20} />
-                                                        <Label className="w-20 text-sm">{f.label}</Label>
-                                                        <FormControl>
-                                                            <Input
-                                                                placeholder={`Enlace de ${f.label}`}
-                                                                className="bg-slate-950 border-slate-700 text-slate-100"
-                                                                {...field}
-                                                                value={field.value ?? ""}
-                                                            />
-                                                        </FormControl>
-                                                    </div>
-                                                    <FormMessage className="text-xs text-red-400" />
-                                                </FormItem>
-                                            )}
-                                        />
-                                    ))}
-                                </div>
+
                             </div>
                         </div>
                     )}
@@ -862,95 +829,51 @@ export default function ProfileForm({ user }: { user: ProfileMe }) {
                             />
                         </div>
                     )}
+                    {/* ================== PESTAÑA UBICACIÓN ================== */}
+                    {page === "socialnets" && (
+                        <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4 md:p-6 space-y-4">
+                            <p className="text-xs text-slate-400 mb-2">
+                                Estos datos se usan para mostrar aproximadamente tu ubicación
+                                (nunca se muestra tu dirección exacta).
+                            </p>
+                            {/* Redes sociales */}
+                            <div className="space-y-4">
+                                {[
+                                    { name: "twitterHandle" as const, icon: "/x.svg", label: "Twitter" },
+                                    { name: "facebookHandle" as const, icon: "/facebook.svg", label: "Facebook" },
+                                    { name: "instagramHandle" as const, icon: "/instagram.svg", label: "Instagram" },
+                                    { name: "linkedinHandle" as const, icon: "/linkedin.svg", label: "LinkedIn" },
+                                    { name: "githubHandle" as const, icon: "/github.svg", label: "GitHub" },
+                                ].map((f) => (
+                                    <FormField
+                                        key={f.name}
+                                        control={form.control}
+                                        name={f.name}
+                                        render={({ field }) => (
+                                            <FormItem className="space-y-1">
+                                                <div className="flex items-center gap-2">
+                                                    <Image className="invert brightness-0 opacity-90" src={f.icon} alt={f.label} width={20} height={20} />
+                                                    <Label className="w-20 text-sm">{f.label}</Label>
+                                                    <FormControl>
+                                                        <Input
+                                                            placeholder={`Enlace de ${f.label}`}
+                                                            className="bg-slate-950 border-slate-700 text-slate-100"
+                                                            {...field}
+                                                            value={field.value ?? ""}
+                                                        />
+                                                    </FormControl>
+                                                </div>
+                                                <FormMessage className="text-xs text-red-400" />
+                                            </FormItem>
+                                        )}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    )}
 
                     {/* ================== PESTAÑAS PENDIENTES ================== */}
-                    {page === "behavior" && (
-                        <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4 md:p-6 text-sm text-slate-300">
-                            <FormField
-                                control={form.control}
-                                name="visibility"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Visibilidad del muro</FormLabel>
-                                        <Select
-                                            value={String(field.value ?? 1)}
-                                            onValueChange={(v) => field.onChange(Number(v))}
-                                        >
-                                            <SelectTrigger className="w-[260px]">
-                                                <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="0">Privado</SelectItem>
-                                                <SelectItem value="1">Público</SelectItem>
-                                                <SelectItem value="2">Solo seguidores</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </FormItem>
-                                )}
-                            />
 
-                        </div>
-                    )}
-
-                    {page === "configuration" && (
-                        <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4 md:p-6 space-y-6 text-sm text-slate-300">
-
-                            <h3 className="text-base font-semibold text-slate-100">Perfil</h3>
-                            {renderVisibilitySelect("profileImageVisibility", "Quiénes pueden ver tu imagen de perfil", VISIBILITY_SELECT_1)}
-                            {renderVisibilitySelect("coverImageVisibility", "Quiénes pueden ver tu imagen de portada", VISIBILITY_SELECT_1)}
-                            {renderVisibilitySelect("fullProfileVisibility", "Quiénes pueden ver tu perfil completo", VISIBILITY_SELECT_1)}
-
-                            <hr className="border-slate-800/70" />
-
-                            <h3 className="text-base font-semibold text-slate-100">Muro y publicaciones</h3>
-                            {renderVisibilitySelect("wallVisibility", "Quiénes pueden ver tu muro", VISIBILITY_SELECT_1)}
-                            {renderVisibilitySelect("postsVisibility", "Quiénes pueden ver tus posts", VISIBILITY_SELECT_1)}
-                            {renderVisibilitySelect("postCommentsVisibility", "Quiénes pueden ver los comentarios de tus posts", VISIBILITY_SELECT_1)}
-                            {renderVisibilitySelect("postRepliesVisibility", "Quiénes pueden ver las respuestas a los comentarios", VISIBILITY_SELECT_1)}
-
-                            <hr className="border-slate-800/70" />
-
-                            <h3 className="text-base font-semibold text-slate-100">Imágenes y videos</h3>
-                            {renderVisibilitySelect("mediaVisibility", "Quiénes pueden ver imágenes y videos", VISIBILITY_SELECT_1)}
-                            {renderVisibilitySelect("mediaCommentsVisibility", "Quiénes pueden ver los comentarios", VISIBILITY_SELECT_1)}
-                            {renderVisibilitySelect("mediaRepliesVisibility", "Quiénes pueden ver las respuestas", VISIBILITY_SELECT_1)}
-
-                            <hr className="border-slate-800/70" />
-
-                            <h3 className="text-base font-semibold text-slate-100">Relaciones</h3>
-                            {renderVisibilitySelect("friendsListVisibility", "Quiénes pueden ver tu lista de amigos", VISIBILITY_SELECT_2)}
-                            {renderVisibilitySelect("followersListVisibility", "Quiénes pueden ver tu lista de seguidores", VISIBILITY_SELECT_1)}
-                            {renderVisibilitySelect("followingListVisibility", "Quiénes pueden ver tu lista de seguidos", VISIBILITY_SELECT_1)}
-
-                            <hr className="border-slate-800/70" />
-
-                            <h3 className="text-base font-semibold text-slate-100">Interacciones</h3>
-                            {renderVisibilitySelect("likesVisibility", "Quiénes pueden ver los likes", VISIBILITY_SELECT_1)}
-                            {renderVisibilitySelect("privateMessagesVisibility", "Quiénes pueden enviarte mensajes privados", VISIBILITY_SELECT_2)}
-
-                            <Button
-                                type="button"
-                                onClick={async () => {
-                                    await fetch("/api/configuration", {
-                                        method: "PUT",
-                                        headers: { "Content-Type": "application/json" },
-                                        body: JSON.stringify(configuration),
-                                    });
-                                }}
-                                className="mt-4 bg-emerald-600 hover:bg-emerald-500"
-                            >
-                                Guardar configuración de privacidad
-                            </Button>
-
-                        </div>
-                    )}
-
-
-                    {page === "validation" && (
-                        <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4 md:p-6 text-sm text-slate-300">
-                            <p>Estado de validación de cuenta.</p>
-                        </div>
-                    )}
 
                     {/* Feedback de guardado */}
                     {saveError && (

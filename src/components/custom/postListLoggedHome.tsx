@@ -113,7 +113,7 @@ export default function PostListLoggedHome({ session }: { session: any }) {
                 cache: "no-store",
             });
             const data = await res.json().catch(() => null);
-            console.log('detalle post data:', data);
+            console.log('data en PostListLoggedHome:', data);
 
             if (!res.ok || !data?.data) {
                 throw new Error(data?.error || "No se pudo cargar el post");
@@ -135,16 +135,7 @@ export default function PostListLoggedHome({ session }: { session: any }) {
     };
 
     return (
-        <div
-            id="PostListLoggedHome"
-            className="
-                relative
-                flex
-                flex-col
-                w-full
-                gap-4
-            "
-        >
+        <div id="PostListLoggedHome" className="relative flex flex-col w-full gap-24 md:px-0">
             {/* Feed compacto */}
             {visiblePosts.map((post, index) => (
                 <div
@@ -156,6 +147,7 @@ export default function PostListLoggedHome({ session }: { session: any }) {
                             : null
                     }
                 >
+
                     <PostCard
                         session={session}
                         post={post}

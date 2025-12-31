@@ -2,9 +2,6 @@
 
 import { prisma } from "@/lib/prisma";
 
-export type RelationshipState =
-    | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
-
 //determina el estado de la relación de amistad entre dos usuarios
 export function relationState(o: {
     a_b_req?: number;

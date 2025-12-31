@@ -168,7 +168,7 @@ const UserProfileMiniCard = ({
     };
 
     return (
-        <div className="flex flex-col w-full  gap-1 text-slate-100">
+        <div className="flex flex-col w-full  gap-0 text-slate-100">
             {/* Nombre */}
             <span className="text-[12px] font-semibold leading-none">
 
@@ -176,7 +176,7 @@ const UserProfileMiniCard = ({
             </span>
 
             {/* Avatar + botones */}
-            <div className="flex flex-row items-center w-full gap-1">
+            <div className="flex flex-row items-center w-full gap-0">
                 <Link href={`/wall/${userId}`}>
                     <div className="w-7 h-7 relative overflow-hidden rounded-full border border-slate-600 bg-slate-800 flex items-center justify-center">
                         {profileImageUrl ? (
@@ -188,17 +188,23 @@ const UserProfileMiniCard = ({
                                 className="w-full h-full object-cover"
                             />
                         ) : (
-                            <span className="text-[10px] text-slate-300">
-                                {userName[0]?.toUpperCase() ?? "?"}
-                            </span>
+                            //<span className="text-[10px] text-slate-300">{userName[0]?.toUpperCase() ?? "?"}</span>
+                            < Image
+                                src={session.user.image}
+                                alt="imagen de perfil"
+                                width={28}
+                                height={28}
+                                className="w-full h-full object-cover"
+                            />
+
                         )}
                     </div>
                 </Link>
 
                 {session && session.user.id != userId && (
-                    <div className="flex flex-1 flex-row gap-[2px] ml-1 justify-between">
+                    <div id="buttonsContainerUserProfileMiniCard" className="flex flex-1 flex-row gap-[2px] ml-1 justify-between h-[16px]">
                         {/* Fila: botón de amistad + badge "Te sigue" */}
-                        <div className="flex flex-row flex-wrap items-center gap-[2px]">
+                        <div id="friendshipAndBadgeContainer" className="flex flex-row flex-wrap items-center gap-[2px]">
                             <FriendButton
                                 userId={userId}
                                 buttonParams={buttonFriendshipParamsState}
@@ -210,7 +216,7 @@ const UserProfileMiniCard = ({
                             {isFollowerState && (
                                 <span
                                     id="isFollowingYou"
-                                    className="userProfileMiniCardButton"
+                                    className="flex flex-row items-center text-[0.6rem] border border-emerald-400 text-emerald-200 bg-emerald-900/30 rounded-full px-1 py-[1px] leading-none whitespace-nowrap h-[16px]"
                                 >
                                     Te sigue
                                 </span>

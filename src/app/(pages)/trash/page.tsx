@@ -22,11 +22,15 @@ export default async function TrashPage() {
     return (
         <div
             className="
-                flex 
-                flex-col 
-                min-h-[calc(100vh-3.5rem)]
-                md:min-h-[calc(100vh-4rem)]
-                text-slate-100
+flex 
+        flex-col 
+        min-h-[calc(100vh-3.5rem)]  /* aprox alto disponible bajo la navbar en mobile */
+        md:min-h-[calc(100vh-4rem)]
+        text-slate-100
+        w-full
+        md:max-w-[33%]
+        md:min-w-[500px]
+        md:w-full
             "
         >
             {/* Header */}
@@ -37,29 +41,26 @@ export default async function TrashPage() {
             </header>
 
             {/* Layout principal: asides + contenido central */}
-            <div className="flex flex-1 w-full gap-4">
-                {/* Aside izquierdo: sólo desktop */}
-                <aside className="hidden lg:block w-[220px] xl:w-[260px]">
-                    <AsideLeft session={session}>
-                        {/* Si querés algo especial para la papelera, lo ponés acá */}
-                    </AsideLeft>
-                </aside>
+            {/* Aside izquierdo: sólo desktop */}
+            <aside className="hidden md:block w-[220px] xl:w-[260px] fixed left-0 top-0 h-full pt-12">
+                <AsideLeft session={session}>
+                    {/* Si querés algo especial para la papelera, lo ponés acá */}
+                </AsideLeft>
+            </aside>
 
-                {/* Contenido central */}
-                <main className="w-full flex-1 flex justify-center">
-                    <div className="w-full max-w-[960px] py-3">
-                        <TrashPageClient />
-                    </div>
-                </main>
-
-                {/* Aside derecho: sólo desktop ancho */}
-                <aside className="hidden xl:block w-[260px]">
-                    <AsideRight session={session}>
-                        {/* Lugar para info extra sobre la papelera, futuro */}
-                    </AsideRight>
-                </aside>
+            {/* Contenido central */}
+            <div className="w-full max-w-[720px] py-0 space-y-4 px-2 md:px-0">
+                <TrashPageClient />
             </div>
+
+            {/* Aside derecho: sólo desktop ancho */}
+            <aside className="hidden md:block w-[220px] xl:w-[260px] fixed right-4 top-0 h-full pt-12">
+                <AsideRight session={session}>
+                    {/* Lugar para info extra sobre la papelera, futuro */}
+                </AsideRight>
+            </aside>
         </div>
+
     );
 }
 

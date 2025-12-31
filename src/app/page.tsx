@@ -17,6 +17,10 @@ export default async function HomePage() {
         min-h-[calc(100vh-3.5rem)]  /* aprox alto disponible bajo la navbar en mobile */
         md:min-h-[calc(100vh-4rem)]
         text-slate-100
+        w-full
+        md:max-w-[33%]
+        md:min-w-[400px]
+        md:w-full
       "
     >
       {/* Si querés reactivar el botón de compartir más adelante */}

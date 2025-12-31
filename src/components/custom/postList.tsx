@@ -140,12 +140,7 @@ export default function PostList({
     return (
         <div
             id="PostListMyWall"
-            className="
-                relative
-                flex
-                flex-col
-                w-full
-                gap-4"
+            className="relative flex flex-col w-full gap-24 md:px-0"
         >
             {/* Feed de tu muro */}
             {visiblePosts.map((post, index) => (

@@ -22,7 +22,7 @@ const FriendButton = ({
 
     // 👉 Estilos base para el “chip”
     const baseChip =
-        "inline-flex items-center rounded-full border px-2 py-[2px] text-[10px] leading-none whitespace-nowrap";
+        "inline-flex items-center rounded-full border px-2 py-[2px] text-[10px] leading-none whitespace-nowrap h-[16px]";
 
 
     const sendReqChip =
@@ -39,7 +39,7 @@ const FriendButton = ({
         " border-rose-400 text-rose-200 bg-rose-900/30";
 
     return (
-        <div className="flex items-center">
+        <div className="flex items-center h-[16px]">
             {/* === SON AMIGOS (actionYes = 6) === */}
             {buttonParams.actionYes === 6 && (
                 <div className="relative flex items-center">
@@ -70,16 +70,18 @@ const FriendButton = ({
 
             {/* === ENVIAR SOLICITUD (actionYes = 2) === */}
             {buttonParams.actionYes === 2 && (
-                <Button
-                    type="button"
-                    onClick={() => {
-                        onClickHandle("sendRequest");
-                    }}
-                    variant="ghost"
-                    className="p-0 bg-transparent hover:bg-transparent"
-                >
-                    <span className={sendReqChip}>{buttonParams.text}</span>
-                </Button>
+                <div className="flex flex-col items-start h-[16px]">
+                    <Button
+                        type="button"
+                        onClick={() => {
+                            onClickHandle("sendRequest");
+                        }}
+                        variant="ghost"
+                        className="p-0 bg-transparent hover:bg-transparent"
+                    >
+                        <span className={sendReqChip}>{buttonParams.text}</span>
+                    </Button>
+                </div>
             )}
 
             {/* === QUIERE SER TU AMIGO (actionYes = 8) === */}
@@ -114,7 +116,7 @@ const FriendButton = ({
 
             {/* === YA ENVIADA (actionYes = 1) === */}
             {buttonParams.actionYes === 1 && (
-                <div className="flex flex-col items-start">
+                <div className="flex flex-col items-start h-[16px]">
                     <span className={sentReqChip}>{buttonParams.text}</span>
                 </div>
             )}

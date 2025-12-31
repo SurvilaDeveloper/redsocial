@@ -1,102 +1,100 @@
 // global.d.ts
 
-type PostVisibility = 1 | 2 | 3 | 4;
+export { };
 
-type PostReaction = "LIKE" | "UNLIKE" | null;
+declare global {
+    type RelationshipState =
+        import("@/lib/relationship-state").RelationshipState;
 
-type PostRelations = {
-    following: boolean;
-    isFollower: boolean;
-    isFriend: boolean;
-    relState: number; // 👈 AGREGAR
-    likesCount: number;
-    unlikesCount: number;
-    userReaction: PostReaction;
-};
+    type PostVisibility = 1 | 2 | 3 | 4;
 
+    type Reaction = "LIKE" | "UNLIKE" | null;
 
-interface MiniUser {
-    id: number;
-    name: string;
-    imageUrl: string | null;
-    imagePublicId?: string | null;
-}
+    type SocialRelations = {
+        relState: RelationshipState;
+        following: boolean;
+        isFollower: boolean;
+    };
 
-type CommentReaction = "LIKE" | "UNLIKE" | null;
+    type PostRelations = SocialRelations & {
+        likesCount: number;
+        unlikesCount: number;
+        userReaction: Reaction;
+    };
 
-interface PostCommentResponse {
-    id: number;
-    response: string;
-    createdAt: string;
-    who_responses: number;
-    active?: number | null;
-    user?: MiniUser; // viene del include
-
-    // ⭐ NUEVO:
-    likesCount?: number;
-    unlikesCount?: number;
-    userReaction?: CommentReaction;
-}
-
-interface PostComment {
-    id: number;
-    comment: string;
-    createdAt: string;
-    post_id: number;
-    who_comments: number;
-    active?: number | null;
-    user?: MiniUser;
-    responses?: PostCommentResponse[];
-
-    // ⭐ NUEVO
-    likesCount?: number;
-    unlikesCount?: number;
-    userReaction?: CommentReaction;
-}
-
-interface Post {
-    id: number;
-    post_comment?: PostComment[];
-    user_id: number; // ✅ dueño del post
-
-    title: string | null;
-    description: string | null;
-
-    imagenumber: number | null;
-    createdAt: string;
-
-    active: number; // 1/0
-    visibility: PostVisibility;
-
-    deletedAt?: string | null; // 🆕 <- importante
-
-    // ⬇⬇⬇ CAMBIO ACÁ
-    relations: PostRelations;
-    // ⬆⬆⬆ antes era un objeto inline
-
-    userData?: {
+    interface MiniUser {
         id: number;
         name: string;
         imageUrl: string | null;
-        imagePublicId: string | null;
-    };
+        imagePublicId?: string | null;
+        image?: string | null;
+    }
 
-    images?: {
+    interface PostCommentResponse {
         id: number;
-        post_id: number;
-        imageUrl: string;
-        imagePublicId: string;
-        index: number;
+        response: string;
+        createdAt: string;
+        who_responses: number;
         active?: number | null;
+        user?: MiniUser;
 
-        // ⭐ NUEVO, opcional:
         likesCount?: number;
         unlikesCount?: number;
-        userReaction?: ImageReaction;
-    }[];
+        userReaction?: Reaction;
+    }
 
-    commentsCount?: number; // 👈 nuevo: cantidad de comentarios (para el feed)
+    interface PostComment {
+        id: number;
+        comment: string;
+        createdAt: string;
+        post_id: number;
+        who_comments: number;
+        active?: number | null;
+        user?: MiniUser;
+        responses?: PostCommentResponse[];
+
+        likesCount?: number;
+        unlikesCount?: number;
+        userReaction?: Reaction;
+    }
+
+    interface Post {
+        id: number;
+        post_comment?: PostComment[];
+        user_id: number;
+
+        title: string | null;
+        description: string | null;
+
+        imagenumber: number | null;
+        createdAt: string;
+
+        active: number;
+        visibility: PostVisibility;
+
+        deletedAt?: string | null;
+
+        relations: PostRelations;
+
+        user?: MiniUser;
+
+        images?: {
+            id: number;
+            post_id: number;
+            imageUrl: string;
+            imagePublicId: string;
+            index: number;
+            active?: number | null;
+
+            likesCount?: number;
+            unlikesCount?: number;
+            userReaction?: Reaction;
+        }[];
+
+        commentsCount?: number;
+    }
 }
+
 
 
 

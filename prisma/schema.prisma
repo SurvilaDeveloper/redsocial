@@ -1,3 +1,5 @@
+// prisma/schema.prisma
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -73,6 +75,45 @@ model SecurityLog {
   @@index([type])
 }
 
+model TrustedDevice {
+  id             Int     @id @default(autoincrement())
+  userId         Int
+  deviceHash     String
+  userAgent      String
+  acceptLanguage String?
+  timezone       String?
+  ip             String?
+
+  // NUEVO
+  revokedAt  DateTime?
+  lastUsedAt DateTime  @default(now())
+  createdAt  DateTime  @default(now())
+
+  user                User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deviceDisableTokens DeviceDisableToken[]
+
+  @@unique([userId, deviceHash])
+  @@index([userId])
+}
+
+model DeviceDisableToken {
+  id       Int @id @default(autoincrement())
+  userId   Int
+  deviceId Int
+
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+
+  createdAt DateTime @default(now())
+
+  user   User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  device TrustedDevice @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([deviceId])
+}
+
 model User {
   id                Int       @id @default(autoincrement())
   nick              String?   @unique(map: "username_UNIQUE")
@@ -82,6 +123,7 @@ model User {
   sessionVersion    Int       @default(1)
   role              UserRole? @default(user)
   emailVerified     DateTime?
+  image             String?
   imageUrl          String?
   imagePublicId     String?
   imageWallUrl      String?
@@ -187,6 +229,8 @@ model User {
   configuration                Configuration?
   passwordChangeRequests       PasswordChangeRequest[]
   securityLogs                 SecurityLog[]
+  trustedDevices               TrustedDevice[]
+  deviceDisableTokens          DeviceDisableToken[]
 
   @@map("user")
 }

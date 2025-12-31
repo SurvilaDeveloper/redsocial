@@ -1,11 +1,16 @@
 // src/app/api/account/confirm-password/route.ts
-
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendPasswordHasBeenChangedEmail } from "@/lib/email";
+import { getRequestMetadata } from "@/lib/request-metadata";
+import { logSecurityEvent } from "@/lib/security-log";
+import { SecurityEventType } from "@/lib/security-events";
 
 export async function POST(req: NextRequest) {
     try {
+
+        const { ip, userAgent } = getRequestMetadata(req);
+
         const { token } = await req.json();
 
         if (!token || typeof token !== "string") {
@@ -15,6 +20,7 @@ export async function POST(req: NextRequest) {
             );
         }
 
+        // 🔹 Buscar solicitud de cambio de contraseña
         const request = await prisma.passwordChangeRequest.findUnique({
             where: { token },
         });
@@ -39,7 +45,8 @@ export async function POST(req: NextRequest) {
                 { status: 410 }
             );
         }
-        // traer datos del usuario
+
+        // 🔹 Traer datos del usuario
         const user = await prisma.user.findUnique({
             where: { id: request.userId },
             select: { id: true, email: true, name: true },
@@ -52,50 +59,44 @@ export async function POST(req: NextRequest) {
             );
         }
 
-
+        // 🔐 Transacción: actualizar password, invalidar requests
         await prisma.$transaction([
-            // 🔐 actualizar password + invalidar sesiones
             prisma.user.update({
-                where: { id: request.userId },
+                where: { id: user.id },
                 data: {
                     password: request.newPasswordHash,
-                    sessionVersion: { increment: 1 }, // 🔥 CLAVE
+                    sessionVersion: { increment: 1 },
                 },
             }),
 
-            // marcar request actual
             prisma.passwordChangeRequest.update({
                 where: { id: request.id },
                 data: { confirmedAt: new Date() },
             }),
 
-            // invalidar otros requests
             prisma.passwordChangeRequest.updateMany({
                 where: {
-                    userId: request.userId,
+                    userId: user.id,
                     confirmedAt: null,
                     id: { not: request.id },
                 },
                 data: { confirmedAt: new Date() },
             }),
-
-            // 📋 Security log
-            prisma.securityLog.create({
-                data: {
-                    userId: request.userId,
-                    type: "PASSWORD_CHANGED",
-                    metadata: { via: "email-confirmation" },
-                },
-            }),
-
-
         ]);
-        // después de actualizar la contraseña y marcar el request como confirmado
-        await sendPasswordHasBeenChangedEmail(
-            user.email,
-            user.name || "Usuario"
-        );
 
+        // 📋 Log de seguridad (no rompe la transacción)
+        await logSecurityEvent({
+            userId: request.userId,
+            type: SecurityEventType.PASSWORD_CHANGED,
+            ip,
+            userAgent,
+            metadata: {
+                via: "email-confirmation",
+            },
+        });
+
+        // ✉️ Email de notificación
+        await sendPasswordHasBeenChangedEmail(user.email, user.name || "Usuario");
 
         return NextResponse.json({
             success: true,
@@ -109,6 +110,7 @@ export async function POST(req: NextRequest) {
         );
     }
 }
+
 
 
 

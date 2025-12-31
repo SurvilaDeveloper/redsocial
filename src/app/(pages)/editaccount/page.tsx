@@ -3,6 +3,8 @@ import auth from "@/auth";
 import { prisma } from "@/lib/prisma";
 //import EditProfile from "@/components/custom/editProfile";
 import EditAccount from "@/components/custom/editAccount";
+import AsideLeft from "@/components/custom/asideleft";
+import AsideRight from "@/components/custom/asideright";
 
 export default async function EditAccountPage() {
     const session = await auth();
@@ -66,42 +68,45 @@ export default async function EditAccountPage() {
 
 
     return (
-        <div className="min-h-screen w-full bg-slate-950 pt-16 px-2 md:px-4 flex justify-center" >
-            <main className="w-full max-w-5xl flex gap-4" >
-                {/* Aside izquierdo */}
-                < aside className="hidden lg:block w-64 shrink-0" >
-                    <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4 text-slate-200" >
-                        <p className="text-sm font-semibold" > Menú </p>
-                        < p className="text-xs text-slate-400 mt-1" >
-                            (Sidebar izquierdo)
-                        </p>
-                    </div>
-                </aside>
+        <div className="flex 
+        flex-col 
+        min-h-[calc(100vh-3.5rem)]  /* aprox alto disponible bajo la navbar en mobile */
+        md:min-h-[calc(100vh-4rem)]
+        text-slate-100
+        w-full
+        max-w-[400px]
+        md:max-w-[33%]
+        md:min-w-[400px]
+        md:w-full" >
+            {/* Header */}
+            <header className="w-full py-3 md:py-4 border-b border-slate-800 mb-2">
+                <h1 className="flex flex-col items-center text-lg md:text-2xl font-semibold w-full">
+                    Editar cuenta
+                </h1>
+            </header>
 
-                {/* Centro */}
-                <section className="flex-1" >
-                    <div className="w-full bg-slate-900/90 border border-slate-800 rounded-2xl shadow-xl px-4 py-4 md:px-6 md:py-6 text-slate-100" >
-                        <h1 className="text-xl md:text-2xl font-semibold mb-4" >
-                            Editar Cuenta
-                        </h1>
+            {/* Aside izquierdo */}
+            <AsideLeft session={session}>
+                {/* Si en algún momento querés agregar algo específico para esta página, lo podés meter acá */}
+            </AsideLeft>
 
-                        < div className="w-full rounded-2xl bg-slate-950/60 border border-slate-800 px-4 py-4 md:px-5 md:py-5" >
-                            {/* EditAccount */}
-                            <EditAccount config={configuration} />
-                        </div>
-                    </div>
-                </section>
 
-                {/* Aside derecho */}
-                <aside className="hidden xl:block w-72 shrink-0" >
-                    <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4 text-slate-200" >
-                        <p className="text-sm font-semibold" > Tips </p>
-                        < p className="text-xs text-slate-400 mt-1" >
-                            (Sidebar derecho)
-                        </p>
-                    </div>
-                </aside>
-            </main>
+            {/* Centro */}
+
+
+
+            {/* EditAccount */}
+            <EditAccount config={configuration} />
+
+
+
+            {/* Aside derecho */}
+
+            <AsideRight session={session}>
+                {/* Lo mismo: espacio para widgets o info extra */}
+            </AsideRight>
+
+
         </div>
     );
 }

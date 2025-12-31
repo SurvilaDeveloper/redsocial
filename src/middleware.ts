@@ -15,7 +15,13 @@ export async function middleware(req: NextRequest) {
     const protectedRoutes =
         pathname.startsWith("/dashboard") ||
         pathname.startsWith("/admin") ||
-        pathname.startsWith("/newpost");
+        pathname.startsWith("/newpost") ||
+        pathname.startsWith("/editpost") ||
+        pathname.startsWith("/editprofile") ||
+        pathname.startsWith("/mywall") ||
+        pathname.startsWith("/profile") ||
+        pathname.startsWith("/trash") ||
+        pathname.startsWith("/wall");
 
     if (protectedRoutes && !token) {
         return NextResponse.redirect(

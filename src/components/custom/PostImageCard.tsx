@@ -135,8 +135,8 @@ export default function PostImageCard({
         <div
             className={
                 isFirst
-                    ? "flex flex-col gap-1 bg-black relative w-full aspect-square overflow-hidden border border-blue-500 rounded-[8px]"
-                    : "flex flex-col gap-1 bg-black relative w-[48%] aspect-square overflow-hidden border border-blue-500 rounded-[8px]"
+                    ? "flex flex-col gap-1 bg-black relative w-full aspect-square overflow-hidden border border-black rounded-[8px]"
+                    : "flex flex-col gap-1 bg-black relative w-[48%] aspect-square overflow-hidden border border-black rounded-[8px]"
             }
         >
             <div
