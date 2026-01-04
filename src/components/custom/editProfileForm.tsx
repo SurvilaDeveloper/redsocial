@@ -1,6 +1,7 @@
 // src/components/custom/editProfileForm.tsx
 "use client";
 
+import { useSession } from "next-auth/react";
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -74,6 +75,8 @@ type ProfileFormValues = {
     never
 >;
 
+
+
 /* -------------------------------------------------------------------------- */
 /*                                 COMPONENT                                  */
 /* -------------------------------------------------------------------------- */
@@ -81,9 +84,42 @@ type ProfileFormValues = {
 export default function ProfileForm({ user }: { user: ProfileMe }) {
 
     console.log("user:", user);
+    const { update } = useSession();
 
-    const [preview] = useState<string | null>(user.imageUrl ?? "/user.jpg");
-    const [wallPreview] = useState<string | null>(user.imageWallUrl ?? "/wall.jpg");
+    const [profileFile, setProfileFile] = useState<File | null>(null);
+    const [wallFile, setWallFile] = useState<File | null>(null);
+    const [wallColor, setWallColor] = useState<string | null>(null)
+    const [wallHeaderBackgroundTypeState, setWallHeaderBackgroundTypeState] = useState<string | null>(user.wallHeaderBackgroundType)
+
+    const [preview, setPreview] = useState<string | null>(
+        user.imageUrl ?? user.image ?? "/user.jpg"
+    );
+
+    const [wallPreview, setWallPreview] = useState<string | null>(
+        user.wallHeaderBackgroundType == "color" ? user.wallHeaderBackgroundColor : user.wallHeaderBackgroundType == "image" ? user.imageWallUrl : "/wall.jpg"
+    );
+
+
+    const [uploadingProfile, setUploadingProfile] = useState(false);
+    const [uploadingWall, setUploadingWall] = useState(false);
+
+    const [profileImageUrl, setProfileImageUrl] = useState<string | null>(
+        user.imageUrl ?? null
+    );
+
+    const [wallImageUrl, setWallImageUrl] = useState<string | null>(
+        user.imageWallUrl ?? null
+    );
+
+    const [profileImagePublicId, setProfileImagePublicId] = useState<string | null>(
+        user.imagePublicId ?? null
+    );
+
+    const [wallImagePublicId, setWallImagePublicId] = useState<string | null>(
+        user.imageWallPublicId ?? null
+    );
+
+
 
     const [discardAsk, setDiscardAsk] = useState(false);
 
@@ -114,6 +150,27 @@ export default function ProfileForm({ user }: { user: ProfileMe }) {
         likesVisibility: user.configuration?.likesVisibility ?? 1,
         privateMessagesVisibility: user.configuration?.privateMessagesVisibility ?? 2,
     });
+
+    async function uploadImage(
+        file: File,
+        endpoint: "/api/upload-profile-image" | "/api/upload-wall-image"
+    ) {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const res = await fetch(endpoint, {
+            method: "POST",
+            body: formData,
+        });
+
+        const json = await res.json();
+
+        if (!res.ok) {
+            throw new Error(json?.error ?? "Error subiendo imagen");
+        }
+
+        return json as { url: string; publicId: string };
+    }
 
 
     /* ----------------------------- GEO DATA -------------------------------- */
@@ -258,6 +315,14 @@ export default function ProfileForm({ user }: { user: ProfileMe }) {
         setCities(newCities);
     }, [provinceId, defaultValues.provinceId]);
 
+    useEffect(() => {
+        return () => {
+            if (preview?.startsWith("blob:")) URL.revokeObjectURL(preview);
+            if (wallPreview?.startsWith("blob:")) URL.revokeObjectURL(wallPreview);
+        };
+    }, [preview, wallPreview]);
+
+
 
     /* ------------------------------ SUBMIT ---------------------------------- */
 
@@ -267,7 +332,7 @@ export default function ProfileForm({ user }: { user: ProfileMe }) {
         setSaving(true);
 
         try {
-            // Obtener nombres de país, provincia y ciudad según los IDs
+            // 1️⃣ Resolver nombres de país / provincia / ciudad
             const countryName = values.countryId
                 ? countriesData.find(c => c.id === values.countryId)?.name ?? null
                 : null;
@@ -280,14 +345,56 @@ export default function ProfileForm({ user }: { user: ProfileMe }) {
                 ? citiesData[values.provinceId]?.find(ci => ci.id === values.cityId)?.name ?? null
                 : null;
 
-            // Valores a enviar al backend
+            // 2️⃣ Subir imágenes SOLO si el usuario cambió algo
+            let uploadedProfileImageUrl = profileImageUrl;
+            let uploadedProfileImagePublicId = profileImagePublicId;
+
+            let uploadedWallImageUrl = wallImageUrl;
+            let uploadedWallImagePublicId = wallImagePublicId;
+
+            if (profileFile) {
+                setUploadingProfile(true);
+                const uploaded = await uploadImage(
+                    profileFile,
+                    "/api/upload-profile-image"
+                );
+
+                uploadedProfileImageUrl = uploaded.url;
+                uploadedProfileImagePublicId = uploaded.publicId;
+
+                setProfileImagePublicId(uploaded.publicId); // solo para UI futura
+                setUploadingProfile(false);
+            }
+
+            if (wallFile) {
+                setUploadingWall(true);
+                const uploaded = await uploadImage(
+                    wallFile,
+                    "/api/upload-wall-image"
+                );
+
+                uploadedWallImageUrl = uploaded.url;
+                uploadedWallImagePublicId = uploaded.publicId;
+
+                setWallImagePublicId(uploaded.publicId); // solo para UI futura
+                setUploadingWall(false);
+            }
+
+            // 3️⃣ Armar payload final
             const valuesToSend = {
                 ...values,
+                imageUrl: uploadedProfileImageUrl,
+                imagePublicId: uploadedProfileImagePublicId,
+                imageWallUrl: uploadedWallImageUrl,
+                imageWallPublicId: uploadedWallImagePublicId,
+                wallHeaderBackgroundType: wallHeaderBackgroundTypeState,
+                wallHeaderBackgroundColor: wallColor,
                 country: countryName,
                 province: provinceName,
                 city: cityName,
             };
 
+            // 4️⃣ PATCH perfil
             const res = await fetch("/api/profile/me", {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
@@ -300,7 +407,10 @@ export default function ProfileForm({ user }: { user: ProfileMe }) {
                 setSaveError(json?.error ?? "Error actualizando perfil");
                 return;
             }
-
+            // 🟢 PERFIL GUARDADO OK
+            await update({
+                image: json?.data?.imageUrl ?? profileImageUrl ?? null,
+            });
             setSaveOk("Perfil actualizado ✅");
         } catch (err) {
             console.error(err);
@@ -310,9 +420,18 @@ export default function ProfileForm({ user }: { user: ProfileMe }) {
         }
     }
 
-
-
     /* ------------------------------- UI ------------------------------------- */
+
+    const handleImagePreview = (
+        e: React.ChangeEvent<HTMLInputElement>,
+        setter: (value: string | null) => void
+    ) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const url = URL.createObjectURL(file);
+        setter(url);
+    };
 
     const tabs: { id: PageId; label: string }[] = [
         { id: "personal", label: "Datos personales" },
@@ -350,8 +469,8 @@ export default function ProfileForm({ user }: { user: ProfileMe }) {
                             {/* Imagen de muro */}
                             <div className="flex flex-col gap-3">
                                 <p className="text-xs text-slate-400">Imagen de portada de tu muro</p>
-                                <div className="relative w-full aspect-[3/1] max-h-64 border-2 border-dashed border-slate-700 rounded-xl overflow-hidden bg-black/60 flex items-center justify-center">
-                                    {wallPreview && (
+                                <div className="relative min-h-[240px] rounded-md overflow-hidden">
+                                    {wallHeaderBackgroundTypeState == "image" && wallPreview && (
                                         <Image
                                             src={wallPreview}
                                             alt="Vista previa de la imagen del muro"
@@ -359,16 +478,111 @@ export default function ProfileForm({ user }: { user: ProfileMe }) {
                                             className="object-cover"
                                         />
                                     )}
+                                    {!wallHeaderBackgroundTypeState && wallPreview && (
+                                        <>
+                                            <Image
+                                                src={wallPreview}
+                                                alt="Vista previa de la imagen del muro"
+                                                fill
+                                                className="object-cover"
+                                            />
+                                            <div>COLOR</div>
+                                        </>
 
-                                    <FormItem>
-                                        <FormLabel className="absolute bottom-3 left-1/2 -translate-x-1/2 inline-flex items-center justify-center px-4 py-2 rounded-full border border-emerald-500 bg-emerald-600/90 hover:bg-emerald-500 text-xs font-medium text-slate-50 cursor-pointer">
-                                            Elegir imagen del muro
-                                        </FormLabel>
-                                        <FormControl>
-                                            <input type="file" accept="image/*" className="hidden" />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
+
+                                    )}
+
+                                    {wallHeaderBackgroundTypeState == "color" && wallPreview && (
+                                        <div className="w-full h-[240px]" style={{ backgroundColor: wallPreview }}>
+                                        </div>
+                                    )}
+
+
+
+                                    {/* BOTONES wall background*/}
+                                    <div
+                                        className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-3"
+                                    >
+                                        <FormItem>
+                                            <FormLabel
+                                                className="
+                                                inline-flex
+                                                items-center
+                                                justify-center
+                                                min-w-[160px]
+                                                px-0 py-2
+                                                rounded-full
+                                                border border-emerald-500
+                                                bg-emerald-600/90 hover:bg-emerald-500
+                                                text-xs font-medium text-slate-50
+                                                cursor-pointer
+                                                text-center"
+                                            >
+                                                Elegir imagen del muro
+                                            </FormLabel>
+
+
+                                            <FormControl>
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    className="hidden"
+                                                    onChange={(e) => {
+                                                        const file = e.target.files?.[0];
+                                                        if (!file) return;
+
+                                                        setWallFile(file);
+                                                        setWallColor(null)
+                                                        setWallHeaderBackgroundTypeState("image")
+                                                        setWallPreview(URL.createObjectURL(file));
+                                                    }}
+                                                />
+                                            </FormControl>
+                                        </FormItem>
+
+                                        <FormItem>
+                                            <FormLabel
+                                                htmlFor="wallColor"
+                                                className="
+                                                inline-flex
+                                                items-center
+                                                justify-center
+                                                min-w-[160px]
+                                                px-0
+                                                py-2
+                                                rounded-full
+                                                border 
+                                                border-emerald-500
+                                                bg-emerald-600/90
+                                                hover:bg-emerald-500
+                                                text-xs font-medium
+                                                text-slate-50
+                                                cursor-pointer
+                                                text-center"
+                                            >
+                                                Elegir color del muro
+                                            </FormLabel>
+
+
+                                            <FormControl>
+                                                <input
+                                                    id="wallColor"
+                                                    type="color"
+                                                    className="hidden"
+                                                    onChange={(e) => {
+                                                        setWallColor(e.target.value);
+                                                        setWallFile(null)
+                                                        setWallHeaderBackgroundTypeState("color")
+                                                        setWallPreview(e.target.value)
+                                                    }}
+                                                />
+                                            </FormControl>
+                                        </FormItem>
+                                    </div>
+                                    {/*</div>*/}
+
+
+
                                 </div>
                             </div>
 
@@ -379,7 +593,18 @@ export default function ProfileForm({ user }: { user: ProfileMe }) {
                                         Cambiar imagen de perfil
                                     </FormLabel>
                                     <FormControl>
-                                        <input type="file" accept="image/*" className="hidden" />
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            className="hidden"
+                                            onChange={(e) => {
+                                                const file = e.target.files?.[0];
+                                                if (!file) return;
+
+                                                setProfileFile(file);
+                                                setPreview(URL.createObjectURL(file));
+                                            }}
+                                        />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -887,14 +1112,31 @@ export default function ProfileForm({ user }: { user: ProfileMe }) {
                         </div>
                     )}
 
+                    {/* Mensaje */}
+
+                    {uploadingProfile && (
+                        <p className="text-xs text-slate-400">
+                            Subiendo imagen de perfil...
+                        </p>
+                    )}
+                    {uploadingWall && (
+                        <p className="text-xs text-slate-400">
+                            Subiendo imagen del muro...
+                        </p>
+                    )}
+
                     {/* Botones */}
                     <div className="flex flex-col sm:flex-row gap-3 sm:gap-6 pt-2">
                         <Button
                             type="submit"
-                            disabled={saving}
+                            disabled={saving || uploadingProfile || uploadingWall}
                             className="flex-1 sm:flex-none sm:w-60 h-10 rounded-md bg-emerald-600 hover:bg-emerald-500 text-sm font-medium"
                         >
                             {saving ? "Guardando..." : "Guardar cambios y salir"}
+
+
+
+
                         </Button>
 
                         <Button

@@ -86,16 +86,38 @@ export const registerAction = async (
 
         const hashedPassword = await bcrypt.hash(data.password, SALT_ROUNDS);
 
-        await prisma.user.create({
-            data: {
-                email: data.email,
-                name: data.name,
-                password: hashedPassword,
-                imageUrl: image?.url ?? null,
-                imagePublicId: image?.publicId ?? null,
-                emailVerified: null, // importante para que loginAction lo bloquee
-            },
+        const user = await prisma.$transaction(async (tx) => {
+            const user = await tx.user.create({
+                data: {
+                    email: data.email,
+                    name: data.name,
+                    password: hashedPassword,
+                    imageUrl: image?.url ?? null,
+                    imagePublicId: image?.publicId ?? null,
+                    emailVerified: null,
+                },
+            });
+            // 👇 crear configuración por defecto
+            await tx.configuration.create({
+                data: {
+                    userId: user.id,
+                    // no hace falta pasar nada más: usa defaults del schema
+                },
+            });
+
+            if (image) {
+                await tx.cloudinaryImage.create({
+                    data: {
+                        userId: user.id,
+                        url: image.url,
+                        publicId: image.publicId,
+                    },
+                });
+            }
+
+            return user;
         });
+
 
         // ✅ mandar mail de verificación automáticamente al registrarse
         const issued = await issueVerificationEmail(data.email);

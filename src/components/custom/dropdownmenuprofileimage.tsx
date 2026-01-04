@@ -28,7 +28,7 @@ const DropDownMenuProfileImage = () => {
                         type="button"
                         className="inline-flex items-center justify-center rounded-full border border-slate-700 bg-slate-900/80 hover:bg-slate-800 hover:border-slate-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 transition-colors"
                     >
-                        <ProfilePicture session={session} />
+                        <ProfilePicture />
                     </button>
                 </DropdownMenuTrigger>
 

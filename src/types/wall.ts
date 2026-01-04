@@ -5,6 +5,9 @@ export type WallUserBasic = {
     name: string | null;
     nick: string | null;
     imageUrl: string | null;
+    imageWallUrl: string | null;
+    wallHeaderBackgroundColor: string | null;
+    wallHeaderBackgroundType: string | null;
 };
 
 export type WallUser = {
@@ -13,7 +16,7 @@ export type WallUser = {
     occupation: string | null;
     location: string | null;
     website: string | null;
-    imageWallUrl: string | null;
+    //imageWallUrl: string | null;
     company: string | null;
 
     country: string | null;

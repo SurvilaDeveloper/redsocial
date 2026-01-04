@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import auth from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
-
+import { WallHeaderBGType } from "@prisma/client";
 /* -------------------------------------------------------------------------- */
 /*                                   SCHEMA                                   */
 /* -------------------------------------------------------------------------- */
@@ -52,6 +52,16 @@ const profileUpdateSchema = z.object({
     instagramHandle: nullableString(100),
     linkedinHandle: nullableString(100),
     githubHandle: nullableString(100),
+    // 🖼️ IMÁGENES (CLAVE)
+    imageUrl: z.string().url().nullable().optional(),
+    imageWallUrl: z.string().url().nullable().optional(),
+
+    // opcional pero MUY recomendable
+    imagePublicId: z.string().nullable().optional(),
+    imageWallPublicId: z.string().nullable().optional(),
+
+    wallHeaderBackgroundType: z.nativeEnum(WallHeaderBGType).nullable().optional(),
+    wallHeaderBackgroundColor: z.string().nullable().optional(),
 });
 
 /* -------------------------------------------------------------------------- */
@@ -125,6 +135,7 @@ export async function GET() {
             imagePublicId: true,
             imageWallUrl: true,
             imageWallPublicId: true,
+
         },
     });
 
@@ -138,6 +149,8 @@ export async function GET() {
 /* -------------------------------------------------------------------------- */
 /*                                    PATCH                                   */
 /* -------------------------------------------------------------------------- */
+
+
 
 export async function PATCH(req: NextRequest) {
     const userId = await getSessionUserId();
@@ -159,55 +172,98 @@ export async function PATCH(req: NextRequest) {
     const { birthday, ...rest } = parsed.data;
 
     try {
-        const updated = await prisma.user.update({
-            where: { id: userId },
-            data: {
-                ...rest,
-                birthday:
-                    birthday === undefined
-                        ? undefined
-                        : birthday === null
-                            ? null
-                            : new Date(birthday),
-            },
-            select: {
-                id: true,
-                nick: true,
-                bio: true,
-                phoneNumber: true,
-                movilNumber: true,
-                birthday: true,
+        const updatedUser = await prisma.$transaction(async (tx) => {
+            /* ------------------------------
+             * 👤 Actualizar usuario
+             * ------------------------------ */
+            const user = await tx.user.update({
+                where: { id: userId },
+                data: {
+                    ...rest,
+                    birthday:
+                        birthday === undefined
+                            ? undefined
+                            : birthday === null
+                                ? null
+                                : new Date(birthday),
+                },
+                select: {
+                    id: true,
+                    nick: true,
+                    bio: true,
+                    phoneNumber: true,
+                    movilNumber: true,
+                    birthday: true,
 
-                country: true,
-                province: true,
-                city: true,
+                    country: true,
+                    province: true,
+                    city: true,
 
-                countryId: true,
-                provinceId: true,
-                cityId: true,
+                    countryId: true,
+                    provinceId: true,
+                    cityId: true,
 
-                street: true,
-                number: true,
-                department: true,
-                mail_code: true,
+                    street: true,
+                    number: true,
+                    department: true,
+                    mail_code: true,
 
-                website: true,
-                language: true,
-                occupation: true,
-                company: true,
+                    website: true,
+                    language: true,
+                    occupation: true,
+                    company: true,
 
-                twitterHandle: true,
-                facebookHandle: true,
-                instagramHandle: true,
-                linkedinHandle: true,
-                githubHandle: true,
+                    twitterHandle: true,
+                    facebookHandle: true,
+                    instagramHandle: true,
+                    linkedinHandle: true,
+                    githubHandle: true,
 
-                imageUrl: true,
-                imageWallUrl: true,
-            },
+                    imageUrl: true,
+                    imagePublicId: true,
+                    imageWallUrl: true,
+                    imageWallPublicId: true,
+                },
+            });
+
+            /* ------------------------------
+             * 📸 Imagen de perfil
+             * ------------------------------ */
+            if (user.imagePublicId && user.imageUrl) {
+                await tx.cloudinaryImage.upsert({
+                    where: { publicId: user.imagePublicId },
+                    update: {
+                        deletedAt: null,
+                    },
+                    create: {
+                        userId,
+                        publicId: user.imagePublicId,
+                        url: user.imageUrl,
+                    },
+                });
+            }
+
+            /* ------------------------------
+             * 🧱 Imagen de portada
+             * ------------------------------ */
+            if (user.imageWallPublicId && user.imageWallUrl) {
+                await tx.cloudinaryImage.upsert({
+                    where: { publicId: user.imageWallPublicId },
+                    update: {
+                        deletedAt: null,
+                    },
+                    create: {
+                        userId,
+                        publicId: user.imageWallPublicId,
+                        url: user.imageWallUrl,
+                    },
+                });
+            }
+
+            return user;
         });
 
-        return NextResponse.json({ data: updated });
+        return NextResponse.json({ data: updatedUser });
     } catch (e: any) {
         const msg = prismaUniqueErrorMessage(e);
         if (msg) {
@@ -221,6 +277,8 @@ export async function PATCH(req: NextRequest) {
         );
     }
 }
+
+
 
 
 

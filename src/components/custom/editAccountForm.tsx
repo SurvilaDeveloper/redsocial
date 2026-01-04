@@ -233,8 +233,20 @@ export default function AccountForm({ config }: { config: Configuration }) {
         label: string,
         options: VisibilityOption[]
     ) => (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-center">
-            <Label className="text-sm">{label}</Label>
+        <div className="
+    grid grid-cols-1 md:grid-cols-2 gap-4
+    py-2 px-2 rounded-md
+    hover:bg-slate-900/40 transition
+  ">
+            <div className="space-y-0.5">
+                <Label className="text-sm text-slate-300">
+                    {label}
+                </Label>
+                <p className="text-xs text-slate-500">
+                    Configura quién puede ver esta información
+                </p>
+            </div>
+
             <VisibilitySelect
                 value={configuration[key]}
                 options={options}
@@ -244,6 +256,7 @@ export default function AccountForm({ config }: { config: Configuration }) {
             />
         </div>
     );
+
 
     async function saveConfiguration() {
         try {
@@ -288,7 +301,7 @@ export default function AccountForm({ config }: { config: Configuration }) {
                         className={cn(
                             "flex-1 px-3 py-2 text-xs sm:text-sm font-medium border-b sm:border-b-0 sm:border-r border-slate-800/70 focus:outline-none",
                             page === tab.id
-                                ? "bg-emerald-900/40 text-emerald-200"
+                                ? "bg-emerald-500/10 text-emerald-300"
                                 : "bg-slate-950/0 text-slate-300 hover:bg-slate-900/70"
                         )}
                     >
@@ -304,8 +317,9 @@ export default function AccountForm({ config }: { config: Configuration }) {
                         Privacidad y cuenta
                     </h2>
 
-                    <hr className="border-slate-800/70" />
-                    <h3 className="text-md font-light text-slate-200">
+                    <div className="my-6 h-px bg-gradient-to-r from-transparent via-slate-800 to-transparent" />
+
+                    <h3 className="text-sm font-medium text-slate-300 uppercase tracking-wide">
                         Perfil
                     </h3>
 
@@ -313,8 +327,9 @@ export default function AccountForm({ config }: { config: Configuration }) {
                     {render("coverImageVisibility", "Imagen de portada", VISIBILITY_SELECT_1)}
                     {render("fullProfileVisibility", "Perfil completo", VISIBILITY_SELECT_1)}
 
-                    <hr className="border-slate-800/70" />
-                    <h3 className="text-md font-light text-slate-200">
+                    <div className="my-6 h-px bg-gradient-to-r from-transparent via-slate-800 to-transparent" />
+
+                    <h3 className="text-sm font-medium text-slate-300 uppercase tracking-wide">
                         Muro y contenido
                     </h3>
 
@@ -326,8 +341,9 @@ export default function AccountForm({ config }: { config: Configuration }) {
                     {render("mediaCommentsVisibility", "Comentarios de medios", VISIBILITY_SELECT_1)}
                     {render("mediaRepliesVisibility", "Respuestas a comentarios de medios", VISIBILITY_SELECT_1)}
 
-                    <hr className="border-slate-800/70" />
-                    <h3 className="text-md font-light text-slate-200">
+                    <div className="my-6 h-px bg-gradient-to-r from-transparent via-slate-800 to-transparent" />
+
+                    <h3 className="text-sm font-medium text-slate-300 uppercase tracking-wide">
                         Relaciones
                     </h3>
 
@@ -335,8 +351,9 @@ export default function AccountForm({ config }: { config: Configuration }) {
                     {render("followersListVisibility", "Lista de seguidores", VISIBILITY_SELECT_1)}
                     {render("followingListVisibility", "Lista de seguidos", VISIBILITY_SELECT_1)}
 
-                    <hr className="border-slate-800/70" />
-                    <h3 className="text-md font-light text-slate-200">
+                    <div className="my-6 h-px bg-gradient-to-r from-transparent via-slate-800 to-transparent" />
+
+                    <h3 className="text-sm font-medium text-slate-300 uppercase tracking-wide">
                         Interacciones
                     </h3>
 
@@ -346,10 +363,17 @@ export default function AccountForm({ config }: { config: Configuration }) {
                     <Button
                         onClick={saveConfiguration}
                         disabled={saving}
-                        className="bg-emerald-600 hover:bg-emerald-500 mt-4"
+                        className="
+    mt-6 w-full h-10
+    bg-emerald-600 hover:bg-emerald-500
+    text-slate-900 font-medium
+    disabled:opacity-60 disabled:cursor-not-allowed
+    transition
+  "
                     >
                         {saving ? "Guardando..." : "Guardar configuración"}
                     </Button>
+
                 </div>
             )}
 
@@ -454,7 +478,11 @@ export default function AccountForm({ config }: { config: Configuration }) {
                         </p>
                     ) : (
                         devices.map((device) => (
-                            <Card key={device.id} className="py-1">
+                            <Card
+                                key={device.id}
+                                className="py-1 bg-slate-950/60 border-slate-800"
+                            >
+
                                 <CardHeader className="flex flex-row items-center justify-between px-3 py-2">
                                     <CardTitle className="flex items-center gap-2 text-sm font-medium">
                                         <DeviceIcon type={device.deviceType} />

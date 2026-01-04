@@ -1,10 +1,12 @@
 // src/components/custom/profilepicture.tsx
 "use client";
 
-import { Session } from "next-auth";
 import Image from "next/image";
+import { useSession } from "next-auth/react";
 
-const ProfilePicture = ({ session }: { session: Session }) => {
+const ProfilePicture = () => {
+    const { data: session } = useSession();
+
     const src = session?.user?.image || "/user.jpg";
 
     return (
@@ -21,4 +23,5 @@ const ProfilePicture = ({ session }: { session: Session }) => {
 };
 
 export default ProfilePicture;
+
 

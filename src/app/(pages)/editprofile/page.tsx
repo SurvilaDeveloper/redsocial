@@ -58,6 +58,9 @@ export default async function EditProfilePage() {
             imagePublicId: true,
             imageWallUrl: true,
             imageWallPublicId: true,
+            image: true,
+            wallHeaderBackgroundColor: true,
+            wallHeaderBackgroundType: true,
 
             visibility: true,
             darkModeEnabled: true,

@@ -11,6 +11,8 @@ import { SecurityEventType } from "./lib/security-events";
 
 import crypto from "crypto";
 import { sendNewDeviceAlertEmail } from "./lib/email";
+// import type { JWT } from "next-auth/jwt";
+// import type { User, AdapterUser } from "next-auth";
 
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -190,25 +192,41 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             return true;
         },
 
-        async jwt({ token, user, account }) {
+        async jwt({ token, user, account, trigger, session }) {
             if (account?.provider === "google") {
                 token.role = "user";
             }
 
+            // 🔁 update() desde el cliente
+            if (trigger === "update" && session?.image) {
+                token.imageUrl = session.image;
+            }
+
+            // 🔐 login / signup
             if (user) {
                 token.id = user.id;
-                token.role = user.role || token.role;
-                token.sessionVersion = user.sessionVersion; // 👈 CLAVE
+                token.role = (user as any).role || token.role;
+                token.sessionVersion = (user as any).sessionVersion;
+
+                token.imageUrl = (user as any).imageUrl ?? null;
+                token.image = user.image ?? null; // Google
             }
 
             return token;
-        },
+        }
+        ,
 
         async session({ session, token }) {
             if (session.user) {
                 session.user.id = token.id as string;
                 session.user.role = token.role as string;
                 session.user.sessionVersion = token.sessionVersion as number; // 👈
+
+                // 👇 PRIORIDAD
+                session.user.image =
+                    (token.imageUrl as string | null) ??
+                    (token.image as string | null) ??
+                    null;
             }
             return session;
         },

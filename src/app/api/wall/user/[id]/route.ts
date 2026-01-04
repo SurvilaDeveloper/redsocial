@@ -28,6 +28,8 @@ export async function GET(
                 bio: true,
                 imageUrl: true,
                 imageWallUrl: true,
+                wallHeaderBackgroundColor: true,
+                wallHeaderBackgroundType: true,
                 occupation: true,
                 company: true,
                 location: true,

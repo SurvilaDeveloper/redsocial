@@ -39,6 +39,9 @@ export type ProfileMe = {
     imagePublicId: string | null;
     imageWallUrl: string | null;
     imageWallPublicId: string | null;
+    image: string | null;
+    wallHeaderBackgroundColor: string | null;
+    wallHeaderBackgroundType: "color" | "image" | null;
 
     visibility: number | null;
     darkModeEnabled: boolean | null;
