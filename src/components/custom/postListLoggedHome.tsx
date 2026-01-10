@@ -30,8 +30,6 @@ export default function PostListLoggedHome({ session }: { session: any }) {
                 });
                 const data = await res.json();
 
-                console.log('data:', data);
-
                 const newPosts: Post[] = data?.allPosts ?? [];
 
                 if (!newPosts.length) {
@@ -113,7 +111,6 @@ export default function PostListLoggedHome({ session }: { session: any }) {
                 cache: "no-store",
             });
             const data = await res.json().catch(() => null);
-            console.log('data en PostListLoggedHome:', data);
 
             if (!res.ok || !data?.data) {
                 throw new Error(data?.error || "No se pudo cargar el post");

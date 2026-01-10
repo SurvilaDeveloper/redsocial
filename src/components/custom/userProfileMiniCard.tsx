@@ -108,7 +108,6 @@ const UserProfileMiniCard = ({
             });
 
             const result = await response.json();
-            console.log("result en friendButton: ", result);
 
             if (response.ok) {
                 if (typeof result.relState === "number") {
@@ -140,7 +139,6 @@ const UserProfileMiniCard = ({
             });
 
             const result = await response.json();
-            console.log("result en friendButton (menu): ", result);
 
             if (response.ok) {
                 if (typeof result.relState === "number") {

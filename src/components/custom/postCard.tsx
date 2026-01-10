@@ -93,7 +93,6 @@ export function PostCard({
 
     useEffect(() => {
         setCurrentPost(post);
-        console.log("post en postCardxx:", currentPost);
     }, [post.id]);
 
     // 🔹 estado local de comentarios
@@ -492,19 +491,6 @@ export function PostCard({
     };
 
     const isActive = (currentPost.active ?? 1) === 1;
-
-    // SOLO PARA DEBUG luego QUITAR – también ANTES de los returns
-    useEffect(() => {
-        console.log(
-            "DEBUG images para post",
-            currentPost.id,
-            "viewerId",
-            viewerId,
-            "isOwner",
-            isOwner,
-            currentPost.images
-        );
-    }, [currentPost.id, viewerId, isOwner, currentPost.images]);
 
     // 👇 OJO: canView SIN !isDeleted, así el dueño ve igual si está eliminado
     const canView =

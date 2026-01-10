@@ -1,0 +1,395 @@
+// src/components/cv/preview/CustomPreview.tsx
+
+import type { CustomData } from "@/types/cv";
+
+type Props = {
+    data: CustomData;
+};
+
+export function CustomPreview({ data }: Props) {
+    if (!data.items.length) return null;
+
+    return (
+        <section className="space-y-4">
+            {data.title && (
+                <h2 className="text-lg font-semibold border-b pb-1">
+                    {data.title}
+                </h2>
+            )}
+
+            <div className="space-y-4">
+                {data.items.map((item) => (
+                    <div key={item.id} className="space-y-1">
+                        <div className="flex flex-wrap items-baseline justify-between gap-2">
+                            <div>
+                                {item.title && (
+                                    <span className="font-medium">
+                                        {item.title}
+                                    </span>
+                                )}
+
+                                {item.subtitle && (
+                                    <span className="text-sm text-muted-foreground">
+                                        {" "}
+                                        – {item.subtitle}
+                                    </span>
+                                )}
+                            </div>
+
+                            {item.date && (
+                                <span className="text-sm text-muted-foreground">
+                                    {item.date}
+                                </span>
+                            )}
+                        </div>
+
+                        {item.description && (
+                            <p className="text-sm leading-relaxed">
+                                {item.description}
+                            </p>
+                        )}
+
+                        {item.url && (
+                            <a
+                                href={normalizeUrl(item.url)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-sm text-primary underline underline-offset-2"
+                            >
+                                {item.url}
+                            </a>
+                        )}
+                    </div>
+                ))}
+            </div>
+        </section>
+    );
+}
+
+function normalizeUrl(url: string) {
+    if (url.startsWith("http://") || url.startsWith("https://")) return url;
+    return `https://${url}`;
+}
+
+//src/components/cv/preview/EducationPreview.tsx
+
+import { EducationData } from "@/types/cv";
+
+export function EducationPreview({ data }: { data: EducationData }) {
+    return (
+        <section>
+            <h2 className="text-lg font-semibold">
+                {data.degree}
+            </h2>
+
+            <p className="text-sm">
+                {data.institution}
+            </p>
+
+            <p className="text-sm text-muted-foreground">
+                {data.startDate}
+                {data.endDate ? ` — ${data.endDate}` : ""}
+            </p>
+
+            {data.description && (
+                <p className="mt-2 text-sm">
+                    {data.description}
+                </p>
+            )}
+        </section>
+    );
+}
+
+//src/components/cv/preview/ExperiencePreview.tsx
+
+import { ExperienceData } from "@/types/cv";
+
+export function ExperiencePreview({ data }: { data: ExperienceData }) {
+    return (
+        <section>
+            <h2 className="text-lg font-semibold">
+                {data.role} · {data.company}
+            </h2>
+
+            <p className="text-sm text-muted-foreground">
+                {data.startDate}
+                {data.endDate ? ` — ${data.endDate}` : " — Actual"}
+            </p>
+
+            {data.description && (
+                <p className="mt-2 text-sm leading-relaxed">
+                    {data.description}
+                </p>
+            )}
+        </section>
+    );
+}
+
+// src/components/cv/preview/LanguagePreview.tsx
+
+import { LanguageData } from "@/types/cv";
+import { LANGUAGE_LABELS } from "@/types/cvLanguages";
+
+export function LanguagesPreview({ data }: { data: LanguageData[] }) {
+    if (!data.length) return null;
+
+    return (
+        <section>
+            <h3 className="text-lg font-semibold">Idiomas</h3>
+
+            <ul className="mt-2 space-y-1">
+                {data.map((lang, i) => (
+                    <li
+                        key={i}
+                        className="flex justify-between"
+                    >
+                        <span>
+                            {lang.code !== "other"
+                                ? LANGUAGE_LABELS[lang.code]
+                                : lang.name}
+                        </span>
+                        <span className="capitalize text-muted-foreground">
+                            {lang.level}
+                        </span>
+                    </li>
+                ))}
+            </ul>
+        </section>
+    );
+}
+
+// src/components/cv/preview/ProfilePreview.tsx
+
+"use client";
+
+import { Mail, Phone, Globe, Linkedin, Github, Facebook, Instagram, Youtube, X, MessageCircle } from "lucide-react";
+import type { ProfileData } from "@/types/cv";
+import { cn } from "@/lib/utils";
+import { LucideIcon } from "lucide-react";
+
+interface ProfilePreviewProps {
+    data: ProfileData;
+    className?: string;
+}
+
+export default function ProfilePreview({ data, className }: ProfilePreviewProps) {
+    const {
+        fullName,
+        headline,
+        location,
+        email,
+        phone,
+        website,
+        linkedin,
+        github,
+        facebook,
+        instagram,
+        youtube,
+        x,
+        discord,
+        medium,
+        devto,
+    } = data;
+
+    const isUrl = discord?.startsWith("http");
+
+    return (
+        <section className={cn("w-full border-b pb-4 mb-6", className)}>
+            <div className="flex flex-col gap-2">
+                <h1 className="text-2xl font-semibold leading-tight">{fullName || "Nombre Apellido"}</h1>
+                {(headline || location) && (
+                    <p className="text-sm text-muted-foreground">
+                        {headline}
+                        {headline && location && " · "}
+                        {location}
+                    </p>
+                )}
+
+                <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm mt-2">
+                    {email && (
+                        <Item icon={Mail} value={email} href={`mailto:${email}`} />
+                    )}
+                    {phone && (
+                        <Item icon={Phone} value={phone} href={`tel:${phone}`} />
+                    )}
+                    {website && (
+                        <Item icon={Globe} value={stripProtocol(website)} href={normalizeUrl(website)} />
+                    )}
+                </div>
+
+                <div className="flex flex-wrap gap-3 mt-3">
+                    {linkedin && <Social icon={Linkedin} href={linkedin} />}
+                    {github && <Social icon={Github} href={github} />}
+                    {facebook && <Social icon={Facebook} href={facebook} />}
+                    {instagram && <Social icon={Instagram} href={instagram} />}
+                    {youtube && <Social icon={Youtube} href={youtube} />}
+                    {x && <Social icon={X} href={x} />}
+                    {discord && (
+                        isUrl
+                            ? <Social icon={MessageCircle} href={discord} title={discord} />
+                            : <Item icon={MessageCircle} value={discord} />
+                    )}
+                    {medium && <Social label="Medium" href={medium} />}
+                    {devto && <Social label="DEV" href={devto} />}
+                </div>
+            </div>
+        </section>
+    );
+}
+
+function Item({
+    icon: Icon,
+    value,
+    href,
+}: {
+    icon: LucideIcon;
+    value: string;
+    href?: string;
+}) {
+    return (
+        <a
+            href={href}
+            className="inline-flex items-center gap-2 hover:underline"
+            target={href?.startsWith("http") ? "_blank" : undefined}
+            rel={href?.startsWith("http") ? "noreferrer" : undefined}
+        >
+            <Icon className="h-4 w-4 text-muted-foreground" />
+            <span>{value}</span>
+        </a>
+    );
+}
+
+function Social({
+    icon: Icon,
+    href,
+    label,
+    title,
+}: {
+    icon?: LucideIcon;
+    href: string;
+    label?: string;
+    title?: string;
+}) {
+
+    const content = Icon ? <Icon className="h-4 w-4" /> : <span className="text-xs font-medium">{label}</span>;
+
+    return (
+        <a
+            href={normalizeUrl(href)}
+            title={title || label}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center justify-center rounded-full border h-8 w-8 hover:bg-accent"
+        >
+            {content}
+        </a>
+    );
+}
+
+function normalizeUrl(url: string) {
+    if (!url) return url;
+    if (url.startsWith("http://") || url.startsWith("https://")) return url;
+    return `https://${url}`;
+}
+
+function stripProtocol(url?: string) {
+    if (!url) return "";
+    return url.replace(/^https?:\/\//, "");
+}
+
+// src/components/cv/preview/ProjectsPreview.tsx
+"use client";
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import type { ProjectData } from "@/types/cv";
+
+export interface ProjectsPreviewProps {
+    data: ProjectData[];
+}
+
+export function ProjectsPreview({ data }: ProjectsPreviewProps) {
+    if (!data?.length) return null;
+
+    return (
+        <div className="space-y-4">
+            {data.map((project) => (
+                <Card key={project.id}>
+                    <CardHeader>
+                        <CardTitle className="text-sm font-semibold">
+                            {project.name}
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                        {project.description && (
+                            <p className="text-sm text-muted-foreground">
+                                {project.description}
+                            </p>
+                        )}
+                        {project.url && (
+                            <a
+                                href={project.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-500 hover:underline text-sm mt-1 block"
+                            >
+                                Ver proyecto
+                            </a>
+                        )}
+                        {(project.startDate || project.endDate) && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                                {project.startDate ?? ""} {project.endDate ? `- ${project.endDate}` : ""}
+                            </p>
+                        )}
+                    </CardContent>
+                </Card>
+            ))}
+        </div>
+    );
+}
+
+// src/components/cv/preview/SkillsPreview.tsx
+
+import type { SkillData } from "@/types/cv";
+
+const LEVEL_LABELS: Record<
+    NonNullable<SkillData["level"]>,
+    string
+> = {
+    basic: "Básico",
+    intermediate: "Intermedio",
+    advanced: "Avanzado",
+    expert: "Experto",
+};
+
+export function SkillsPreview({ data }: { data: SkillData[] }) {
+    const visibleSkills = data.filter(
+        (s) => s.name.trim().length > 0
+    );
+
+    if (!visibleSkills.length) return null;
+
+    return (
+        <section className="space-y-2">
+            <h2 className="text-lg font-semibold">
+                Skills
+            </h2>
+
+            <ul className="grid grid-cols-2 gap-x-4 gap-y-1">
+                {visibleSkills.map((skill) => (
+                    <li
+                        key={skill.name.toLowerCase()}
+                        className="flex justify-between text-sm"
+                    >
+                        <span>{skill.name}</span>
+
+                        {skill.level && (
+                            <span className="text-muted-foreground">
+                                {LEVEL_LABELS[skill.level]}
+                            </span>
+                        )}
+                    </li>
+                ))}
+            </ul>
+        </section>
+    );
+}

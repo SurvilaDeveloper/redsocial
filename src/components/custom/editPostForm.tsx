@@ -164,7 +164,6 @@ const EditPostForm = ({
                 for (let i = 0; i < imageToDelete.length; i++) {
                     try {
                         const res = await deletePostImage(imageToDelete[i]);
-                        console.log("Respuesta deletePostImage:", res);
                     } catch (err) {
                         console.error(
                             "Error al borrar imagen en Cloudinary:",

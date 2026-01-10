@@ -72,7 +72,6 @@ const authConfig: NextAuthConfig = {
 
                     // Enviar correo de verificación
                     const emailState = await sendEmailVerification(user.name, user.email, token);
-                    console.log("emailState: ", emailState)
                     //throw new Error("Email send verification");
                 }
 

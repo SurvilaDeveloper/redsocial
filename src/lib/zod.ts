@@ -1,7 +1,5 @@
 // src/lib/zod.ts
 import { z } from "zod";
-import { COMMON_LANGUAGES } from "@/types/cv";
-import { LANGUAGE_LABELS } from "@/types/cvLanguages";
 
 /* -------------------------------------------------------------------------- */
 /*                                   AUTH                                     */

@@ -239,6 +239,7 @@ model User {
   trustedDevices               TrustedDevice[]
   deviceDisableTokens          DeviceDisableToken[]
   curricula                    Curriculum[]
+  curriculumMedias             CurriculumMedia[]
 
   @@map("user")
 }
@@ -249,17 +250,57 @@ model Curriculum {
   id      Int     @id @default(autoincrement())
   userId  Int     @unique
   title   String
-  summary String?
+  summary String? @db.VarChar(400)
   content Json
+
+  styleConfig Json?
+  templateId  String @default("classic")
 
   isPublic Boolean @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  birthDate DateTime? @db.Date
+
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  curriculumMedias CurriculumMedia[]
 
   @@index([userId])
+  @@index([birthDate])
+}
+
+enum CVMediaStatus {
+  active
+  deleted
+}
+
+model CurriculumMedia {
+  id           Int @id @default(autoincrement())
+  userId       Int
+  curriculumId Int
+
+  // Cloudinary
+  url      String @db.VarChar(255)
+  publicId String @db.VarChar(255)
+
+  // para previews rápidas (opcional)
+  thumbUrl String? @db.VarChar(255)
+
+  // si la imagen se “reemplazó” por svg al borrar
+  status      CVMediaStatus @default(active)
+  replacedUrl String?       @db.VarChar(255) // ej: "/image-deleted.svg"
+  deletedAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  curriculum Curriculum @relation(fields: [curriculumId], references: [id], onDelete: Cascade)
+
+  @@unique([curriculumId, publicId])
+  @@index([userId])
+  @@index([curriculumId])
 }
 
 model Configuration {
@@ -442,8 +483,8 @@ model PostCommentResponse {
 model Image {
   id            Int            @id @default(autoincrement())
   description   String?        @db.VarChar(1000)
-  imageUrl      String         @db.VarChar(255)
-  imagePublicId String
+  imageUrl      String?        @db.VarChar(255)
+  imagePublicId String?
   createdAt     DateTime       @default(now())
   post_id       Int
   active        Int?           @default(1) @db.TinyInt
@@ -645,8 +686,8 @@ model ProductListingMedia {
 
   type MediaType @default(image)
 
-  url      String @db.VarChar(255)
-  publicId String @db.VarChar(255)
+  url      String? @db.VarChar(255)
+  publicId String? @db.VarChar(255)
 
   thumbnailUrl      String? @db.VarChar(255)
   thumbnailPublicId String? @db.VarChar(255)
@@ -808,8 +849,8 @@ model ServiceListingMedia {
 
   type MediaType @default(image)
 
-  url      String @db.VarChar(255)
-  publicId String @db.VarChar(255)
+  url      String? @db.VarChar(255)
+  publicId String? @db.VarChar(255)
 
   thumbnailUrl      String? @db.VarChar(255)
   thumbnailPublicId String? @db.VarChar(255)

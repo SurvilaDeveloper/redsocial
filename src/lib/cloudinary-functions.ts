@@ -58,10 +58,6 @@ export async function deletePostImage(image: { url: string, publicId: string }) 
 
     // 2. Procesar la respuesta del backend con la firma y otros datos
     const { signature, timestamp, apiKey, cloudName } = await signatureRes.json();
-    console.log("Signature:", signature);
-    console.log("Timestamp:", timestamp);
-    console.log("API Key:", apiKey);
-    console.log("Cloud Name:", cloudName);
 
     // 3. Crear el FormData para la solicitud de eliminación
     const formData = new FormData();

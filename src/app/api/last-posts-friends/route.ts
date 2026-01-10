@@ -4,7 +4,6 @@ import auth from "@/auth";
 
 export async function GET(req: NextRequest) {
     const session = await auth()
-    console.log("session en last.posts/route.ts: ", session);
     const { searchParams } = new URL(req.url);
     const page = parseInt(searchParams.get("page") || "1", 10);
     const pageSize = 2;
@@ -36,10 +35,7 @@ export async function GET(req: NextRequest) {
                 ],
             }
         })
-        console.log("o-o-o-o-o-o-", xxx);
     }
-
-
     if (session) {
         const postsReq = await prisma.post.findMany({
             where: {
@@ -82,12 +78,6 @@ export async function GET(req: NextRequest) {
                 images: true,
             },
         });
-
-
-
-
-        console.log("XXXXXXX   ", postsReq);
-
         const posts = postsReq.map(async (post) => {
             const images = await prisma.image.findMany({
                 where: { post_id: post.id },

@@ -52,8 +52,6 @@ export default function PostList({
 
                 const data = await res.json();
 
-                console.log('data en postList:', data);
-
                 const newPosts: Post[] = data?.allPosts ?? [];
 
                 if (!newPosts.length) {

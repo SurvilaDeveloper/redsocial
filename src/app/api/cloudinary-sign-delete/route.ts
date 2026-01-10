@@ -11,8 +11,6 @@ export async function POST(req: Request) {  // Usar POST en lugar de GET
         // Crear la cadena para firmar, incluyendo el `public_id` y `timestamp`
         const stringToSign = `public_id=${publicId}&timestamp=${timestamp}${apiSecret}`;
 
-        console.log("String to sign:", stringToSign);
-
         // Crear la firma usando el `apiSecret` y la cadena
         const signature = crypto
             .createHash("sha1")

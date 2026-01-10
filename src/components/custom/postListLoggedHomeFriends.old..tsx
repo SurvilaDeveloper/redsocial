@@ -18,7 +18,6 @@ export default function PostListLoggedHomeFriends({ session }: { session: any })
             setLoading(true);
             const res = await fetch(`/api/last-posts-friends?page=${page}`);
             const data = await res.json();
-            console.log("data: ", data);
             if (data.allPosts && data.allPosts.length === 0) {
                 setHasMore(false);
             } else if (data.allPosts) {

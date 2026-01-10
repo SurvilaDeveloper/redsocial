@@ -24,9 +24,6 @@ export async function GET() {
     const currentDeviceHash = generateDeviceHash({
         userAgent
     });
-
-    console.log('currentDeviceHash en src/app/api/security/devices/route.ts:', currentDeviceHash);
-
     const devices = await prisma.trustedDevice.findMany({
         where: {
             userId,

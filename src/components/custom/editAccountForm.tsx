@@ -106,7 +106,6 @@ export default function AccountForm({ config }: { config: Configuration }) {
             const res = await fetch("/api/security/devices");
             const data = await res.json();
             setDevices(data.devices);
-            console.log("devices", data.devices);
         } catch (err) {
             console.error(err);
             alert("No se pudieron cargar los dispositivos");

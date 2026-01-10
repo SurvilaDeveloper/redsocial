@@ -197,3 +197,214 @@ body {
   height: 1.5rem;
 }
 */
+
+/* styles/cv-preview.css o globals.css */
+/* CV Preview tokens */
+/* CV Preview tokens */
+.cv-root {
+  color: #111;
+  /* fallback general */
+}
+
+/* Tipografías y colores controlados por styleConfig */
+.cv-title {
+  font-family: var(--cv-title-font, ui-sans-serif);
+  font-size: var(--cv-title-size, 18px);
+  color: var(--cv-title-color, #111);
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.cv-subtitle {
+  font-family: var(--cv-subtitle-font, ui-sans-serif);
+  font-size: var(--cv-subtitle-size, 14px);
+  color: var(--cv-subtitle-color, #374151);
+  /* slate-700 */
+  line-height: 1.35;
+}
+
+.cv-text {
+  font-family: var(--cv-text-font, ui-sans-serif);
+  font-size: var(--cv-text-size, 14px);
+  color: var(--cv-text-color, #111);
+  line-height: 1.5;
+}
+
+.cv-date {
+  font-family: var(--cv-date-font, ui-sans-serif);
+  font-size: var(--cv-date-size, 12px);
+  color: var(--cv-date-color, #64748b);
+  /* slate-500 */
+  line-height: 1.3;
+}
+
+.cv-doc-title {
+  font-family: var(--cv-doc-title-font, ui-sans-serif);
+  font-size: var(--cv-doc-title-size, 20px);
+  color: var(--cv-doc-title-color, #111);
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.cv-item-title {
+  font-family: var(--cv-item-title-font, var(--cv-text-font, ui-sans-serif));
+  font-size: var(--cv-item-title-size, var(--cv-text-size, 14px));
+  color: var(--cv-item-title-color, var(--cv-text-color, #111));
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.cv-item-subtitle {
+  font-family: var(--cv-item-subtitle-font, var(--cv-text-font, ui-sans-serif));
+  font-size: var(--cv-item-subtitle-size, var(--cv-text-size, 14px));
+  color: var(--cv-item-subtitle-color, var(--cv-subtitle-color, #374151));
+  font-weight: 500;
+  line-height: 1.25;
+}
+
+/* ===== Header roles ===== */
+
+.cv-name {
+  font-family: var(--cv-name-font, ui-sans-serif);
+  font-size: var(--cv-name-size, 24px);
+  color: var(--cv-name-color, #111);
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.cv-headline {
+  font-family: var(--cv-headline-font, ui-sans-serif);
+  font-size: var(--cv-headline-size, 14px);
+  color: var(--cv-headline-color, rgb(55 65 81));
+  /* slate-700 */
+  line-height: 1.35;
+}
+
+.cv-summary {
+  font-family: var(--cv-summary-font, ui-sans-serif);
+  font-size: var(--cv-summary-size, 14px);
+  color: var(--cv-summary-color, #111);
+  line-height: 1.55;
+}
+
+.cv-description {
+  font-family: var(--cv-description-font, var(--cv-text-font, ui-sans-serif));
+  font-size: var(--cv-description-size, var(--cv-text-size, 14px));
+  line-height: 1.5;
+}
+
+/* globals.css (AGREGAR) */
+.cv-sidebar {
+  /* usa tus variables cv-text/cv-title etc; esto solo define layout premium */
+}
+
+.cv-timeline .cv-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 9999px;
+  background: var(--cv-title-color);
+}
+
+.cv-timeline-body {
+  border-left: 2px solid rgba(0, 0, 0, 0.1);
+}
+
+/* globals.css (AGREGAR) */
+.cv-accent-right {
+  background: #ffdb8e;
+  /* cremita */
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+@media print {
+
+  /* A4 real */
+  @page {
+    size: A4;
+    margin: 10mm;
+  }
+
+  /* Reset general: evita alturas tipo 100vh/min-h-screen */
+  html,
+  body {
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    background: white !important;
+  }
+
+  /* Ocultar toda la app (direct children del body) */
+  body>* {
+    display: none !important;
+  }
+
+  /* Mostrar SOLO el modal (tiene que estar portaleado al body) */
+  body>.cv-preview-modal {
+    display: block !important;
+    position: static !important;
+    inset: auto !important;
+    background: transparent !important;
+    overflow: visible !important;
+    padding: 0 !important;
+  }
+
+  /* No imprimir la toolbar */
+  .cv-preview-toolbar {
+    display: none !important;
+  }
+
+  /* Quitar constraints del contenedor */
+  body>.cv-preview-modal>div {
+    max-width: none !important;
+    width: auto !important;
+  }
+
+  /* CV: A4, sin transform, y que pagine si excede */
+  .cv-root {
+    width: 190mm !important;
+    /* A4(210) - márgenes 10mm izq/der => 190mm */
+    min-height: 277mm !important;
+    /* A4(297) - márgenes 10mm sup/inf => 277mm */
+    height: auto !important;
+    transform: none !important;
+    transform-origin: top left !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+    /* Si tu padding inline es 16mm, está bien. Si querés que lo controle print, podés forzarlo acá. */
+    /* padding: 16mm !important; */
+  }
+
+  /* Evitar scrollbars en impresión */
+  .cv-preview-modal,
+  .cv-sheet {
+    overflow: visible !important;
+  }
+
+  .cv-section,
+  .cv-item,
+  .cv-row,
+  .cv-block {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  /* Evitar cortes raros en títulos */
+  .cv-section>h2 {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+}
+
+
+/* ejemplo: ajustar en .dark */
+.dark {
+  /* bordes más sutiles */
+  --border: 215 20% 18%;
+  /* antes suele estar más claro */
+  --input: 215 20% 18%;
+  --ring: 215 20% 35%;
+
+  /* si usás backgrounds muy negros, un “lift” ayuda */
+  --background: 222 47% 7%;
+  --card: 222 47% 8%;
+}

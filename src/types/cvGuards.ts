@@ -32,3 +32,16 @@ export function isProjectsSection(
 ): section is CVSection<"projects"> {
     return section.type === "projects";
 }
+
+export function isProfileSection(
+    section: CVSection
+): section is CVSection<"profile"> {
+    return section.type === "profile";
+}
+
+export function isCustomSection(
+    section: CVSection
+): section is CVSection<"custom"> {
+    return section.type === "custom";
+}
+

@@ -53,7 +53,6 @@ const WallHeader = ({ session, userId }: WallHeaderProps) => {
                 isFollower: data.meta?.isFollower ?? false,
                 visibility: data.user.visibility ?? undefined,
             };
-            console.log("normalizedUser: ", normalizedUser);
 
             setFullUser(normalizedUser);
 

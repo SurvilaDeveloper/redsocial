@@ -20,11 +20,8 @@ export const createPost = async (
         publicId: string;
     } | null)[]
 ) => {
-    console.log("image en post-action: ", mainImage);
-    console.log("imagesAdded en post-action: ", imagesAdded);
 
     const session = await auth();
-    console.log("session en post-action: ", session);
 
     if (!session) {
         return {
@@ -115,7 +112,6 @@ export const updatePost = async (
     postId: number
 ) => {
     const session = await auth()
-    console.log("session en post-action: ", session);
     if (!session) {
         return {
             error: "No logged user."
@@ -151,7 +147,7 @@ export const updatePost = async (
             }));
 
         } catch (error) {
-            console.log("Error al eliminar registros de la db")
+            console.error("Error al eliminar registros de la db", error)
         }
 
         const post = await prisma.post.update({
@@ -205,7 +201,6 @@ export const updatePost = async (
                 }
             }
             if (imagesAdded && imagesAdded.length > 0) {
-                console.log("imagesAdded: ", imagesAdded);
 
                 for (let i = 0; i < imagesAdded.length; i++) {
                     if (imagesAdded[i]) {

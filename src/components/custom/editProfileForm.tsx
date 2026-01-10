@@ -82,8 +82,6 @@ type ProfileFormValues = {
 /* -------------------------------------------------------------------------- */
 
 export default function ProfileForm({ user }: { user: ProfileMe }) {
-
-    console.log("user:", user);
     const { update } = useSession();
 
     const [profileFile, setProfileFile] = useState<File | null>(null);

@@ -1,28 +1,63 @@
-//src/components/cv/preview/EducationPreview.tsx
+// src/components/cv/preview/EducationPreview.tsx
+import type { EducationData, EducationItem } from "@/types/cv";
 
-import { EducationData } from "@/types/cv";
+type Props = {
+    data: EducationData;
+};
 
-export function EducationPreview({ data }: { data: EducationData }) {
+export function EducationPreview({ data }: Props) {
+    const items: EducationItem[] = Array.isArray(data) ? data : [];
+    if (items.length === 0) return null;
+
+    const visible = items.filter((e) => {
+        const institution = (e.institution ?? "").trim();
+        const degree = (e.degree ?? "").trim();
+        const start = (e.startDate ?? "").trim();
+        const end = (e.endDate ?? "").trim();
+        const desc = (e.description ?? "").trim();
+        return !!(institution || degree || start || end || desc);
+    });
+
+    if (visible.length === 0) return null;
+
     return (
-        <section>
-            <h2 className="text-lg font-semibold">
-                {data.degree}
-            </h2>
+        <div className="space-y-4">
+            {visible.map((e) => {
+                const institution = (e.institution ?? "").trim();
+                const degree = (e.degree ?? "").trim();
+                const start = (e.startDate ?? "").trim();
+                const end = (e.endDate ?? "").trim();
+                const desc = (e.description ?? "").trim();
 
-            <p className="text-sm">
-                {data.institution}
-            </p>
+                const title = degree || "Título";
+                const dateLabel =
+                    start || end
+                        ? `${start || ""}${end ? ` — ${end}` : start ? " — En curso" : ""}`
+                        : "";
 
-            <p className="text-sm text-muted-foreground">
-                {data.startDate}
-                {data.endDate ? ` — ${data.endDate}` : ""}
-            </p>
+                return (
+                    <div key={e.id} className="cv-item cv-block space-y-1">
+                        <div className="cv-row flex flex-wrap items-baseline justify-between gap-2">
+                            <div className="flex flex-wrap items-baseline gap-2">
+                                <span className="cv-item-title">{title}</span>
+                                {institution ? (
+                                    <span className="cv-item-subtitle">· {institution}</span>
+                                ) : null}
+                            </div>
 
-            {data.description && (
-                <p className="mt-2 text-sm">
-                    {data.description}
-                </p>
-            )}
-        </section>
+                            {dateLabel ? (
+                                <span className="cv-date">{dateLabel}</span>
+                            ) : null}
+                        </div>
+
+                        <div className="cv-block-body space-y-1">
+                            {desc ? (
+                                <p className="cv-description">{desc}</p>
+                            ) : null}
+                        </div>
+                    </div>
+                );
+            })}
+        </div>
     );
 }
