@@ -60,6 +60,12 @@ const DropDownMenuProfileImage = () => {
                     </DropdownMenuItem>
 
                     <DropdownMenuItem asChild className="text-sm px-2 py-1.5 cursor-pointer rounded-md focus:bg-slate-800 focus:text-slate-50 hover:bg-slate-800/80">
+                        <Link href="/cv" className="w-full">
+                            {cfg.TEXTS.editCV}
+                        </Link>
+                    </DropdownMenuItem>
+
+                    <DropdownMenuItem asChild className="text-sm px-2 py-1.5 cursor-pointer rounded-md focus:bg-slate-800 focus:text-slate-50 hover:bg-slate-800/80">
                         <Link href="/login" className="w-full">
                             {cfg.TEXTS.changeAccount}
                         </Link>

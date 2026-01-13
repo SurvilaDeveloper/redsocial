@@ -28,3 +28,10 @@ export const cvEditorStyles = {
 
 // util para normalizar opcionales (ideal para endDate / url / etc.)
 export const normalizeOptional = (v: string) => (v?.trim() ? v.trim() : undefined);
+
+// Mantiene lo que el usuario escribe (incluye espacios internos y el espacio final mientras tipea).
+// Solo convierte "" o "   " en undefined.
+export const normalizeOptionalSoft = (v: string) => {
+    if (typeof v !== "string") return undefined;
+    return v.length === 0 || v.replace(/\s/g, "").length === 0 ? undefined : v;
+};

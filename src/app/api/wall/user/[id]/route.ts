@@ -5,8 +5,34 @@ import { prisma } from "@/lib/prisma";
 import auth from "@/auth";
 import { getRelationshipState } from "@/lib/relationship";
 
+type CvMeta = {
+    exists: boolean;
+    id: number | null;
+    isPublic: boolean;
+    canView: boolean;
+};
+
+function buildCvMeta(
+    cv: { id: number; isPublic: boolean } | null,
+    opts: { isOwner: boolean }
+): CvMeta {
+    if (!cv) {
+        return { exists: false, id: null, isPublic: false, canView: false };
+    }
+
+    const isPublic = Boolean(cv.isPublic);
+    const canView = opts.isOwner ? true : isPublic;
+
+    return {
+        exists: true,
+        id: cv.id,
+        isPublic,
+        canView,
+    };
+}
+
 export async function GET(
-    req: NextRequest,
+    _req: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
@@ -49,9 +75,16 @@ export async function GET(
             return NextResponse.json({ error: "User not found" }, { status: 404 });
         }
 
-        const isOwner = sessionUserId === user.id;
+        // ✅ CV meta (lookup mínimo, no trae contenido)
+        const cvRow = await prisma.curriculum.findUnique({
+            where: { userId: wallUserId },
+            select: { id: true, isPublic: true },
+        });
 
-        // 🔐 Owner puede ver todo
+        const isOwner = sessionUserId === user.id;
+        const visibility = user.visibility ?? 1;
+
+        // 🔐 Owner puede ver todo (y puede ver su CV aunque no sea público)
         if (isOwner) {
             return NextResponse.json({
                 user,
@@ -59,18 +92,21 @@ export async function GET(
                     isOwner: true,
                     isFriend: false,
                     isFollower: false,
-                    visibility: user.visibility,
+                    visibility,
+                    cv: buildCvMeta(cvRow, { isOwner: true }),
                 },
             });
         }
-
-        const visibility = user.visibility ?? 1;
 
         // 1️⃣ Público
         if (visibility === 1) {
             return NextResponse.json({
                 user,
-                meta: { isOwner: false, visibility },
+                meta: {
+                    isOwner: false,
+                    visibility,
+                    cv: buildCvMeta(cvRow, { isOwner: false }),
+                },
             });
         }
 
@@ -81,7 +117,11 @@ export async function GET(
             }
             return NextResponse.json({
                 user,
-                meta: { isOwner: false, visibility },
+                meta: {
+                    isOwner: false,
+                    visibility,
+                    cv: buildCvMeta(cvRow, { isOwner: false }),
+                },
             });
         }
 
@@ -114,6 +154,7 @@ export async function GET(
                     isFriend,
                     isFollower,
                     visibility,
+                    cv: buildCvMeta(cvRow, { isOwner: false }),
                 },
             });
         }
@@ -130,6 +171,7 @@ export async function GET(
                     isFriend: true,
                     isFollower,
                     visibility,
+                    cv: buildCvMeta(cvRow, { isOwner: false }),
                 },
             });
         }
@@ -138,12 +180,10 @@ export async function GET(
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     } catch (error) {
         console.error(error);
-        return NextResponse.json(
-            { error: "Internal Server Error" },
-            { status: 500 }
-        );
+        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }
+
 
 
 

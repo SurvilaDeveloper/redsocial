@@ -35,7 +35,14 @@ export const yearYYYY = z
     .regex(/^\d{4}$/, "Formato esperado: YYYY (ej: 2024)");
 
 // Custom: YYYY o YYYY-MM
-export const yearOrMonth = z.union([yearYYYY, monthYYYYMM]);
+// YYYY o YYYY-MM en un solo regex (mensaje único y consistente)
+export const yearOrMonth = z
+    .string()
+    .regex(
+        /^(\d{4})(-(0[1-9]|1[0-2]))?$/,
+        "Formato esperado: YYYY o YYYY-MM (ej: 2024 o 2024-07)"
+    );
+
 
 export const optionalYearOrMonth = z.preprocess(
     (v) => {
@@ -44,6 +51,7 @@ export const optionalYearOrMonth = z.preprocess(
     },
     yearOrMonth.optional()
 );
+
 
 // YYYY-MM-DD (día)
 export const dateYYYYMMDD = z

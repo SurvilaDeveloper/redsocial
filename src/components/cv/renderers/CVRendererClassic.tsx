@@ -2,8 +2,8 @@
 "use client";
 
 import React, { useMemo } from "react";
-import type { EditorCV } from "@/types/cvEditor";
 import type {
+    Curriculum,
     CVSection,
     ProfileData,
     ExperienceData,
@@ -12,9 +12,11 @@ import type {
     LanguageData,
     ProjectData,
     CustomData,
+    HeaderImageMeta,
+    CVThemeColor,
 } from "@/types/cv";
 
-import { TONES, type Tone, type CVThemeColor, coerceThemeColor } from "@/types/cvTheme";
+import { TONES, type Tone, coerceThemeColor } from "@/types/cv";
 
 import { HeaderPreview } from "../preview/HeaderPreview";
 import ProfilePreview from "../preview/ProfilePreview";
@@ -25,31 +27,23 @@ import { LanguagesPreview } from "../preview/LanguagesPreview";
 import { ProjectsPreview } from "../preview/ProjectsPreview";
 import { CustomPreview } from "../preview/CustomPreview";
 
-type Props = { cv: EditorCV };
+type Props = { cv: Curriculum };
 
-type HeaderImageMeta = {
-    url: string | null;
-    publicId: string | null;
-    show: boolean;
-};
+function getHeaderImageMeta(cv: Curriculum): HeaderImageMeta {
+    const raw = cv.content.meta?.headerImage;
 
-function getHeaderImageMeta(cv: any): HeaderImageMeta {
-    const raw = cv?.content?.meta?.headerImage ?? {};
     return {
-        url: typeof raw.url === "string" && raw.url.trim().length ? raw.url.trim() : null,
-        publicId:
-            typeof raw.publicId === "string" && raw.publicId.trim().length
-                ? raw.publicId.trim()
-                : null,
-        show: Boolean(raw.show ?? false),
+        url: typeof raw?.url === "string" && raw.url.trim().length ? raw.url.trim() : null,
+        publicId: typeof raw?.publicId === "string" && raw.publicId.trim().length ? raw.publicId.trim() : null,
+        show: Boolean(raw?.show ?? false),
     };
 }
 
 export function CVRendererClassic({ cv }: Props) {
     // ✅ Theme color (final path + fallback legacy)
     const color = useMemo<CVThemeColor>(() => {
-        const fromStyle = (cv as any)?.styleConfig?.theme?.color;
-        const legacy = (cv as any)?.color;
+        const fromStyle = cv.styleConfig?.theme?.color;
+        const legacy = (cv as any)?.color; // legacy CVs viejos (si existían)
         return coerceThemeColor(fromStyle ?? legacy);
     }, [cv]);
 
@@ -74,26 +68,29 @@ export function CVRendererClassic({ cv }: Props) {
                 <div className={`absolute inset-x-0 top-0 h-2 ${tone.bg900}`} />
 
                 {/* Subtle decorative blobs */}
-                <div className={`pointer-events-none absolute -top-10 -right-10 h-32 w-32 rounded-full ${tone.bg100} opacity-80 z-0`} />
-                <div className={`pointer-events-none absolute -top-12 right-14 h-24 w-24 rounded-full ${tone.bg50} z-0`} />
-                <div className={`pointer-events-none absolute -top-8 left-10 h-20 w-20 rounded-full ${tone.bg50} z-0`} />
+                <div
+                    className={`pointer-events-none absolute -top-10 -right-10 h-32 w-32 rounded-full ${tone.bg100} opacity-80 z-0`}
+                />
+                <div
+                    className={`pointer-events-none absolute -top-12 right-14 h-24 w-24 rounded-full ${tone.bg50} z-0`}
+                />
+                <div
+                    className={`pointer-events-none absolute -top-8 left-10 h-20 w-20 rounded-full ${tone.bg50} z-0`}
+                />
 
                 <div className="relative z-10 p-6 sm:p-7 space-y-6">
                     {profileSection ? (
                         <HeaderPreview
                             profile={profileData}
-                            summary={(cv as any).summary ?? ""}
-                            imageUrl={headerImage.url}
-                            showImage={headerImage.show}
+                            summary={cv.summary ?? ""}
+                            imageUrl={headerImage.url ?? null}
+                            showImage={Boolean(headerImage.show)}
                         />
                     ) : null}
 
                     {profileSection ? (
                         <div className={`pt-2 border-t ${tone.border200}`}>
-                            <ProfilePreview
-                                data={profileData}
-                                birthDate={(cv as any).birthDate ?? null}
-                            />
+                            <ProfilePreview data={profileData} birthDate={cv.birthDate ?? null} />
                         </div>
                     ) : null}
                 </div>
@@ -105,55 +102,35 @@ export function CVRendererClassic({ cv }: Props) {
                     switch (section.type) {
                         case "experience":
                             return (
-                                <SectionBlock
-                                    key={section.id}
-                                    title="Experiencia"
-                                    tone={tone}
-                                >
+                                <SectionBlock key={section.id} title="Experiencia" tone={tone}>
                                     <ExperiencePreview data={section.data as ExperienceData} />
                                 </SectionBlock>
                             );
 
                         case "education":
                             return (
-                                <SectionBlock
-                                    key={section.id}
-                                    title="Educación"
-                                    tone={tone}
-                                >
+                                <SectionBlock key={section.id} title="Educación" tone={tone}>
                                     <EducationPreview data={section.data as EducationData} />
                                 </SectionBlock>
                             );
 
                         case "projects":
                             return (
-                                <SectionBlock
-                                    key={section.id}
-                                    title="Proyectos"
-                                    tone={tone}
-                                >
+                                <SectionBlock key={section.id} title="Proyectos" tone={tone}>
                                     <ProjectsPreview data={section.data as ProjectData[]} />
                                 </SectionBlock>
                             );
 
                         case "skills":
                             return (
-                                <SectionBlock
-                                    key={section.id}
-                                    title="Skills"
-                                    tone={tone}
-                                >
+                                <SectionBlock key={section.id} title="Skills" tone={tone}>
                                     <SkillsPreview data={section.data as SkillData[]} />
                                 </SectionBlock>
                             );
 
                         case "languages":
                             return (
-                                <SectionBlock
-                                    key={section.id}
-                                    title="Idiomas"
-                                    tone={tone}
-                                >
+                                <SectionBlock key={section.id} title="Idiomas" tone={tone}>
                                     <LanguagesPreview data={section.data as LanguageData[]} />
                                 </SectionBlock>
                             );
@@ -162,11 +139,7 @@ export function CVRendererClassic({ cv }: Props) {
                             const d = section.data as CustomData;
                             const title = d.title?.trim() || "Sección";
                             return (
-                                <SectionBlock
-                                    key={section.id}
-                                    title={title}
-                                    tone={tone}
-                                >
+                                <SectionBlock key={section.id} title={title} tone={tone}>
                                     <CustomPreview data={d} />
                                 </SectionBlock>
                             );
@@ -195,7 +168,7 @@ function SectionBlock({
             {/* Header */}
             <div className="flex items-end gap-3 px-5 pt-5">
                 <div className={`h-6 w-1.5 rounded-full ${tone.bg900}`} />
-                <h2 className="text-lg font-semibold tracking-tight text-neutral-900 break-words">
+                <h2 className="cv-title text-lg font-semibold tracking-tight text-neutral-900 break-words">
                     {title}
                 </h2>
             </div>

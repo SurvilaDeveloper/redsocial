@@ -290,6 +290,21 @@ body {
 .cv-description {
   font-family: var(--cv-description-font, var(--cv-text-font, ui-sans-serif));
   font-size: var(--cv-description-size, var(--cv-text-size, 14px));
+  color: var(--cv-description-color, #111);
+  line-height: 1.5;
+}
+
+.cv-personal {
+  font-family: var(--cv-personal-font, var(--cv-text-font, ui-sans-serif));
+  font-size: var(--cv-personal-size, var(--cv-text-size, 14px));
+  color: var(--cv-personal-color, #111);
+  line-height: 1.5;
+}
+
+.cv-link {
+  font-family: var(--cv-link-font, var(--cv-text-font, ui-sans-serif));
+  font-size: var(--cv-link-size, var(--cv-text-size, 14px));
+  color: var(--cv-link-color, #111);
   line-height: 1.5;
 }
 

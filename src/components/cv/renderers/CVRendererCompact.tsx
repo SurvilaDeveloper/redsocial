@@ -14,7 +14,7 @@ import type {
     CustomData,
 } from "@/types/cv";
 
-import { TONES, type Tone, type CVThemeColor, coerceThemeColor } from "@/types/cvTheme";
+import { TONES, type Tone, type CVThemeColor, coerceThemeColor } from "@/types/cv";
 
 import { HeaderPreview } from "../preview/HeaderPreview";
 import ProfilePreview from "../preview/ProfilePreview";
@@ -180,7 +180,7 @@ function SectionBlock({
             {/* ✅ overflow-visible para evitar recortes en print */}
             <div className="rounded-2xl border bg-white shadow-sm overflow-visible">
                 <div className="flex items-center justify-between gap-3 px-4 pt-4 min-w-0">
-                    <h2 className="text-base font-semibold tracking-tight text-neutral-900 min-w-0 break-words">
+                    <h2 className="cv-title text-base font-semibold tracking-tight text-neutral-900 min-w-0 break-words">
                         {title}
                     </h2>
 

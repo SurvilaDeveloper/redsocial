@@ -1,5 +1,5 @@
 // src/types/cvStyle.ts
-
+/*
 import { CVThemeColor } from "./cvTheme";
 
 export type CVTextStyle = {
@@ -14,12 +14,14 @@ export type CVStyleElement =
     | "name"
     | "headline"
     | "summary"
+    | "personal"
     | "title"
     | "subtitle"
     | "description"
     | "date"
     | "itemTitle"
-    | "itemSubtitle";
+    | "itemSubtitle"
+    | "link";
 
 export type CVStyleConfig = {
     // estilos por rol
@@ -28,6 +30,8 @@ export type CVStyleConfig = {
     headline: CVTextStyle;
     summary: CVTextStyle;
 
+    personal: CVTextStyle;
+
     title: CVTextStyle;
     subtitle: CVTextStyle;
     description: CVTextStyle;
@@ -35,6 +39,8 @@ export type CVStyleConfig = {
 
     itemTitle: CVTextStyle;
     itemSubtitle: CVTextStyle;
+
+    link: CVTextStyle
 
     // flags de layout (por ahora)
     showDocTitle: boolean;
@@ -47,3 +53,4 @@ export type CVStyleConfig = {
     };
 };
 
+*/

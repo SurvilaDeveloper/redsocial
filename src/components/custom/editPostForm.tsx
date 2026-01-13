@@ -189,7 +189,7 @@ const EditPostForm = ({
                 );
                 setError(response.error);
             } else {
-                router.push("/");
+                router.push("/mywall");
             }
         });
     }

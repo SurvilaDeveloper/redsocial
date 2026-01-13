@@ -14,7 +14,7 @@ import type {
     CustomData,
 } from "@/types/cv";
 
-import { TONES, type Tone, type CVThemeColor, coerceThemeColor } from "@/types/cvTheme";
+import { TONES, type Tone, type CVThemeColor, coerceThemeColor } from "@/types/cv";
 
 import { HeaderPreview } from "../preview/HeaderPreview";
 import ProfilePreview from "../preview/ProfilePreview";
@@ -38,9 +38,7 @@ function getHeaderImageMeta(cv: any): HeaderImageMeta {
     return {
         url: typeof raw.url === "string" && raw.url.trim().length ? raw.url.trim() : null,
         publicId:
-            typeof raw.publicId === "string" && raw.publicId.trim().length
-                ? raw.publicId.trim()
-                : null,
+            typeof raw.publicId === "string" && raw.publicId.trim().length ? raw.publicId.trim() : null,
         show: Boolean(raw.show ?? false),
     };
 }
@@ -57,20 +55,11 @@ export function CVRendererModernSidebar({ cv }: Props) {
 
     const sections = cv.content?.sections ?? [];
 
-    const profileSection = sections.find((s) => s.type === "profile") as
-        | CVSection<"profile">
-        | undefined;
+    const profileSection = sections.find((s) => s.type === "profile") as CVSection<"profile"> | undefined;
     const profileData = (profileSection?.data ?? { fullName: "" }) as ProfileData;
 
+    // ✅ profile siempre primero (renderizado arriba) y el resto respeta el orden del array
     const rest = sections.filter((s) => s.type !== "profile");
-
-    const sidebar = rest.filter(
-        (s) => s.type === "skills" || s.type === "languages" || s.type === "projects"
-    );
-    const main = rest.filter(
-        (s) => s.type === "experience" || s.type === "education" || s.type === "custom"
-    );
-    const oneColumn = [...sidebar, ...main];
 
     const headerImage = getHeaderImageMeta(cv);
 
@@ -132,10 +121,7 @@ export function CVRendererModernSidebar({ cv }: Props) {
                                         <div className="mt-3 h-px w-full bg-neutral-200/70" />
 
                                         <div className="pt-4 min-w-0 break-words">
-                                            <ProfilePreview
-                                                data={profileData}
-                                                birthDate={(cv as any).birthDate ?? null}
-                                            />
+                                            <ProfilePreview data={profileData} birthDate={(cv as any).birthDate ?? null} />
                                         </div>
                                     </div>
                                 </div>
@@ -144,9 +130,9 @@ export function CVRendererModernSidebar({ cv }: Props) {
                     </div>
                 </div>
 
-                {/* === ONE COLUMN SECTIONS === */}
+                {/* === ONE COLUMN SECTIONS (respeta orden) === */}
                 <div className="space-y-6">
-                    {oneColumn.map((section) => renderSection(section, tone))}
+                    {rest.map((section) => renderSection(section, tone))}
                 </div>
             </div>
         </div>
@@ -245,7 +231,7 @@ function SectionBlock({
                                 />
                             </div>
 
-                            <h2 className="text-lg font-semibold tracking-tight text-neutral-900 min-w-0 break-words">
+                            <h2 className="cv-title text-lg font-semibold tracking-tight text-neutral-900 min-w-0 break-words">
                                 {title}
                             </h2>
                         </div>
@@ -268,3 +254,4 @@ function SectionBlock({
         </section>
     );
 }
+

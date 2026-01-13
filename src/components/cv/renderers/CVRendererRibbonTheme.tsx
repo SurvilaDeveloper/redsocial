@@ -14,7 +14,7 @@ import type {
     CustomData,
 } from "@/types/cv";
 
-import { TONES, type Tone, type CVThemeColor, coerceThemeColor } from "@/types/cvTheme";
+import { TONES, type Tone, type CVThemeColor, coerceThemeColor } from "@/types/cv";
 
 import { HeaderPreview } from "../preview/HeaderPreview";
 import ProfilePreview from "../preview/ProfilePreview";
@@ -57,12 +57,9 @@ export function CVRendererRibbonTheme({ cv }: Props) {
     const profileSection = sections.find((s) => s.type === "profile") as CVSection<"profile"> | undefined;
 
     const profileData = (profileSection?.data ?? { fullName: "" }) as ProfileData;
-    const rest = sections.filter((s) => s.type !== "profile");
 
-    // orden pensado para lectura
-    const left = rest.filter((s) => s.type === "experience" || s.type === "education" || s.type === "custom");
-    const right = rest.filter((s) => s.type === "skills" || s.type === "languages" || s.type === "projects");
-    const ordered = [...left, ...right];
+    // ✅ Profile primero (renderizado arriba) y el resto respeta el orden del array
+    const rest = sections.filter((s) => s.type !== "profile");
 
     const headerImage = getHeaderImageMeta(cv);
 
@@ -125,12 +122,9 @@ export function CVRendererRibbonTheme({ cv }: Props) {
                                             Perfil
                                         </h3>
 
-                                        {/* ✅ indicator only (selector will live in CVEditor later) */}
+                                        {/* indicator only */}
                                         <div className="flex items-center gap-2">
-                                            <span className="text-[11px] font-medium text-neutral-500">{color}</span>
-                                            <div
-                                                className={`h-8 w-8 rounded-2xl border bg-white shadow-sm flex items-center justify-center ${tone.ring200} ring-2`}
-                                            >
+                                            <div className={`h-8 w-8 rounded-2xl border bg-white shadow-sm flex items-center justify-center ${tone.ring200} ring-2`}>
                                                 <div className={`h-2.5 w-2.5 rounded-full ${tone.bg900}`} />
                                             </div>
                                         </div>
@@ -151,8 +145,8 @@ export function CVRendererRibbonTheme({ cv }: Props) {
                     </div>
                 </div>
 
-                {/* ===== Sections: stacked cards with “ribbon corner” ===== */}
-                <div className="space-y-6">{ordered.map((section) => renderSection(section, tone))}</div>
+                {/* ===== Sections: stacked cards (respeta orden real) ===== */}
+                <div className="space-y-6">{rest.map((section) => renderSection(section, tone))}</div>
             </div>
         </div>
     );
@@ -239,7 +233,9 @@ function RibbonSection({
                                 <span className={`h-2.5 w-2.5 rounded-full ${tone.bg900}`} />
                             </span>
 
-                            <h2 className="text-lg font-semibold tracking-tight text-neutral-900 min-w-0 break-words">{title}</h2>
+                            <h2 className="cv-title text-lg font-semibold tracking-tight text-neutral-900 min-w-0 break-words">
+                                {title}
+                            </h2>
                         </div>
 
                         {/* chips */}
@@ -263,5 +259,6 @@ function RibbonSection({
         </section>
     );
 }
+
 
 

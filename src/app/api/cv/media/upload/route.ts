@@ -20,18 +20,25 @@ export async function POST(req: NextRequest) {
         const formData = await req.formData();
         const file = formData.get("file");
         const curriculumIdRaw = formData.get("curriculumId");
-        const curriculumId = Number(curriculumIdRaw);
+        const curriculumId =
+            typeof curriculumIdRaw === "string" && curriculumIdRaw.trim() && curriculumIdRaw !== "null"
+                ? Number(curriculumIdRaw)
+                : null;
 
-        if (!Number.isFinite(curriculumId) || curriculumId <= 0) {
+        if (curriculumId !== null && (!Number.isFinite(curriculumId) || curriculumId <= 0)) {
             return NextResponse.json({ error: "curriculumId inválido" }, { status: 400 });
         }
 
+
         // Validar que el CV sea del usuario (aunque sea 1 CV por user)
-        const cv = await prisma.curriculum.findFirst({
-            where: { id: curriculumId, userId },
-            select: { id: true },
-        });
-        if (!cv) return NextResponse.json({ error: "CV no encontrado" }, { status: 404 });
+        if (curriculumId !== null) {
+            const cv = await prisma.curriculum.findFirst({
+                where: { id: curriculumId, userId },
+                select: { id: true },
+            });
+            if (!cv) return NextResponse.json({ error: "CV no encontrado" }, { status: 404 });
+        }
+
 
         if (!(file instanceof Blob)) {
             return NextResponse.json({ error: "Archivo inválido" }, { status: 400 });
@@ -51,7 +58,7 @@ export async function POST(req: NextRequest) {
         const uploadResult = await new Promise<any>((resolve, reject) => {
             const stream = cloudinary.uploader.upload_stream(
                 {
-                    folder: `cv/${userId}/${curriculumId}`,
+                    folder: `cv`,
                     resource_type: "image",
 
                     // Opcional: que Cloudinary genere thumb y te lo devuelva en el response

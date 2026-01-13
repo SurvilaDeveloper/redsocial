@@ -96,11 +96,15 @@ export default function ProfilePreview({ data, className, birthDate }: ProfilePr
                 {hasTopMeta ? (
                     <div className="cv-row flex flex-wrap gap-x-4 gap-y-2">
                         {showBirthDate && birthDate ? (
-                            <Meta
-                                icon={Calendar}
-                                value={`Nacimiento: ${formatBirthDateAR(birthDate)}`}
-                                variant="date"
-                            />
+                            <>
+                                <span className="cv-personal">Fecha de nacimiento:</span>
+                                <Meta
+                                    icon={Calendar}
+                                    value={`${formatBirthDateAR(birthDate)}`}
+                                    variant="date"
+                                />
+                            </>
+
                         ) : null}
 
                         {showAddress && locationText ? (
@@ -167,7 +171,7 @@ function Meta({
     return (
         <div className="inline-flex items-center gap-2">
             <Icon className="h-4 w-4 cv-icon" />
-            <span className={variant === "date" ? "cv-date" : "cv-item-subtitle"}>
+            <span className={variant === "date" ? "cv-date" : "cv-personal"}>
                 {value}
             </span>
         </div>
@@ -191,7 +195,7 @@ function Item({
             rel={href?.startsWith("http") ? "noreferrer" : undefined}
         >
             <Icon className="h-4 w-4 cv-icon" />
-            <span className="cv-text">{value}</span>
+            <span className="cv-personal">{value}</span>
         </a>
     );
 }
@@ -207,7 +211,7 @@ function Social({
     label?: string;
     title?: string;
 }) {
-    const content = Icon ? <Icon className="h-4 w-4" /> : <span className="cv-text">{label}</span>;
+    const content = Icon ? <Icon className="h-4 w-4" /> : <span className="cv-personal">{label}</span>;
 
     return (
         <a

@@ -1,32 +1,17 @@
-// src/components/cv/renderers/CVRendererSwitch.tsx  (ACTUALIZAR)
-import type { EditorCV } from "@/types/cvEditor";
-import type { CVStyleConfig } from "@/types/cvStyle";
+// src/components/cv/renderers/CVRendererSwitch.tsx
+import type { Curriculum } from "@/types/cv";
 
 import { CVRendererClassic } from "./CVRendererClassic";
-import { CVRendererTwoColumns } from "./CVRendererTwoColumns";
 import { CVRendererCompact } from "./CVRendererCompact";
 import { CVRendererModernSidebar } from "./CVRendererModernSidebar";
 import { CVRendererTimeline } from "./CVRendererTimeline";
 import { CVRendererRightProfileAccent } from "./CVRendererRightProfileAccent";
 import { CVRendererRibbonTheme } from "./CVRendererRibbonTheme";
 
-export type CVTemplateId =
-    | "classic"
-    | "twoColumns"
-    | "compact"
-    | "modernSidebar"
-    | "timeline"
-    | "rightProfileAccent"
-    | "ribbonTheme";
+import type { CVTemplateId } from "@/types/cv";
 
-export function CVRendererSwitch({
-    cv,
-    styleConfig,
-}: {
-    cv: EditorCV;
-    styleConfig: CVStyleConfig;
-}) {
-    const template = ((styleConfig as any)?.template ?? "classic") as CVTemplateId;
+export function CVRendererSwitch({ cv }: { cv: Curriculum }) {
+    const template = ((cv.styleConfig?.template ?? "classic") as CVTemplateId);
 
     switch (template) {
         case "rightProfileAccent":
@@ -35,8 +20,6 @@ export function CVRendererSwitch({
             return <CVRendererModernSidebar cv={cv} />;
         case "timeline":
             return <CVRendererTimeline cv={cv} />;
-        case "twoColumns":
-            return <CVRendererTwoColumns cv={cv} />;
         case "compact":
             return <CVRendererCompact cv={cv} />;
         case "classic":
@@ -47,4 +30,5 @@ export function CVRendererSwitch({
             return <CVRendererClassic cv={cv} />;
     }
 }
+
 

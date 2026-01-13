@@ -1,8 +1,8 @@
 // src/components/cv/styles/CVThemeSelect.tsx
 "use client";
 
-import type { CVThemeColor } from "@/types/cvTheme";
-import { TONES } from "@/types/cvTheme";
+import type { CVThemeColor } from "@/types/cv";
+import { TONES } from "@/types/cv";
 
 import {
     Select,

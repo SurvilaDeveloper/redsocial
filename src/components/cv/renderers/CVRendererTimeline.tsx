@@ -14,7 +14,7 @@ import type {
     CustomData,
 } from "@/types/cv";
 
-import { TONES, type Tone, type CVThemeColor, coerceThemeColor } from "@/types/cvTheme";
+import { TONES, type Tone, type CVThemeColor, coerceThemeColor } from "@/types/cv";
 
 import { HeaderPreview } from "../preview/HeaderPreview";
 import ProfilePreview from "../preview/ProfilePreview";

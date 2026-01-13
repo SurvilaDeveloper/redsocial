@@ -14,7 +14,7 @@ import type {
     CustomData,
 } from "@/types/cv";
 
-import { TONES, type Tone, type CVThemeColor, coerceThemeColor } from "@/types/cvTheme";
+import { TONES, type Tone, type CVThemeColor, coerceThemeColor } from "@/types/cv";
 
 import { HeaderPreview } from "../preview/HeaderPreview";
 import ProfilePreview from "../preview/ProfilePreview";
@@ -38,9 +38,7 @@ function getHeaderImageMeta(cv: any): HeaderImageMeta {
     return {
         url: typeof raw.url === "string" && raw.url.trim().length ? raw.url.trim() : null,
         publicId:
-            typeof raw.publicId === "string" && raw.publicId.trim().length
-                ? raw.publicId.trim()
-                : null,
+            typeof raw.publicId === "string" && raw.publicId.trim().length ? raw.publicId.trim() : null,
         show: Boolean(raw.show ?? false),
     };
 }
@@ -57,33 +55,23 @@ export function CVRendererRightProfileAccent({ cv }: Props) {
 
     const sections = cv.content?.sections ?? [];
 
-    const profileSection = sections.find((s) => s.type === "profile") as
-        | CVSection<"profile">
-        | undefined;
+    const profileSection = sections.find((s) => s.type === "profile") as CVSection<"profile"> | undefined;
     const profileData = (profileSection?.data ?? { fullName: "" }) as ProfileData;
 
+    // ✅ Profile siempre primero (renderizado arriba) y el resto respeta el orden del array
     const rest = sections.filter((s) => s.type !== "profile");
-
-    // ✅ Orden: primero skills/lang/projects, luego experience/education/custom
-    const top = rest.filter(
-        (s) => s.type === "skills" || s.type === "languages" || s.type === "projects"
-    );
-    const bottom = rest.filter(
-        (s) => s.type === "experience" || s.type === "education" || s.type === "custom"
-    );
-    const oneColumn = [...top, ...bottom];
 
     const headerImage = getHeaderImageMeta(cv);
 
     return (
         <div className="relative">
             {/* === FULL-HEIGHT VERTICAL ACCENT (behind everything) === */}
-            <div className={`pointer-events-none absolute inset-y-0 right-0 w-[28%] ${tone.bg900} z-0`} />
-            <div className={`pointer-events-none absolute inset-y-0 right-[28%] w-px ${tone.bg100} opacity-80 z-0`} />
+            <div className={`pointer-events-none absolute inset-y-0 right-0 w-[28%] ${tone.bg300} z-0`} />
+            <div className={`pointer-events-none absolute inset-y-0 right-[28%] w-1 ${tone.bg700} opacity-80 z-0`} />
 
             {/* soft cuts */}
-            <div className={`pointer-events-none absolute -top-8 -right-12 h-56 w-56 rounded-full ${tone.bg900} opacity-[0.18] z-0`} />
-            <div className={`pointer-events-none absolute -bottom-8 -right-12 h-72 w-72 rounded-full ${tone.bg900} opacity-[0.12] z-0`} />
+            <div className={`pointer-events-none absolute -top-8 -right-12 h-56 w-56 rounded-full ${tone.bg900} opacity-[0.33] z-0`} />
+            <div className={`pointer-events-none absolute -bottom-8 -right-12 h-72 w-72 rounded-full ${tone.bg900} opacity-[0.33] z-0`} />
 
             {/* subtle grid, global */}
             <div className="pointer-events-none absolute inset-0 opacity-[0.05] [background-image:radial-gradient(#000_1px,transparent_1px)] [background-size:20px_20px] z-0" />
@@ -124,8 +112,8 @@ export function CVRendererRightProfileAccent({ cv }: Props) {
 
                                 <div className="relative z-10 p-6">
                                     <div className="flex items-center justify-between gap-3 min-w-0">
-                                        <h3 className="text-sm font-semibold tracking-wide text-neutral-900 min-w-0 break-words">
-                                            Perfil
+                                        <h3 className="cv-title text-sm font-semibold tracking-wide text-neutral-900 min-w-0 break-words">
+                                            Datos
                                         </h3>
 
                                         <div
@@ -151,9 +139,9 @@ export function CVRendererRightProfileAccent({ cv }: Props) {
                     </div>
                 </div>
 
-                {/* === REST: ONE COLUMN, "stacked over" the vertical accent === */}
+                {/* === REST: ONE COLUMN, respeta orden === */}
                 <div className="space-y-6">
-                    {oneColumn.map((section) => renderSection(section, tone))}
+                    {rest.map((section) => renderSection(section, tone))}
                 </div>
             </div>
         </div>
@@ -256,7 +244,7 @@ function SectionBlock({
                                 />
                             </div>
 
-                            <h2 className="text-lg font-semibold tracking-tight text-neutral-900 min-w-0 break-words">
+                            <h2 className="cv-title text-lg font-semibold tracking-tight text-neutral-900 min-w-0 break-words">
                                 {title}
                             </h2>
                         </div>

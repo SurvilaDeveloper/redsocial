@@ -4,6 +4,7 @@ import auth from "@/auth";
 import { prisma } from "@/lib/prisma";
 
 type ImageAsset = {
+    id?: number;
     publicId: string;
     url: string;
     thumbUrl?: string;
@@ -57,7 +58,7 @@ export async function GET() {
     const userId = Number(session.user.id);
 
     // Traemos todo en paralelo
-    const [user, postsImages, productMedia, serviceMedia, cloudIndex] = await Promise.all([
+    const [user, postsImages, productMedia, serviceMedia, cloudIndex, cvMedia] = await Promise.all([
         prisma.user.findUnique({
             where: { id: userId },
             select: {
@@ -72,6 +73,7 @@ export async function GET() {
             // Image pertenece a Post, y Post tiene user_id
             where: { post: { user_id: userId } },
             select: {
+
                 imageUrl: true,
                 imagePublicId: true,
                 createdAt: true,
@@ -111,6 +113,22 @@ export async function GET() {
         prisma.cloudinaryImage.findMany({
             where: { userId, deletedAt: null },
             select: { url: true, publicId: true, createdAt: true },
+        }),
+        prisma.curriculumMedia.findMany({
+            where: {
+                userId,
+                status: "active",
+                deletedAt: null,
+            },
+            select: {
+                id: true,
+                url: true,
+                publicId: true,
+                thumbUrl: true,
+                createdAt: true,
+                curriculumId: true, // para owner
+            },
+            orderBy: { createdAt: "desc" },
         }),
     ]);
 
@@ -217,6 +235,23 @@ export async function GET() {
             createdAt: c.createdAt?.toISOString?.(),
         });
     }
+
+    for (const m of cvMedia) {
+        if (!m.publicId || !m.url) continue;
+        if (isDeletedSvg(m.url)) continue;
+
+        pushUnique(map, {
+            id: m.id,
+            publicId: m.publicId,
+            url: m.url,
+            thumbUrl: m.thumbUrl ?? undefined,
+            source: "cv.media",
+            createdAt: m.createdAt?.toISOString?.(),
+            ownerTitle: m.curriculumId ? "Curriculum" : "Biblioteca CV",
+            ownerId: m.curriculumId ?? null,
+        });
+    }
+
 
     // orden simple: más nuevo primero si hay createdAt
     const images = Array.from(map.values()).sort((a, b) => {

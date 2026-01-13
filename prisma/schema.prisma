@@ -276,29 +276,29 @@ enum CVMediaStatus {
 }
 
 model CurriculumMedia {
-  id           Int @id @default(autoincrement())
+  id           Int  @id @default(autoincrement())
   userId       Int
-  curriculumId Int
+  curriculumId Int? // ✅ ahora puede quedar “sin CV”
 
-  // Cloudinary
   url      String @db.VarChar(255)
   publicId String @db.VarChar(255)
 
-  // para previews rápidas (opcional)
   thumbUrl String? @db.VarChar(255)
 
-  // si la imagen se “reemplazó” por svg al borrar
   status      CVMediaStatus @default(active)
-  replacedUrl String?       @db.VarChar(255) // ej: "/image-deleted.svg"
+  replacedUrl String?       @db.VarChar(255)
   deletedAt   DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  curriculum Curriculum @relation(fields: [curriculumId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([curriculumId, publicId])
+  // ✅ relación opcional + SetNull al borrar el CV
+  curriculum Curriculum? @relation(fields: [curriculumId], references: [id], onDelete: SetNull)
+
+  // ⚠️ este unique cambia (porque curriculumId ahora puede ser null)
+  @@unique([userId, publicId]) // ✅ recomendado: la imagen es única por usuario
   @@index([userId])
   @@index([curriculumId])
 }

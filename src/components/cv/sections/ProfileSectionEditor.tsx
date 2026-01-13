@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, type FieldError } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import type { ProfileData } from "@/types/cv";
@@ -19,10 +19,15 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-
-import { cvEditorStyles, normalizeOptional } from "@/components/cv/styles/editorStyles";
-
 import { Textarea } from "@/components/ui/textarea";
+
+import {
+    cvEditorStyles,
+    normalizeOptional,
+    normalizeOptionalSoft,
+} from "@/components/cv/styles/editorStyles";
+
+import { cn } from "@/lib/utils";
 import { CVImageSourcePicker } from "../media/CVImageSourcePicker";
 
 export type ProfileSectionEditorProps = {
@@ -42,19 +47,25 @@ export type ProfileSectionEditorProps = {
     showProfileImage?: boolean;
     onShowProfileImageChange: (next: boolean) => void;
 
+    userId?: number | null;
     curriculumId?: number | null;
 };
 
+// UI helper: texto de error consistente
+function ErrorText({ error }: { error?: FieldError | null }) {
+    if (!error?.message) return null;
+    return <p className="mt-1 text-[11px] text-red-300">{String(error.message)}</p>;
+}
+
 export function ProfileSectionEditor({
     curriculumId,
+    userId,
     value,
     onChange,
     birthDate,
     onBirthDateChange,
     summary,
     onSummaryChange,
-
-    // ✅ IMPORTANTÍSIMO: faltaban estos
     profileImageUrl,
     onProfileImageChange,
     showProfileImage,
@@ -117,7 +128,7 @@ export function ProfileSectionEditor({
     // ✅ Flag anti-loop: cuando hacemos reset, no propagamos watch->onChange
     const isResettingRef = useRef(false);
 
-    // Sync externo → form
+    // externo → form
     useEffect(() => {
         isResettingRef.current = true;
 
@@ -131,27 +142,27 @@ export function ProfileSectionEditor({
         });
     }, [defaultValues, reset]);
 
-    // Sync form → externo (preview reactivo)
+    // form → externo (preview reactivo, SIN romper tipeo por trims agresivos)
     useEffect(() => {
-        const subscription = watch((data) => {
+        const sub = watch((data) => {
             if (isResettingRef.current) return;
 
             const next: ProfileData = {
                 // Identidad
                 fullName: data.fullName ?? "",
-                headline: normalizeOptional((data as any)?.headline ?? ""),
+                headline: normalizeOptionalSoft((data as any)?.headline ?? ""),
 
-                // Ubicación
-                address: normalizeOptional((data as any)?.address ?? ""),
+                // Ubicación (soft: permite espacios normales)
+                address: normalizeOptionalSoft((data as any)?.address ?? ""),
                 postalCode: normalizeOptional((data as any)?.postalCode ?? ""),
-                city: normalizeOptional((data as any)?.city ?? ""),
+                city: normalizeOptionalSoft((data as any)?.city ?? ""),
 
                 // Datos personales
-                birthPlace: normalizeOptional((data as any)?.birthPlace ?? ""),
-                nationality: normalizeOptional((data as any)?.nationality ?? ""),
+                birthPlace: normalizeOptionalSoft((data as any)?.birthPlace ?? ""),
+                nationality: normalizeOptionalSoft((data as any)?.nationality ?? ""),
                 gender: (data as any)?.gender ?? undefined,
                 maritalStatus: (data as any)?.maritalStatus ?? undefined,
-                drivingLicense: normalizeOptional((data as any)?.drivingLicense ?? ""),
+                drivingLicense: normalizeOptionalSoft((data as any)?.drivingLicense ?? ""),
 
                 // Visibilidad
                 showBirthDate: Boolean((data as any)?.showBirthDate),
@@ -160,10 +171,10 @@ export function ProfileSectionEditor({
 
                 // Contacto
                 email: normalizeOptional((data as any)?.email ?? ""),
-                phone: normalizeOptional((data as any)?.phone ?? ""),
+                phone: normalizeOptionalSoft((data as any)?.phone ?? ""),
                 website: normalizeOptional((data as any)?.website ?? ""),
 
-                // Profesional
+                // Profesional (urls/email: trim ok)
                 linkedin: normalizeOptional((data as any)?.linkedin ?? ""),
                 github: normalizeOptional((data as any)?.github ?? ""),
 
@@ -172,7 +183,7 @@ export function ProfileSectionEditor({
                 instagram: normalizeOptional((data as any)?.instagram ?? ""),
                 youtube: normalizeOptional((data as any)?.youtube ?? ""),
                 x: normalizeOptional((data as any)?.x ?? ""),
-                discord: normalizeOptional((data as any)?.discord ?? ""),
+                discord: normalizeOptionalSoft((data as any)?.discord ?? ""),
 
                 // Contenido
                 medium: normalizeOptional((data as any)?.medium ?? ""),
@@ -182,35 +193,33 @@ export function ProfileSectionEditor({
             onChange(next);
         });
 
-        return () => subscription.unsubscribe();
+        return () => sub.unsubscribe();
     }, [watch, onChange]);
 
-    // ✅ setValueAs reusable (mantiene opcionales como undefined)
-    const optionalField = { setValueAs: normalizeOptional };
+    const inputErrorClass = "border-red-500/60 focus-visible:ring-red-500/30";
 
     const hasErrors = Object.keys(formState.errors ?? {}).length > 0;
 
-    // ✅ Birthdate (root) validation (sin tocar el schema de profile)
+    // Root birthdate validation (sin tocar schema de profile)
     const birthDateError = useMemo(() => {
         const parsed = optionalBirthDateSchema.safeParse(birthDate ?? "");
         return parsed.success ? null : parsed.error.issues?.[0]?.message ?? "Fecha inválida";
     }, [birthDate]);
 
+    // helpers setValueAs (según tipo de input)
+    const optionalSoft = { setValueAs: (v: any) => normalizeOptionalSoft(typeof v === "string" ? v : "") };
+    const optionalHard = { setValueAs: (v: any) => normalizeOptional(typeof v === "string" ? v : "") };
+
     return (
         <div className="space-y-6">
             {/* Header general */}
-            <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4 md:p-6 space-y-2">
-                <h3 className="text-sm font-semibold text-slate-100">Perfil</h3>
-                <p className="text-xs text-slate-400">
-                    Completá tu información base. Lo ideal: nombre + headline + ubicación + links clave.
-                </p>
 
-                {hasErrors && (
-                    <div className="mt-2 rounded-lg border border-red-500/40 bg-red-950/30 px-3 py-2 text-xs text-red-200">
-                        Hay errores en la sección de perfil.
-                    </div>
-                )}
-            </div>
+            {hasErrors && (
+                <div className="mt-2 rounded-lg border border-red-500/40 bg-red-950/30 px-3 py-2 text-xs text-red-200">
+                    Hay errores en la sección de perfil.
+                </div>
+            )}
+
 
             {/* Identidad */}
             <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4 md:p-6 space-y-4">
@@ -219,7 +228,7 @@ export function ProfileSectionEditor({
                     <p className="text-xs text-slate-400">Esto suele ser lo primero que se lee en el CV.</p>
                 </div>
 
-                {/* ✅ Picker de imagen: global + cv + upload */}
+                {/* Picker de imagen */}
                 <CVImageSourcePicker
                     curriculumId={curriculumId ?? null}
                     valueUrl={profileImageUrl ?? null}
@@ -227,9 +236,9 @@ export function ProfileSectionEditor({
                     onSelect={(img) => onProfileImageChange(img.url)}
                 />
 
-                {/* ✅ Toggle root */}
-                <div className="flex items-center justify-between rounded-lg border border-slate-800 bg-slate-950/60 px-3 py-2">
-                    <div className="text-sm text-slate-200">Mostrar foto en el header</div>
+                {/* Toggle root */}
+                <div className="flex items-center justify-end rounded-lg border border-slate-800 bg-slate-950/60 px-3 py-2 gap-2">
+                    <div className="text-sm text-slate-200">Mostrar foto en Perfil</div>
                     <Switch
                         checked={Boolean(showProfileImage)}
                         onCheckedChange={(v) => onShowProfileImageChange(Boolean(v))}
@@ -241,49 +250,41 @@ export function ProfileSectionEditor({
                     <div className={cvEditorStyles.block}>
                         <Label className={cvEditorStyles.label}>Nombre completo</Label>
                         <Input
-                            className={cvEditorStyles.input}
+                            className={cn(cvEditorStyles.input, formState.errors.fullName && inputErrorClass)}
                             placeholder="Ej: José Alberto Gomez"
                             {...register("fullName")}
                         />
-                        {formState.errors.fullName?.message && (
-                            <p className="text-xs text-red-400">{formState.errors.fullName.message}</p>
-                        )}
+                        <ErrorText error={formState.errors.fullName as FieldError | undefined} />
                     </div>
 
                     <div className={cvEditorStyles.block}>
                         <Label className={cvEditorStyles.label}>Headline</Label>
                         <Input
-                            className={cvEditorStyles.input}
+                            className={cn(cvEditorStyles.input, formState.errors.headline && inputErrorClass)}
                             placeholder="Ej: Full Stack Developer · React · Next.js · Python"
-                            {...register("headline", optionalField)}
+                            {...register("headline", optionalSoft)}
                         />
-                        {formState.errors.headline?.message && (
-                            <p className="text-xs text-red-400">{formState.errors.headline.message}</p>
-                        )}
+                        <ErrorText error={formState.errors.headline as FieldError | undefined} />
                     </div>
                 </div>
 
-                {/* ✅ SUMMARY (root) */}
+                {/* SUMMARY (root) */}
                 <div className={cvEditorStyles.block}>
                     <Label className={cvEditorStyles.label}>Resumen (summary)</Label>
 
                     <Textarea
-                        className={cvEditorStyles.textarea}
+                        className={cn(cvEditorStyles.textarea, (summary ?? "").length > 400 && inputErrorClass)}
                         placeholder="Escribí 2–5 líneas sobre vos: foco, tecnologías, objetivos, impacto…"
                         value={summary ?? ""}
                         onChange={(e) => onSummaryChange(e.target.value)}
                     />
 
                     <div className="flex items-center justify-between">
-                        <p className="text-[11px] text-slate-500">
-                            Se muestra en el header del CV (nombre + headline + resumen).
-                        </p>
+                        <p className="text-[11px] text-slate-500">Se muestra en el header del CV.</p>
                         <p className="text-[11px] text-slate-500">{(summary ?? "").length}/400</p>
                     </div>
 
-                    {(summary ?? "").length > 400 && (
-                        <p className="text-xs text-red-400">Máximo 400 caracteres.</p>
-                    )}
+                    {(summary ?? "").length > 400 && <p className="text-xs text-red-300">Máximo 400 caracteres.</p>}
                 </div>
             </div>
 
@@ -295,31 +296,34 @@ export function ProfileSectionEditor({
                 </div>
 
                 <div className={cvEditorStyles.grid2}>
-                    <div className={cvEditorStyles.block + " md:col-span-2"}>
+                    <div className={cn(cvEditorStyles.block, "md:col-span-2")}>
                         <Label className={cvEditorStyles.label}>Dirección</Label>
                         <Input
-                            className={cvEditorStyles.input}
+                            className={cn(cvEditorStyles.input, formState.errors.address && inputErrorClass)}
                             placeholder="Ej: Av. Corrientes 1234"
-                            {...register("address", optionalField)}
+                            {...register("address", optionalSoft)}
                         />
+                        <ErrorText error={formState.errors.address as FieldError | undefined} />
                     </div>
 
                     <div className={cvEditorStyles.block}>
                         <Label className={cvEditorStyles.label}>Código postal</Label>
                         <Input
-                            className={cvEditorStyles.input}
+                            className={cn(cvEditorStyles.input, formState.errors.postalCode && inputErrorClass)}
                             placeholder="Ej: C1043"
-                            {...register("postalCode", optionalField)}
+                            {...register("postalCode", optionalHard)}
                         />
+                        <ErrorText error={formState.errors.postalCode as FieldError | undefined} />
                     </div>
 
                     <div className={cvEditorStyles.block}>
                         <Label className={cvEditorStyles.label}>Ciudad</Label>
                         <Input
-                            className={cvEditorStyles.input}
+                            className={cn(cvEditorStyles.input, formState.errors.city && inputErrorClass)}
                             placeholder="Ej: Buenos Aires"
-                            {...register("city", optionalField)}
+                            {...register("city", optionalSoft)}
                         />
+                        <ErrorText error={formState.errors.city as FieldError | undefined} />
                     </div>
                 </div>
             </div>
@@ -338,84 +342,94 @@ export function ProfileSectionEditor({
                     <div className={cvEditorStyles.block}>
                         <Label className={cvEditorStyles.label}>Fecha de nacimiento</Label>
                         <Input
-                            className={cvEditorStyles.input}
+                            className={cn(cvEditorStyles.input, birthDateError && inputErrorClass)}
                             type="date"
                             style={{ colorScheme: "dark" }}
                             value={birthDate ?? ""}
                             onChange={(e) => onBirthDateChange(normalizeOptional(e.target.value))}
                         />
                         <p className="text-[11px] text-slate-500">Formato: YYYY-MM-DD</p>
-                        {birthDateError && <p className="text-xs text-red-400">{birthDateError}</p>}
+                        {birthDateError && <p className="text-xs text-red-300">{birthDateError}</p>}
                     </div>
 
                     <div className={cvEditorStyles.block}>
                         <Label className={cvEditorStyles.label}>Nacionalidad</Label>
                         <Input
-                            className={cvEditorStyles.input}
+                            className={cn(cvEditorStyles.input, formState.errors.nationality && inputErrorClass)}
                             placeholder="Ej: Argentina"
-                            {...register("nationality", optionalField)}
+                            {...register("nationality", optionalSoft)}
                         />
+                        <ErrorText error={formState.errors.nationality as FieldError | undefined} />
                     </div>
 
                     <div className={cvEditorStyles.block}>
                         <Label className={cvEditorStyles.label}>Lugar de nacimiento</Label>
                         <Input
-                            className={cvEditorStyles.input}
+                            className={cn(cvEditorStyles.input, formState.errors.birthPlace && inputErrorClass)}
                             placeholder="Ej: CABA"
-                            {...register("birthPlace", optionalField)}
+                            {...register("birthPlace", optionalSoft)}
                         />
+                        <ErrorText error={formState.errors.birthPlace as FieldError | undefined} />
                     </div>
 
                     <div className={cvEditorStyles.block}>
                         <Label className={cvEditorStyles.label}>Género</Label>
                         <Select
-                            value={(watch("gender") as any) ?? ""}
+                            value={String((watch("gender") as any) ?? "")}
                             onValueChange={(v) =>
-                                setValue("gender", (v || undefined) as any, { shouldDirty: true, shouldTouch: true })
+                                setValue("gender", (v || undefined) as any, {
+                                    shouldDirty: true,
+                                    shouldTouch: true,
+                                    shouldValidate: true,
+                                })
                             }
                         >
-                            <SelectTrigger className={cvEditorStyles.input}>
+                            <SelectTrigger className={cn(cvEditorStyles.input, formState.errors.gender && inputErrorClass)}>
                                 <SelectValue placeholder="(opcional)" />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="bg-slate-900 border-slate-700 text-slate-100">
                                 <SelectItem value="male">Masculino</SelectItem>
                                 <SelectItem value="female">Femenino</SelectItem>
                                 <SelectItem value="other">Otro</SelectItem>
                                 <SelectItem value="prefer_not_to_say">Prefiero no decir</SelectItem>
                             </SelectContent>
                         </Select>
+                        <ErrorText error={formState.errors.gender as FieldError | undefined} />
                     </div>
 
                     <div className={cvEditorStyles.block}>
                         <Label className={cvEditorStyles.label}>Estado civil</Label>
                         <Select
-                            value={(watch("maritalStatus") as any) ?? ""}
+                            value={String((watch("maritalStatus") as any) ?? "")}
                             onValueChange={(v) =>
                                 setValue("maritalStatus", (v || undefined) as any, {
                                     shouldDirty: true,
                                     shouldTouch: true,
+                                    shouldValidate: true,
                                 })
                             }
                         >
-                            <SelectTrigger className={cvEditorStyles.input}>
+                            <SelectTrigger className={cn(cvEditorStyles.input, formState.errors.maritalStatus && inputErrorClass)}>
                                 <SelectValue placeholder="(opcional)" />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="bg-slate-900 border-slate-700 text-slate-100">
                                 <SelectItem value="single">Soltero/a</SelectItem>
                                 <SelectItem value="married">Casado/a</SelectItem>
                                 <SelectItem value="divorced">Divorciado/a</SelectItem>
                                 <SelectItem value="widowed">Viudo/a</SelectItem>
                             </SelectContent>
                         </Select>
+                        <ErrorText error={formState.errors.maritalStatus as FieldError | undefined} />
                     </div>
 
                     <div className={cvEditorStyles.block}>
                         <Label className={cvEditorStyles.label}>Licencia de conducir</Label>
                         <Input
-                            className={cvEditorStyles.input}
+                            className={cn(cvEditorStyles.input, formState.errors.drivingLicense && inputErrorClass)}
                             placeholder="Ej: B1"
-                            {...register("drivingLicense", optionalField)}
+                            {...register("drivingLicense", optionalSoft)}
                         />
+                        <ErrorText error={formState.errors.drivingLicense as FieldError | undefined} />
                     </div>
                 </div>
             </div>
@@ -424,9 +438,7 @@ export function ProfileSectionEditor({
             <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4 md:p-6 space-y-4">
                 <div className="space-y-1">
                     <h4 className="text-sm font-semibold text-slate-100">Visibilidad</h4>
-                    <p className="text-xs text-slate-400">
-                        Elegí qué datos se muestran en el preview / CV público.
-                    </p>
+                    <p className="text-xs text-slate-400">Elegí qué datos se muestran en el preview / CV público.</p>
                 </div>
 
                 <div className="grid gap-3 md:grid-cols-3">
@@ -435,7 +447,11 @@ export function ProfileSectionEditor({
                         <Switch
                             checked={Boolean(watch("showBirthDate"))}
                             onCheckedChange={(v) =>
-                                setValue("showBirthDate", v, { shouldDirty: true, shouldTouch: true })
+                                setValue("showBirthDate", Boolean(v), {
+                                    shouldDirty: true,
+                                    shouldTouch: true,
+                                    shouldValidate: true,
+                                })
                             }
                             className="data-[state=unchecked]:bg-red-900 data-[state=checked]:bg-emerald-600"
                         />
@@ -446,7 +462,11 @@ export function ProfileSectionEditor({
                         <Switch
                             checked={Boolean(watch("showAddress"))}
                             onCheckedChange={(v) =>
-                                setValue("showAddress", v, { shouldDirty: true, shouldTouch: true })
+                                setValue("showAddress", Boolean(v), {
+                                    shouldDirty: true,
+                                    shouldTouch: true,
+                                    shouldValidate: true,
+                                })
                             }
                             className="data-[state=unchecked]:bg-red-900 data-[state=checked]:bg-emerald-600"
                         />
@@ -457,7 +477,11 @@ export function ProfileSectionEditor({
                         <Switch
                             checked={Boolean(watch("showGender"))}
                             onCheckedChange={(v) =>
-                                setValue("showGender", v, { shouldDirty: true, shouldTouch: true })
+                                setValue("showGender", Boolean(v), {
+                                    shouldDirty: true,
+                                    shouldTouch: true,
+                                    shouldValidate: true,
+                                })
                             }
                             className="data-[state=unchecked]:bg-red-900 data-[state=checked]:bg-emerald-600"
                         />
@@ -476,32 +500,32 @@ export function ProfileSectionEditor({
                     <div className={cvEditorStyles.block}>
                         <Label className={cvEditorStyles.label}>Email</Label>
                         <Input
-                            className={cvEditorStyles.input}
+                            className={cn(cvEditorStyles.input, formState.errors.email && inputErrorClass)}
                             type="email"
                             placeholder="ej: nombre@correo.com"
-                            {...register("email", optionalField)}
+                            {...register("email", optionalHard)}
                         />
-                        {formState.errors.email?.message && (
-                            <p className="text-xs text-red-400">{formState.errors.email.message}</p>
-                        )}
+                        <ErrorText error={formState.errors.email as FieldError | undefined} />
                     </div>
 
                     <div className={cvEditorStyles.block}>
                         <Label className={cvEditorStyles.label}>Teléfono</Label>
                         <Input
-                            className={cvEditorStyles.input}
+                            className={cn(cvEditorStyles.input, formState.errors.phone && inputErrorClass)}
                             placeholder="Ej: +54 11 1234-5678"
-                            {...register("phone", optionalField)}
+                            {...register("phone", optionalSoft)}
                         />
+                        <ErrorText error={formState.errors.phone as FieldError | undefined} />
                     </div>
 
-                    <div className={cvEditorStyles.block + " md:col-span-2"}>
+                    <div className={cn(cvEditorStyles.block, "md:col-span-2")}>
                         <Label className={cvEditorStyles.label}>Website</Label>
                         <Input
-                            className={cvEditorStyles.input}
+                            className={cn(cvEditorStyles.input, formState.errors.website && inputErrorClass)}
                             placeholder="https://tu-sitio.com (opcional)"
-                            {...register("website", optionalField)}
+                            {...register("website", optionalHard)}
                         />
+                        <ErrorText error={formState.errors.website as FieldError | undefined} />
                     </div>
                 </div>
             </div>
@@ -517,19 +541,21 @@ export function ProfileSectionEditor({
                     <div className={cvEditorStyles.block}>
                         <Label className={cvEditorStyles.label}>LinkedIn</Label>
                         <Input
-                            className={cvEditorStyles.input}
+                            className={cn(cvEditorStyles.input, formState.errors.linkedin && inputErrorClass)}
                             placeholder="https://linkedin.com/in/..."
-                            {...register("linkedin", optionalField)}
+                            {...register("linkedin", optionalHard)}
                         />
+                        <ErrorText error={formState.errors.linkedin as FieldError | undefined} />
                     </div>
 
                     <div className={cvEditorStyles.block}>
                         <Label className={cvEditorStyles.label}>GitHub</Label>
                         <Input
-                            className={cvEditorStyles.input}
+                            className={cn(cvEditorStyles.input, formState.errors.github && inputErrorClass)}
                             placeholder="https://github.com/..."
-                            {...register("github", optionalField)}
+                            {...register("github", optionalHard)}
                         />
+                        <ErrorText error={formState.errors.github as FieldError | undefined} />
                     </div>
                 </div>
             </div>
@@ -544,27 +570,52 @@ export function ProfileSectionEditor({
                 <div className={cvEditorStyles.grid2}>
                     <div className={cvEditorStyles.block}>
                         <Label className={cvEditorStyles.label}>Facebook</Label>
-                        <Input className={cvEditorStyles.input} placeholder="https://facebook.com/..." {...register("facebook", optionalField)} />
+                        <Input
+                            className={cn(cvEditorStyles.input, formState.errors.facebook && inputErrorClass)}
+                            placeholder="https://facebook.com/..."
+                            {...register("facebook", optionalHard)}
+                        />
+                        <ErrorText error={formState.errors.facebook as FieldError | undefined} />
                     </div>
 
                     <div className={cvEditorStyles.block}>
                         <Label className={cvEditorStyles.label}>Instagram</Label>
-                        <Input className={cvEditorStyles.input} placeholder="https://instagram.com/..." {...register("instagram", optionalField)} />
+                        <Input
+                            className={cn(cvEditorStyles.input, formState.errors.instagram && inputErrorClass)}
+                            placeholder="https://instagram.com/..."
+                            {...register("instagram", optionalHard)}
+                        />
+                        <ErrorText error={formState.errors.instagram as FieldError | undefined} />
                     </div>
 
                     <div className={cvEditorStyles.block}>
                         <Label className={cvEditorStyles.label}>YouTube</Label>
-                        <Input className={cvEditorStyles.input} placeholder="https://youtube.com/..." {...register("youtube", optionalField)} />
+                        <Input
+                            className={cn(cvEditorStyles.input, formState.errors.youtube && inputErrorClass)}
+                            placeholder="https://youtube.com/..."
+                            {...register("youtube", optionalHard)}
+                        />
+                        <ErrorText error={formState.errors.youtube as FieldError | undefined} />
                     </div>
 
                     <div className={cvEditorStyles.block}>
                         <Label className={cvEditorStyles.label}>X (Twitter)</Label>
-                        <Input className={cvEditorStyles.input} placeholder="https://x.com/..." {...register("x", optionalField)} />
+                        <Input
+                            className={cn(cvEditorStyles.input, formState.errors.x && inputErrorClass)}
+                            placeholder="https://x.com/..."
+                            {...register("x", optionalHard)}
+                        />
+                        <ErrorText error={formState.errors.x as FieldError | undefined} />
                     </div>
 
-                    <div className={cvEditorStyles.block + " md:col-span-2"}>
+                    <div className={cn(cvEditorStyles.block, "md:col-span-2")}>
                         <Label className={cvEditorStyles.label}>Discord</Label>
-                        <Input className={cvEditorStyles.input} placeholder="Usuario#0000 (opcional)" {...register("discord", optionalField)} />
+                        <Input
+                            className={cn(cvEditorStyles.input, formState.errors.discord && inputErrorClass)}
+                            placeholder="Usuario#0000 (opcional)"
+                            {...register("discord", optionalSoft)}
+                        />
+                        <ErrorText error={formState.errors.discord as FieldError | undefined} />
                     </div>
                 </div>
             </div>
@@ -579,24 +630,28 @@ export function ProfileSectionEditor({
                 <div className={cvEditorStyles.grid2}>
                     <div className={cvEditorStyles.block}>
                         <Label className={cvEditorStyles.label}>Medium</Label>
-                        <Input className={cvEditorStyles.input} placeholder="https://medium.com/@..." {...register("medium", optionalField)} />
+                        <Input
+                            className={cn(cvEditorStyles.input, formState.errors.medium && inputErrorClass)}
+                            placeholder="https://medium.com/@..."
+                            {...register("medium", optionalHard)}
+                        />
+                        <ErrorText error={formState.errors.medium as FieldError | undefined} />
                     </div>
 
                     <div className={cvEditorStyles.block}>
                         <Label className={cvEditorStyles.label}>DEV.to</Label>
-                        <Input className={cvEditorStyles.input} placeholder="https://dev.to/..." {...register("devto", optionalField)} />
+                        <Input
+                            className={cn(cvEditorStyles.input, formState.errors.devto && inputErrorClass)}
+                            placeholder="https://dev.to/..."
+                            {...register("devto", optionalHard)}
+                        />
+                        <ErrorText error={formState.errors.devto as FieldError | undefined} />
                     </div>
                 </div>
             </div>
 
-            {/* (debug opcional) */}
-            {curriculumId ? (
-                <div className="text-[10px] text-slate-600">CV ID: {curriculumId}</div>
-            ) : null}
+            {/* debug opcional */}
+            {curriculumId ? <div className="text-[10px] text-slate-600">CV ID: {curriculumId}</div> : null}
         </div>
     );
 }
-
-
-
-

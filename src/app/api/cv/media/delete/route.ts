@@ -4,6 +4,8 @@ import auth from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { v2 as cloudinary } from "cloudinary";
 
+const DELETED_SVG_URL = "/image-deleted.svg";
+
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME!,
     api_key: process.env.CLOUDINARY_API_KEY!,
@@ -18,7 +20,6 @@ export async function DELETE(req: NextRequest) {
 
         const body = await req.json().catch(() => null);
         const id = Number(body?.id);
-
         if (!Number.isFinite(id) || id <= 0) {
             return NextResponse.json({ error: "id inválido" }, { status: 400 });
         }
@@ -28,26 +29,24 @@ export async function DELETE(req: NextRequest) {
             select: { id: true, publicId: true, status: true },
         });
 
-        if (!media) return NextResponse.json({ error: "No encontrado" }, { status: 404 });
+        if (!media) return NextResponse.json({ error: "Media no encontrada" }, { status: 404 });
+        if (media.status === "deleted") return NextResponse.json({ ok: true });
 
-        if (media.publicId) {
-            await cloudinary.uploader
-                .destroy(media.publicId, { resource_type: "image" })
-                .catch(() => null);
-        }
+        await cloudinary.uploader.destroy(media.publicId, { resource_type: "image" });
 
         await prisma.curriculumMedia.update({
             where: { id: media.id },
             data: {
                 status: "deleted",
                 deletedAt: new Date(),
-                replacedUrl: "/image-deleted.svg",
+                replacedUrl: DELETED_SVG_URL,
             },
         });
 
         return NextResponse.json({ ok: true });
     } catch (err) {
         console.error("cv/media/delete error:", err);
-        return NextResponse.json({ error: "Error eliminando" }, { status: 500 });
+        return NextResponse.json({ error: "Error eliminando imagen" }, { status: 500 });
     }
 }
+

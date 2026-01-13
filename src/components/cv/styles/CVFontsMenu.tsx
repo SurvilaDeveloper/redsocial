@@ -3,8 +3,6 @@
 
 import React from "react";
 import { Type, ChevronDown } from "lucide-react";
-
-import { Button } from "@/components/ui/button";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -60,7 +58,7 @@ export function CVFontsMenu({
             <DropdownMenuContent
                 align="start"
                 sideOffset={10}
-                className="w-[min(28rem,calc(100vw-1.5rem))] rounded-lg border border-slate-700 bg-slate-950 text-slate-100 shadow-xl p-4 space-y-4"
+                className="w-[min(28rem,calc(100vw-1.5rem))] h-[calc(100vh-72px)] rounded-lg border border-slate-700 bg-slate-950 text-slate-100 shadow-xl p-4 space-y-4 overflow-y-scroll"
             >
                 {/* Toggle showDocTitle */}
                 <div className="flex items-center justify-between gap-3 rounded-md border border-slate-700 px-3 py-2">
@@ -80,7 +78,7 @@ export function CVFontsMenu({
                 <div className="space-y-3">
                     {styleKeys.map((key) => (
                         <div key={key} className="flex items-center gap-2">
-                            <div className="capitalize w-28 text-sm text-slate-300">{key}:</div>
+                            <div className="capitalize w-28 text-sm text-slate-300 max-w-[80px] lg:max-w-full">{key}:</div>
 
                             <select
                                 value={styleConfig[key].fontFamily}
@@ -92,7 +90,7 @@ export function CVFontsMenu({
                                     });
                                     onDirty?.();
                                 }}
-                                className="bg-slate-950 text-slate-100 border border-slate-700 px-2 py-1 rounded"
+                                className="bg-slate-950 text-slate-100 border border-slate-700 px-2 py-1 rounded max-w-[90px] lg:max-w-full"
                             >
                                 {FONT_FAMILIES.map((f) => (
                                     <option key={f} value={f}>

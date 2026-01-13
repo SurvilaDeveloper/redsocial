@@ -183,7 +183,8 @@ export const updatePost = async (
                             },
                             data: {
                                 imageUrl: image.url,
-                                imagePublicId: image.publicId
+                                imagePublicId: image.publicId,
+                                active: 1
                             }
                         }
                     )
@@ -213,7 +214,8 @@ export const updatePost = async (
                             },
                             update: {
                                 imageUrl: imagesAdded[i]!.url,
-                                imagePublicId: imagesAdded[i]!.publicId
+                                imagePublicId: imagesAdded[i]!.publicId,
+                                active: 1
                             },
                             create: {
                                 imageUrl: imagesAdded[i]!.url,

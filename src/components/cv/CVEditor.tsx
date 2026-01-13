@@ -5,8 +5,15 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { useCV } from "@/hooks/useCV";
-import { CVSection } from "@/types/cv";
-import type { CVStyleConfig } from "@/types/cvStyle";
+import type {
+    Curriculum,
+    CVSection,
+    CVStyleConfig,
+    CVStyleElement,
+    CVTextStyle,
+    CVThemeColor,
+    HeaderImageMeta,
+} from "@/types/cv";
 import {
     isEducationSection,
     isExperienceSection,
@@ -31,7 +38,7 @@ import { CustomSectionEditor } from "./sections/CustomSectionEditor";
 import { CVPreviewModal } from "./CVPreviewModal";
 import { CVPreviewSheet } from "./CVPreviewSheet";
 
-import { Save } from "lucide-react";
+import { Save, ChevronDown } from "lucide-react";
 
 import {
     DndContext,
@@ -65,14 +72,18 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-import type { CVStyleElement, CVTextStyle } from "@/types/cvStyle";
-import type { CVTemplateId } from "./renderers/CVRendererSwitch";
+import type { CVTemplateId } from "@/types/cv";
 import { CVTemplateSelect } from "./styles/CVTemplateSelect";
 import { CVFontsMenu } from "./styles/CVFontsMenu";
 
 import { CVThemeSelect } from "./styles/CVThemeSelect";
-import { coerceThemeColor } from "@/types/cvTheme";
-import type { CVThemeColor } from "@/types/cvTheme";
+import { coerceThemeColor } from "@/types/cv"; // ahora está en cv.ts
+import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
+import { cn } from "@/lib/utils";
+
+/* ===========================
+   Style defaults / normalize
+=========================== */
 
 const FONT_FAMILIES = ["sans-serif", "serif", "monospace", "cursive", "fantasy"] as const;
 const FONT_SIZES = ["12px", "14px", "16px", "18px", "20px", "24px"] as const;
@@ -83,12 +94,14 @@ const STYLE_KEYS: CVStyleElement[] = [
     "name",
     "headline",
     "summary",
+    "personal",
     "title",
     "subtitle",
     "description",
     "date",
     "itemTitle",
     "itemSubtitle",
+    "link",
 ] as const;
 
 const makeStyle = (
@@ -107,6 +120,8 @@ const DEFAULTS_BY_KEY: Record<CVStyleElement, CVTextStyle> = {
     headline: makeStyle("14px", { color: "#374151" }),
     summary: makeStyle("12px", { color: "#374151" }),
 
+    personal: makeStyle("12px", { color: "#374151" }),
+
     title: makeStyle("14px"),
     subtitle: makeStyle("12px", { color: "#374151" }),
     description: makeStyle("12px"),
@@ -114,13 +129,14 @@ const DEFAULTS_BY_KEY: Record<CVStyleElement, CVTextStyle> = {
 
     itemTitle: makeStyle("14px"),
     itemSubtitle: makeStyle("12px", { color: "#374151" }),
+
+    link: makeStyle("12px"),
 };
 
 const DEFAULT_STYLE_CONFIG: CVStyleConfig = {
     ...DEFAULTS_BY_KEY,
     showDocTitle: true,
     template: "classic",
-    // ✅ NUEVO: theme defaults
     theme: { color: "slate" as CVThemeColor },
 };
 
@@ -146,6 +162,7 @@ function normalizeStyleConfig(value: unknown): CVStyleConfig {
         };
     }
 
+    // legacy: algunos CVs viejos tenían "title" como style general
     const oldTitle = obj.title;
     if (oldTitle && typeof oldTitle === "object") {
         out.name = { ...out.name, fontFamily: out.name.fontFamily ?? oldTitle.fontFamily, color: out.name.color };
@@ -157,8 +174,6 @@ function normalizeStyleConfig(value: unknown): CVStyleConfig {
     }
 
     out.template = obj.template ? obj.template : "classic";
-
-    // ✅ theme.color: lee de DB si existe, si no slate
     out.theme = {
         ...(obj.theme ?? {}),
         color: coerceThemeColor(obj?.theme?.color),
@@ -167,30 +182,43 @@ function normalizeStyleConfig(value: unknown): CVStyleConfig {
     return out as CVStyleConfig;
 }
 
-// ====== HeaderImage meta helpers (content.meta.headerImage) ======
-type HeaderImageMeta = {
-    url: string | null;
-    publicId: string | null;
-    show: boolean;
-};
+/* ===========================
+   Header image meta helpers
+   (cv.content.meta.headerImage)
+=========================== */
 
-function getHeaderImageMeta(cv: any): HeaderImageMeta {
-    const raw = cv?.content?.meta?.headerImage ?? {};
-    return {
-        url: typeof raw.url === "string" && raw.url.trim().length ? raw.url.trim() : null,
-        publicId: typeof raw.publicId === "string" && raw.publicId.trim().length ? raw.publicId.trim() : null,
-        show: Boolean(raw.show ?? false),
-    };
+function normalizeHeaderImageMeta(input: any): HeaderImageMeta {
+    const url = typeof input?.url === "string" && input.url.trim().length ? input.url.trim() : null;
+    const publicId = typeof input?.publicId === "string" && input.publicId.trim().length ? input.publicId.trim() : null;
+    const show = Boolean(input?.show ?? false);
+    return { url, publicId, show };
 }
+
+function getHeaderImageMeta(cv: Curriculum): HeaderImageMeta {
+    return normalizeHeaderImageMeta(cv.content?.meta?.headerImage);
+}
+
+/* ===========================
+   CVEditor
+=========================== */
 
 export function CVEditor({ cvId }: { cvId: number | null }) {
     const router = useRouter();
-    const { cv, setCV, save, loading } = useCV(cvId);
+
+    // useCV debe retornar Curriculum (si todavía no, por ahora tipamos acá)
+    const { cv, setCV, save, remove, loading } = useCV(cvId) as unknown as {
+        cv: Curriculum | null;
+        setCV: React.Dispatch<React.SetStateAction<Curriculum | null>>;
+        save: (payload: Curriculum) => Promise<Curriculum>;
+        remove: (id: number) => Promise<void>;
+        loading: boolean;
+    };
 
     const [previewOpen, setPreviewOpen] = useState(false);
 
     const [isDirty, setIsDirty] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+    const [isTogglingPublic, setIsTogglingPublic] = useState(false);
 
     // AlertDialog (cerrar con cambios)
     const [closeDialogOpen, setCloseDialogOpen] = useState(false);
@@ -198,28 +226,79 @@ export function CVEditor({ cvId }: { cvId: number | null }) {
     // styleConfig (local editable; se persiste con Guardar)
     const [styleConfig, setStyleConfig] = useState<CVStyleConfig>(DEFAULT_STYLE_CONFIG);
 
-    const applyStyleConfig = useCallback((next: CVStyleConfig) => {
-        setStyleConfig(next);
+    // ✅ Collapsibles por sección (sin localStorage)
+    const [openById, setOpenById] = useState<Record<string, boolean>>({});
 
-        // ✅ importantísimo: mantener cv.styleConfig sincronizado para previews que leen desde cv
-        setCV((prev) => (prev ? ({ ...prev, styleConfig: next } as any) : prev));
+    // Delete CV
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
 
-        setIsDirty(true);
-    }, [setCV]);
+    const handleDelete = useCallback(async () => {
+        if (!cv?.id) return;
 
+        setIsDeleting(true);
+        try {
+            await remove(cv.id);
+            setDeleteDialogOpen(false);
+            router.push("/cv");
+            router.refresh?.();
+        } catch (e: any) {
+            console.error(e);
+            alert(e?.message ?? "Error eliminando el CV");
+        } finally {
+            setIsDeleting(false);
+        }
+    }, [cv?.id, remove, router]);
 
-    useEffect(() => {
-        if (!cv) return;
-        // eslint-disable-next-line no-console
-        console.log("content.meta.headerImage =", (cv as any)?.content?.meta?.headerImage);
+    const isOpen = useCallback(
+        (id: string, fallback = false) => {
+            const v = openById[id];
+            return typeof v === "boolean" ? v : fallback;
+        },
+        [openById]
+    );
+
+    const setOpen = useCallback((id: string, open: boolean) => {
+        setOpenById((prev) => ({ ...prev, [id]: open }));
+    }, []);
+
+    const expandAll = useCallback(() => {
+        setOpenById((prev) => {
+            const next = { ...prev };
+            for (const s of cv?.content?.sections ?? []) next[s.id] = true;
+            return next;
+        });
     }, [cv]);
 
+    const collapseAll = useCallback(() => {
+        setOpenById((prev) => {
+            const next = { ...prev };
+            for (const s of cv?.content?.sections ?? []) next[s.id] = false;
+            return next;
+        });
+    }, [cv]);
+
+    const applyStyleConfig = useCallback(
+        (next: CVStyleConfig) => {
+            setStyleConfig(next);
+            // ✅ mantener cv.styleConfig sincronizado (el modal ya lo lee desde cv)
+            setCV((prev) => (prev ? { ...prev, styleConfig: next } : prev));
+            setIsDirty(true);
+        },
+        [setCV]
+    );
+
     useEffect(() => {
         if (!cv) return;
-        const fromDb = (cv as any).styleConfig as unknown;
-        setStyleConfig(normalizeStyleConfig(fromDb));
+        setStyleConfig(normalizeStyleConfig(cv.styleConfig));
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [cv?.id]);
+
+    // ✅ cv efectivo SIEMPRE incluye styleConfig actual
+    const effectiveCv = useMemo(() => {
+        if (!cv) return null;
+        return { ...cv, styleConfig } as Curriculum;
+    }, [cv, styleConfig]);
 
     const sensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -228,57 +307,9 @@ export function CVEditor({ cvId }: { cvId: number | null }) {
 
     const hasSection = (type: CVSection["type"]) => cv?.content.sections.some((s) => s.type === type);
 
-    function normalizeHeaderImageMeta(input: any): HeaderImageMeta {
-        const url =
-            typeof input?.url === "string" && input.url.trim().length ? input.url.trim() : null;
-
-        const publicId =
-            typeof input?.publicId === "string" && input.publicId.trim().length ? input.publicId.trim() : null;
-
-        const show = Boolean(input?.show ?? false);
-
-        return { url, publicId, show };
-    }
-
-    const updateHeaderImageMeta = useCallback(
-        (patch: Partial<HeaderImageMeta>) => {
-            setCV((prev) => {
-                if (!prev) return prev;
-
-                const prevContent: any = prev.content ?? {};
-                const prevMeta: any = prevContent.meta ?? {};
-                const current = normalizeHeaderImageMeta(prevMeta.headerImage);
-
-                const next: HeaderImageMeta = { ...current, ...patch };
-
-                setIsDirty(true);
-
-                return {
-                    ...prev,
-                    content: {
-                        ...prevContent,
-                        meta: {
-                            ...prevMeta,
-                            headerImage: next,
-                        },
-                    },
-
-                    // convenience
-                    imageUrl: next.url,
-                    imagePublicId: next.publicId,
-                    showProfileImage: next.show,
-                } as any;
-            });
-        },
-        [setCV]
-    );
-
-    /**
-     * ✅ Update root + meta en content (sin romper sections)
-     */
     const updateRoot = useCallback(
         (
-            patch: Partial<Pick<any, "summary" | "birthDate">> & {
+            patch: Partial<Pick<Curriculum, "summary" | "birthDate">> & {
                 headerImage?:
                 | Partial<HeaderImageMeta>
                 | ((prev: HeaderImageMeta) => Partial<HeaderImageMeta>);
@@ -287,7 +318,6 @@ export function CVEditor({ cvId }: { cvId: number | null }) {
             setCV((prev) => {
                 if (!prev) return prev;
 
-                // meta actual
                 const prevHeader = getHeaderImageMeta(prev);
 
                 let nextHeader = prevHeader;
@@ -299,34 +329,36 @@ export function CVEditor({ cvId }: { cvId: number | null }) {
                             : patch.headerImage;
 
                     nextHeader = {
-                        url:
-                            nextPartial.url !== undefined ? (nextPartial.url ?? null) : prevHeader.url,
+                        url: nextPartial.url !== undefined ? (nextPartial.url ?? null) : prevHeader.url,
                         publicId:
-                            nextPartial.publicId !== undefined
-                                ? (nextPartial.publicId ?? null)
-                                : prevHeader.publicId,
-                        show:
-                            nextPartial.show !== undefined ? Boolean(nextPartial.show) : prevHeader.show,
+                            nextPartial.publicId !== undefined ? (nextPartial.publicId ?? null) : prevHeader.publicId,
+                        show: nextPartial.show !== undefined ? Boolean(nextPartial.show) : prevHeader.show,
                     };
                 }
 
-                // removemos headerImage del patch root
                 const { headerImage, ...rootPatch } = patch;
 
                 setIsDirty(true);
+
+                const prevContent = prev.content ?? { sections: [] };
+                const prevMeta = prevContent.meta ?? {};
+
+                const currentHeader = normalizeHeaderImageMeta(prevMeta.headerImage);
+                const headerToStore = patch.headerImage ? nextHeader : currentHeader;
 
                 return {
                     ...prev,
                     ...rootPatch,
                     content: {
-                        ...(prev as any).content,
+                        ...prevContent,
                         meta: {
-                            ...((prev as any).content?.meta ?? {}),
-                            headerImage: nextHeader,
+                            ...prevMeta,
+                            headerImage: headerToStore,
                         },
-                        // ⛔ no tocamos sections acá
-                        sections: (prev as any).content?.sections ?? [],
+                        sections: prevContent.sections ?? [],
                     },
+                    imageUrl: headerToStore.url ?? null,
+                    imagePublicId: headerToStore.publicId ?? null,
                 };
             });
         },
@@ -347,33 +379,55 @@ export function CVEditor({ cvId }: { cvId: number | null }) {
         setCloseDialogOpen(true);
     }, [isDirty, isSaving, router]);
 
+    const handleTogglePublic = useCallback(async () => {
+        if (!effectiveCv) return;
+
+        setIsTogglingPublic(true);
+        setIsSaving(true);
+
+        try {
+            const next = { ...effectiveCv, isPublic: !Boolean(effectiveCv.isPublic) };
+            const saved = await save(next);
+
+            // Actualiza estado local con lo que devuelve la API
+            setCV(saved);
+
+            // Esto “ya guardó” el cambio
+            setIsDirty(false);
+        } finally {
+            setIsSaving(false);
+            setIsTogglingPublic(false);
+        }
+    }, [effectiveCv, save, setCV]);
+
+
     const handleSave = useCallback(async () => {
-        if (!cv) return;
+        if (!effectiveCv) return;
 
         setIsSaving(true);
         try {
-            const saved = await save({ ...cv, styleConfig } as any);
+            const saved = await save(effectiveCv);
             setIsDirty(false);
 
             if (cvId === null) router.replace(`/cv/${saved.id}`);
         } finally {
             setIsSaving(false);
         }
-    }, [cv, cvId, router, save, styleConfig]);
+    }, [effectiveCv, cvId, router, save]);
 
     const handleSaveAndClose = useCallback(async () => {
-        if (!cv) return;
+        if (!effectiveCv) return;
 
         setIsSaving(true);
         try {
-            await save({ ...cv, styleConfig } as any);
+            await save(effectiveCv);
             setIsDirty(false);
             setCloseDialogOpen(false);
             router.push("/");
         } finally {
             setIsSaving(false);
         }
-    }, [cv, router, save, styleConfig]);
+    }, [effectiveCv, router, save]);
 
     const handleCloseWithoutSaving = useCallback(() => {
         if (isSaving) return;
@@ -389,7 +443,6 @@ export function CVEditor({ cvId }: { cvId: number | null }) {
         setCV((prev) => {
             if (!prev) return prev;
 
-            // Profile fijo arriba: reordenamos solo las "rest"
             const profile = prev.content.sections.find((s) => s.type === "profile");
             const rest = prev.content.sections.filter((s) => s.type !== "profile");
 
@@ -405,7 +458,7 @@ export function CVEditor({ cvId }: { cvId: number | null }) {
             return {
                 ...prev,
                 content: {
-                    ...(prev as any).content,
+                    ...prev.content,
                     sections: profile ? [profile, ...nextRest] : nextRest,
                 },
             };
@@ -427,11 +480,15 @@ export function CVEditor({ cvId }: { cvId: number | null }) {
 
             setIsDirty(true);
 
+            const created = createSection(type);
+
+            setOpenById((m) => ({ ...m, [created.id]: true }));
+
             return {
                 ...prev,
                 content: {
-                    ...(prev as any).content,
-                    sections: [...prev.content.sections, createSection(type)],
+                    ...prev.content,
+                    sections: [...prev.content.sections, created],
                 },
             };
         });
@@ -439,13 +496,18 @@ export function CVEditor({ cvId }: { cvId: number | null }) {
 
     const removeSection = useCallback(
         (id: string) => {
+            setOpenById((prev) => {
+                const { [id]: _omit, ...rest } = prev;
+                return rest;
+            });
+
             setCV((prev) => {
                 if (!prev) return prev;
                 setIsDirty(true);
                 return {
                     ...prev,
                     content: {
-                        ...(prev as any).content,
+                        ...prev.content,
                         sections: prev.content.sections.filter((s) => s.id !== id),
                     },
                 };
@@ -463,7 +525,7 @@ export function CVEditor({ cvId }: { cvId: number | null }) {
             return {
                 ...prev,
                 content: {
-                    ...(prev as any).content,
+                    ...prev.content,
                     sections: prev.content.sections.map((s) => (s.id === updated.id ? updated : s)),
                 },
             };
@@ -473,19 +535,16 @@ export function CVEditor({ cvId }: { cvId: number | null }) {
     const closePreview = () => setPreviewOpen(false);
 
     if (loading) return <p className="text-sm text-muted-foreground">Cargando…</p>;
-    if (!cv) return <p className="text-sm text-muted-foreground">No encontrado</p>;
+    if (!cv || !effectiveCv) return <p className="text-sm text-muted-foreground">No encontrado</p>;
 
-    const headerImage = getHeaderImageMeta(cv);
-    void headerImage; // (si no lo usás acá, evitás warning)
-
-    const themeColor = coerceThemeColor((styleConfig as any)?.theme?.color);
+    const themeColor = coerceThemeColor(styleConfig?.theme?.color);
 
     return (
-        <div className="space-y-4 pt-2">
+        <div className="space-y-4 pt-0">
             {/* ---------- Top bar fixed ---------- */}
             <div className="fixed top-0 left-0 right-0 z-50 border-b border-slate-800 bg-slate-950/80 backdrop-blur">
                 <div className="mx-auto px-3 py-2">
-                    <div className="flex items-center justify-between gap-3">
+                    <div className="flex flex- row items-center justify-between gap-3">
                         {/* Left */}
                         <div className="flex items-center gap-3 min-w-0">
                             <div className="relative flex flex-row gap-2">
@@ -494,43 +553,56 @@ export function CVEditor({ cvId }: { cvId: number | null }) {
                                     styleConfig={styleConfig}
                                     styleKeys={STYLE_KEYS}
                                     onChange={(next) => applyStyleConfig(next)}
-                                    onDirty={() => setIsDirty(true)} // podés dejarlo, pero ya lo marca applyStyleConfig
-
+                                    onDirty={() => setIsDirty(true)}
                                 />
 
                                 <CVTemplateSelect
-                                    value={(((styleConfig as any).template ?? "classic") as CVTemplateId)}
+                                    value={(styleConfig.template ?? "classic") as CVTemplateId}
                                     onChange={(t) => {
-                                        applyStyleConfig(({ ...(styleConfig as any), template: t } as any));
+                                        applyStyleConfig({ ...styleConfig, template: t });
                                     }}
                                 />
 
-
-                                {/* ✅ Theme color select (lives in CVEditor) */}
                                 <CVThemeSelect
                                     value={themeColor}
                                     onChange={(next) => {
                                         applyStyleConfig({
-                                            ...(styleConfig as any),
+                                            ...styleConfig,
                                             theme: {
-                                                ...((styleConfig as any).theme ?? {}),
+                                                ...(styleConfig.theme ?? {}),
                                                 color: next,
                                             },
-                                        } as any);
+                                        });
                                     }}
                                 />
 
-
                                 <div className="min-w-0">
-                                    <div className="text-xs text-muted-foreground">{dirtyLabel}</div>
+                                    <div className="text-[8px] text-muted-foreground">{dirtyLabel}</div>
                                 </div>
                             </div>
                         </div>
 
                         {/* Right */}
-                        <div className="relative flex items-center gap-2">
+                        <div className="flex flex-row items-center justify-end gap-0 w-full">
                             <Button onClick={() => setPreviewOpen(true)} disabled={isSaving} className="lg:hidden">
                                 Preview
+                            </Button>
+                            <Button
+                                variant={cv.isPublic ? "secondary" : "default"}
+                                onClick={handleTogglePublic}
+                                disabled={isSaving || isDeleting || isTogglingPublic || !cv.id}
+                                title={!cv.id ? "Primero guardá el CV" : cv.isPublic ? "Dejar de hacerlo público" : "Hacer público este CV"}
+                            >
+                                {cv.isPublic ? "Dejar de hacer público" : "Hacer público"}
+                            </Button>
+
+                            <Button
+                                variant="destructive"
+                                onClick={() => setDeleteDialogOpen(true)}
+                                disabled={isSaving || isDeleting || !cv.id}
+                                title={!cv.id ? "Primero guardá el CV para poder eliminarlo" : "Eliminar CV"}
+                            >
+                                Eliminar
                             </Button>
 
                             <Button
@@ -551,6 +623,34 @@ export function CVEditor({ cvId }: { cvId: number | null }) {
                             >
                                 ✕
                             </Button>
+
+                            {/* ---------- AlertDialog: eliminar CV ---------- */}
+                            <AlertDialog
+                                open={deleteDialogOpen}
+                                onOpenChange={(open) => {
+                                    if (isDeleting) return;
+                                    setDeleteDialogOpen(open);
+                                }}
+                            >
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                        <AlertDialogTitle>¿Eliminar este CV?</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                            Esto elimina el CV de la base. Tus imágenes usadas en este CV se conservan.
+                                        </AlertDialogDescription>
+                                    </AlertDialogHeader>
+
+                                    <AlertDialogFooter>
+                                        <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
+
+                                        <AlertDialogAction asChild>
+                                            <Button variant="destructive" onClick={handleDelete} disabled={isDeleting}>
+                                                {isDeleting ? "Eliminando…" : "Eliminar definitivamente"}
+                                            </Button>
+                                        </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
                         </div>
                     </div>
                 </div>
@@ -589,24 +689,37 @@ export function CVEditor({ cvId }: { cvId: number | null }) {
             </AlertDialog>
 
             {/* ---------- Preview Modal ---------- */}
-            {previewOpen && <CVPreviewModal cv={cv} onClose={closePreview} styleConfig={styleConfig} />}
+            {previewOpen && <CVPreviewModal cv={effectiveCv} onClose={closePreview} />}
 
             {/* ---------- Main layout ---------- */}
-            <div className="w-full px-3">
-                <div className="lg:grid lg:grid-cols-2 lg:gap-4">
+            <div className="w-full px-0">
+                <div className="lg:grid lg:grid-cols-2 lg:gap-2">
                     {/* ================= LEFT: Editor ================= */}
-                    <div className="space-y-4">
-                        <div className="flex flex-row items-center justify-center w-full">
-                            <input
-                                value={cv.title ?? ""}
-                                onChange={(e) => {
-                                    const title = e.target.value;
-                                    setCV((prev) => (prev ? { ...prev, title } : prev));
-                                    setIsDirty(true);
-                                }}
-                                placeholder={cv.id === null ? "Nuevo CV (escribe un título)" : "Curriculum Vitae (escribe un título)"}
-                                className="w-96 bg-transparent text-sm font-semibold text-slate-100 outline-none placeholder:text-slate-500"
-                            />
+                    <div className="space-y-0">
+                        {/* ✅ Título + Expand/Collapse pegados */}
+                        <div className="flex flex-col items-center justify-center w-full gap-0">
+                            <div className="fixed top-[56px] left-0 flex flex-row items-center justify-start gap-1 bg-slate-900/70 z-10 w-full h-6 lg:w-auto">
+                                <Button type="button" variant="secondary" size="sm" className="h-8" onClick={expandAll}>
+                                    Expandir todo
+                                </Button>
+                                <Button type="button" variant="secondary" size="sm" className="h-8 " onClick={collapseAll}>
+                                    Colapsar todo
+                                </Button>
+                            </div>
+
+                            <div className="flex flex-row items-center justify-center gap-1 w-full pt-10">
+                                <span className="text-slate-400 text-[10px] text-nowrap">Edita el título</span>
+                                <input
+                                    value={cv.title ?? ""}
+                                    onChange={(e) => {
+                                        const title = e.target.value;
+                                        setCV((prev) => (prev ? { ...prev, title } : prev));
+                                        setIsDirty(true);
+                                    }}
+                                    placeholder={cv.id ? "Curriculum Vitae (escribe un título)" : "Nuevo CV (escribe un título)"}
+                                    className="w-96 bg-transparent text-sm font-semibold text-slate-100 outline-none placeholder:text-slate-500 border border-slate-500"
+                                />
+                            </div>
                         </div>
 
                         <div className="space-y-2">
@@ -614,41 +727,33 @@ export function CVEditor({ cvId }: { cvId: number | null }) {
                             {cv.content.sections
                                 .filter((s) => s.type === "profile")
                                 .map((section) => (
-                                    <SortableSectionCard key={section.id} section={section} title={section.type}>
+                                    <SortableSectionCard
+                                        key={section.id}
+                                        section={section}
+                                        title={section.type}
+                                        collapsible={{
+                                            open: isOpen(section.id, true),
+                                            onOpenChange: (open) => setOpen(section.id, open),
+                                        }}
+                                    >
                                         {isProfileSection(section) && (
                                             <ProfileSectionEditor
                                                 curriculumId={cv.id}
                                                 value={section.data}
                                                 onChange={(data) => updateSection({ ...section, data })}
-                                                birthDate={cv.birthDate}
-                                                onBirthDateChange={(next) => {
-                                                    setCV((prev) => {
-                                                        if (!prev) return prev;
-                                                        const prevVal = (prev as any).birthDate ?? null;
-                                                        const nextVal = next ?? null;
-                                                        if (prevVal === nextVal) return prev;
-                                                        return { ...prev, birthDate: next };
-                                                    });
-                                                    setIsDirty(true);
-                                                }}
-                                                summary={(cv as any).summary ?? ""}
-                                                onSummaryChange={(next) => {
-                                                    setCV((prev) => (prev ? { ...prev, summary: next } : prev));
-                                                    setIsDirty(true);
-                                                }}
-                                                // ✅ desde content.meta.headerImage
-                                                profileImageUrl={(cv as any).imageUrl ?? null}
-                                                onProfileImageChange={(url) => {
-                                                    updateHeaderImageMeta({ url });
-                                                }}
-                                                showProfileImage={Boolean((cv as any).showProfileImage)}
-                                                onShowProfileImageChange={(next) => {
-                                                    updateHeaderImageMeta({ show: next });
-                                                }}
+                                                birthDate={cv.birthDate ?? null}
+                                                onBirthDateChange={(next) => updateRoot({ birthDate: next })}
+                                                summary={cv.summary ?? ""}
+                                                onSummaryChange={(next) => updateRoot({ summary: next })}
+                                                profileImageUrl={getHeaderImageMeta(cv).url}
+                                                onProfileImageChange={(url) => updateRoot({ headerImage: { url } })}
+                                                showProfileImage={getHeaderImageMeta(cv).show}
+                                                onShowProfileImageChange={(next) => updateRoot({ headerImage: { show: next } })}
                                             />
                                         )}
                                     </SortableSectionCard>
                                 ))}
+
                             <hr className="border-border/40 my-3" />
 
                             {/* Rest sortable */}
@@ -657,7 +762,7 @@ export function CVEditor({ cvId }: { cvId: number | null }) {
                                     items={cv.content.sections.filter((s) => s.type !== "profile").map((s) => s.id)}
                                     strategy={verticalListSortingStrategy}
                                 >
-                                    <div className="space-y-4 divide-y divide-border/40">
+                                    <div className="space-y-1 divide-y divide-border/40">
                                         {cv.content.sections
                                             .filter((s) => s.type !== "profile")
                                             .map((section) => (
@@ -666,20 +771,38 @@ export function CVEditor({ cvId }: { cvId: number | null }) {
                                                     section={section}
                                                     title={section.type}
                                                     onRemove={() => removeSection(section.id)}
+                                                    collapsible={{
+                                                        open: isOpen(section.id, false),
+                                                        onOpenChange: (open) => setOpen(section.id, open),
+                                                    }}
                                                 >
-                                                    {isExperienceSection(section) && <ExperienceSectionEditor section={section} onChange={updateSection} />}
-                                                    {isEducationSection(section) && <EducationSectionEditor section={section} onChange={updateSection} />}
-                                                    {isSkillsSection(section) && <SkillsSectionEditor section={section} onChange={updateSection} />}
+                                                    {isExperienceSection(section) && (
+                                                        <ExperienceSectionEditor section={section} onChange={updateSection} />
+                                                    )}
+                                                    {isEducationSection(section) && (
+                                                        <EducationSectionEditor section={section} onChange={updateSection} />
+                                                    )}
+                                                    {isSkillsSection(section) && (
+                                                        <SkillsSectionEditor section={section} onChange={updateSection} />
+                                                    )}
 
                                                     {isLanguagesSection(section) && (
-                                                        <LanguagesSectionEditor value={section.data} onChange={(data) => updateSection({ ...section, data })} />
+                                                        <LanguagesSectionEditor
+                                                            value={section.data}
+                                                            onChange={(data) => updateSection({ ...section, data })}
+                                                        />
                                                     )}
 
                                                     {isProjectsSection(section) && (
-                                                        <ProjectsSectionEditor value={section.data} onChange={(data) => updateSection({ ...section, data })} />
+                                                        <ProjectsSectionEditor
+                                                            value={section.data}
+                                                            onChange={(data) => updateSection({ ...section, data })}
+                                                        />
                                                     )}
 
-                                                    {isCustomSection(section) && <CustomSectionEditor section={section} onChange={updateSection} />}
+                                                    {isCustomSection(section) && (
+                                                        <CustomSectionEditor section={section} onChange={updateSection} />
+                                                    )}
                                                 </SortableSectionCard>
                                             ))}
                                     </div>
@@ -722,30 +845,29 @@ export function CVEditor({ cvId }: { cvId: number | null }) {
                                     <div className="text-xs font-medium text-slate-300">Preview</div>
 
                                     <div className="flex items-center gap-2">
-                                        <Button variant="outline" size="sm" className="h-8" onClick={() => window.print()}>
-                                            Imprimir
-                                        </Button>
-
                                         <Button variant="outline" size="sm" className="h-8" onClick={() => setPreviewOpen(true)}>
-                                            Pantalla completa
+                                            Pantalla completa / Imprimir
                                         </Button>
                                     </div>
                                 </div>
 
-                                <div className="flex-1 overflow-y-auto p-4">
-                                    <div className="origin-top scale-[0.9]">
-                                        <CVPreviewSheet cv={cv} styleConfig={styleConfig} scale={1} />
+                                <div className="flex-1 overflow-y-auto p-0">
+                                    <div className="origin-top scale-[1]">
+                                        <CVPreviewSheet cv={effectiveCv} scale={1} />
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-
                 </div>
             </div>
         </div>
     );
 }
+
+/* ===========================
+   Helpers
+=========================== */
 
 function createSection(type: CVSection["type"]): CVSection {
     switch (type) {
@@ -841,17 +963,22 @@ function SortableSectionCard({
     children,
     onRemove,
     title,
+    collapsible,
 }: {
     section: CVSection;
     title: string;
     children: React.ReactNode;
     onRemove?: () => void;
+    collapsible?: {
+        open: boolean;
+        onOpenChange: (open: boolean) => void;
+    };
 }) {
     const isProfile = section.type === "profile";
 
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
         id: section.id,
-        disabled: isProfile, // ✅ profile no se arrastra
+        disabled: isProfile,
     });
 
     const style: React.CSSProperties = {
@@ -860,36 +987,65 @@ function SortableSectionCard({
         opacity: isDragging ? 0.6 : 1,
     };
 
+    const open = collapsible?.open ?? true;
+
     return (
         <div ref={setNodeRef} style={style}>
-            <Card className="border-0 bg-transparent shadow-none">
-                <CardHeader className="flex flex-row items-center justify-between py-1">
-                    <div className="flex items-center gap-2">
-                        {!isProfile && (
-                            <button
-                                type="button"
-                                className="cursor-grab active:cursor-grabbing px-2 py-1 rounded border text-sm text-muted-foreground hover:bg-accent"
-                                title="Arrastrar para reordenar"
-                                {...attributes}
-                                {...listeners}
+            <Card className="border-0 bg-transparent shadow-none w-full p-0">
+                <Collapsible open={open} onOpenChange={(v) => collapsible?.onOpenChange?.(v)} className="rounded-xl">
+                    <CardHeader className="flex flex-row items-center justify-between py-0 w-full p-0">
+                        <div className="flex items-center gap-2 min-w-0">
+                            {!isProfile && (
+                                <button
+                                    type="button"
+                                    className="cursor-grab active:cursor-grabbing px-2 py-1 rounded border text-sm text-muted-foreground hover:bg-accent"
+                                    title="Arrastrar para reordenar"
+                                    {...attributes}
+                                    {...listeners}
+                                >
+                                    ⠿
+                                </button>
+                            )}
+
+                            <CardTitle className="text-sm capitalize p-0">{title}</CardTitle>
+
+                            {collapsible ? (
+                                <button
+                                    type="button"
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        collapsible.onOpenChange(!open);
+                                    }}
+                                    className="ml-2 inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-accent"
+                                    title={open ? "Colapsar" : "Expandir"}
+                                >
+                                    {open ? "Ocultar" : "Mostrar"}
+                                    <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", open ? "rotate-180" : "rotate-0")} />
+                                </button>
+                            ) : null}
+                        </div>
+
+                        {!isProfile && onRemove && (
+                            <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    onRemove();
+                                }}
                             >
-                                ⠿
-                            </button>
+                                Eliminar
+                            </Button>
                         )}
+                    </CardHeader>
 
-                        <CardTitle className="text-sm capitalize">{title}</CardTitle>
-                    </div>
-
-                    {!isProfile && onRemove && (
-                        <Button variant="destructive" size="sm" onClick={onRemove}>
-                            Eliminar
-                        </Button>
-                    )}
-                </CardHeader>
-
-                <CardContent className="pt-0">{children}</CardContent>
+                    <CollapsibleContent>
+                        <CardContent className="p-0">{children}</CardContent>
+                    </CollapsibleContent>
+                </Collapsible>
             </Card>
         </div>
     );
 }
-

@@ -1,8 +1,7 @@
 // src/hooks/useCV.ts
 import { useEffect, useState } from "react";
-import type { Curriculum, CVSection } from "@/types/cv";
-import type { EditorCV } from "@/types/cvEditor";
-import type { CVStyleConfig } from "@/types/cvStyle";
+import type { Curriculum, CVSection, CVStyleConfig, HeaderImageMeta, CVThemeColor } from "@/types/cv";
+import { coerceThemeColor } from "@/types/cv";
 import { yyyyMmDdFromDate } from "@/lib/zod/dates";
 
 import {
@@ -15,16 +14,21 @@ import {
     isProjectsSection,
 } from "@/types/cvGuards";
 
-import type { CVThemeColor } from "@/types/cvTheme";
-import { coerceThemeColor } from "@/types/cvTheme";
-
-
 /* =========================================================
    Helpers
 ========================================================= */
 
-function normalizeStyleConfig(raw: any): CVStyleConfig {
-    const base = raw && typeof raw === "object" ? raw : {};
+function normalizeOptional(v: any): string | undefined {
+    if (v === null || v === undefined) return undefined;
+    if (typeof v !== "string") return String(v);
+    const t = v.trim();
+    return t.length ? t : undefined;
+}
+
+function normalizeStyleConfig(raw: any): CVStyleConfig | null {
+    if (!raw || typeof raw !== "object") return null;
+
+    const base = raw as any;
     const themeColor = coerceThemeColor(base?.theme?.color);
 
     return {
@@ -36,35 +40,11 @@ function normalizeStyleConfig(raw: any): CVStyleConfig {
     } as CVStyleConfig;
 }
 
-
-
-function normalizeOptional(v: any): string | undefined {
-    if (v === null || v === undefined) return undefined;
-    if (typeof v !== "string") return String(v);
-    const t = v.trim();
-    return t.length ? t : undefined;
-}
-
-/** Meta persistida en content (JSON) */
-export type HeaderImageMeta = {
-    url: string | null;
-    publicId: string | null;
-    show: boolean;
-};
-
 function normalizeHeaderImageMeta(input: any): HeaderImageMeta {
-    const url =
-        typeof input?.url === "string" && input.url.trim().length
-            ? input.url.trim()
-            : null;
-
-    const publicId =
-        typeof input?.publicId === "string" && input.publicId.trim().length
-            ? input.publicId.trim()
-            : null;
-
-    const show = Boolean(input?.show ?? false);
-
+    const obj = input && typeof input === "object" ? (input as any) : {};
+    const url = typeof obj.url === "string" && obj.url.trim().length ? obj.url.trim() : null;
+    const publicId = typeof obj.publicId === "string" && obj.publicId.trim().length ? obj.publicId.trim() : null;
+    const show = Boolean(obj.show ?? false);
     return { url, publicId, show };
 }
 
@@ -118,12 +98,12 @@ function normalizeSections(sections: CVSection[] | undefined): CVSection[] {
                 return {
                     ...section,
                     data: raw.map((it: any) => ({
-                        id: it.id ?? crypto.randomUUID(),
-                        institution: it.institution ?? "",
-                        degree: it.degree ?? "",
-                        startDate: it.startDate ?? "",
-                        endDate: it.endDate ?? undefined,
-                        description: it.description ?? "",
+                        id: it?.id ?? crypto.randomUUID(),
+                        institution: it?.institution ?? "",
+                        degree: it?.degree ?? "",
+                        startDate: it?.startDate ?? "",
+                        endDate: normalizeOptional(it?.endDate),
+                        description: it?.description ?? "",
                     })),
                 };
             }
@@ -136,7 +116,7 @@ function normalizeSections(sections: CVSection[] | undefined): CVSection[] {
                         institution: raw?.institution ?? "",
                         degree: raw?.degree ?? "",
                         startDate: raw?.startDate ?? "",
-                        endDate: raw?.endDate ?? undefined,
+                        endDate: normalizeOptional(raw?.endDate),
                         description: raw?.description ?? "",
                     },
                 ],
@@ -148,10 +128,10 @@ function normalizeSections(sections: CVSection[] | undefined): CVSection[] {
             return {
                 ...section,
                 data: Array.isArray(section.data)
-                    ? section.data.map((s) => ({
-                        id: (s as any).id ?? crypto.randomUUID(),
-                        name: (s as any).name ?? "",
-                        level: (s as any).level ?? "basic",
+                    ? section.data.map((s: any) => ({
+                        id: s?.id ?? crypto.randomUUID(),
+                        name: s?.name ?? "",
+                        level: s?.level ?? "basic",
                     }))
                     : [],
             };
@@ -202,12 +182,13 @@ function normalizeSections(sections: CVSection[] | undefined): CVSection[] {
 
         /* ---------------- custom ---------------- */
         if (isCustomSection(section)) {
+            const d: any = section.data ?? {};
             return {
                 ...section,
                 data: {
-                    title: (section as any).data?.title ?? "Nueva sección",
-                    items: Array.isArray((section as any).data?.items)
-                        ? (section as any).data.items.map((item: any) => ({
+                    title: d?.title ?? "Nueva sección",
+                    items: Array.isArray(d?.items)
+                        ? d.items.map((item: any) => ({
                             id: item?.id ?? crypto.randomUUID(),
                             title: item?.title ?? "",
                             subtitle: item?.subtitle ?? "",
@@ -259,9 +240,7 @@ function normalizeSections(sections: CVSection[] | undefined): CVSection[] {
 
 /** Colapsa múltiples experience en 1 */
 function mergeExperienceSections(sections: CVSection[]): CVSection[] {
-    const expSections = sections.filter(
-        (s) => s.type === "experience"
-    ) as CVSection<"experience">[];
+    const expSections = sections.filter((s) => s.type === "experience") as CVSection<"experience">[];
 
     if (expSections.length <= 1) return sections;
 
@@ -307,12 +286,13 @@ function buildSections(sections: CVSection[] | undefined): CVSection[] {
 
 /** content normalizado: sections + meta.headerImage */
 function normalizeContent(rawContent: any) {
-    const rawMeta = rawContent?.meta ?? {};
+    const base = rawContent && typeof rawContent === "object" ? rawContent : {};
+    const rawMeta = (base as any).meta && typeof (base as any).meta === "object" ? (base as any).meta : {};
     const headerImage = normalizeHeaderImageMeta(rawMeta?.headerImage);
 
     return {
-        ...rawContent,
-        sections: buildSections(rawContent?.sections),
+        ...(base as any),
+        sections: buildSections((base as any)?.sections),
         meta: {
             ...rawMeta,
             headerImage,
@@ -320,64 +300,59 @@ function normalizeContent(rawContent: any) {
     };
 }
 
-/** Normaliza CV raw de API a Curriculum */
-function normalizeCV(cv: any): Curriculum {
-    const contentNormalized = normalizeContent(cv?.content);
+/** Normaliza CV raw de API a Curriculum (serializable) */
+function normalizeCV(raw: any): Curriculum {
+    const contentNormalized = normalizeContent(raw?.content);
 
-    // legacy root (por si existía)
-    const legacyUrl =
-        typeof cv?.imageUrl === "string" && cv.imageUrl.trim().length
-            ? cv.imageUrl.trim()
-            : null;
-
-    const legacyPublicId =
-        typeof cv?.imagePublicId === "string" && cv.imagePublicId.trim().length
-            ? cv.imagePublicId.trim()
-            : null;
-
-    const mergedHeaderImage: HeaderImageMeta = {
-        url: contentNormalized.meta.headerImage.url ?? legacyUrl,
-        publicId: contentNormalized.meta.headerImage.publicId ?? legacyPublicId,
-        show: Boolean(contentNormalized.meta.headerImage.show ?? false),
-    };
+    const bd = raw?.birthDate;
+    const birthDate =
+        typeof bd === "string"
+            ? (bd.trim().length ? bd.trim() : null)
+            : bd
+                ? yyyyMmDdFromDate(new Date(bd))
+                : null;
 
     return {
-        id: cv.id,
-        userId: cv.userId,
-        title: cv.title || "Mi CV",
-        summary: cv.summary ?? "",
+        id: raw?.id ?? null,
+        userId: raw?.userId ?? null,
+        title: raw?.title || "Mi CV",
+        summary: raw?.summary ?? "",
+        birthDate,
+
         content: {
             ...contentNormalized,
             meta: {
                 ...contentNormalized.meta,
-                headerImage: mergedHeaderImage,
+                headerImage: normalizeHeaderImageMeta(contentNormalized?.meta?.headerImage),
             },
         },
-        styleConfig: normalizeStyleConfig(cv.styleConfig),
 
-        isPublic: cv.isPublic ?? false,
-        createdAt: cv.createdAt,
-        updatedAt: cv.updatedAt,
-        birthDate: cv.birthDate ? yyyyMmDdFromDate(new Date(cv.birthDate)) : null,
-    } as any;
+        styleConfig: normalizeStyleConfig(raw?.styleConfig),
+
+        isPublic: Boolean(raw?.isPublic ?? false),
+
+        createdAt:
+            typeof raw?.createdAt === "string"
+                ? raw.createdAt
+                : raw?.createdAt
+                    ? new Date(raw.createdAt).toISOString()
+                    : new Date().toISOString(),
+
+        updatedAt:
+            typeof raw?.updatedAt === "string"
+                ? raw.updatedAt
+                : raw?.updatedAt
+                    ? new Date(raw.updatedAt).toISOString()
+                    : new Date().toISOString(),
+    } as Curriculum;
 }
 
 /* =========================================================
    Hook
 ========================================================= */
 
-type EditorCVWithStyle = EditorCV & {
-    styleConfig?: CVStyleConfig | null;
-    birthDate?: string | null;
-
-    // ✅ conveniencia (para no romper tu UI actual mientras migrás)
-    imageUrl?: string | null;
-    imagePublicId?: string | null;
-    showProfileImage?: boolean;
-};
-
 export function useCV(cvId: number | null) {
-    const [cv, setCV] = useState<EditorCVWithStyle | null>(null);
+    const [cv, setCV] = useState<Curriculum | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -388,60 +363,47 @@ export function useCV(cvId: number | null) {
                         id: crypto.randomUUID(),
                         type: "profile",
                         data: { fullName: "" },
-                    } as any,
+                    },
                 ],
                 meta: { headerImage: { url: null, publicId: null, show: false } },
             });
 
             setCV({
                 id: null,
+                userId: null,
                 title: "Nuevo CV",
                 summary: "",
+                birthDate: null,
                 content,
                 styleConfig: normalizeStyleConfig({
-                    // si más adelante querés defaults de textos, podés meterlos acá
                     theme: { color: "slate" },
+                    template: "classic",
+                    showDocTitle: true,
                 }),
-
-                birthDate: null,
-
-                // convenience
-                imageUrl: content.meta.headerImage.url,
-                imagePublicId: content.meta.headerImage.publicId,
-                showProfileImage: content.meta.headerImage.show,
-            });
+                isPublic: false,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+            } as Curriculum);
 
             setLoading(false);
             return;
         }
 
-        fetch(`/api/cv/${cvId}`)
+        setLoading(true);
+        fetch(`/api/cv/${cvId}`, { cache: "no-store" })
             .then((res) => res.json())
             .then((data) => {
-                const normalized = normalizeCV(data.cv);
-                const headerImage = (normalized as any)?.content?.meta?.headerImage as
-                    | HeaderImageMeta
-                    | undefined;
-
-                setCV({
-                    id: normalized.id,
-                    title: normalized.title,
-                    summary: normalized.summary ?? "",
-                    content: normalized.content,
-                    styleConfig: (normalized as any).styleConfig ?? null,
-                    birthDate: (normalized as any).birthDate ?? null,
-
-                    // convenience
-                    imageUrl: headerImage?.url ?? null,
-                    imagePublicId: headerImage?.publicId ?? null,
-                    showProfileImage: Boolean(headerImage?.show ?? false),
-                });
-
+                const normalized = normalizeCV(data?.cv);
+                setCV(normalized);
+                setLoading(false);
+            })
+            .catch(() => {
+                setCV(null);
                 setLoading(false);
             });
     }, [cvId]);
 
-    const save = async (updated: EditorCVWithStyle) => {
+    const save = async (updated: Curriculum) => {
         const sections = buildSections(updated.content?.sections);
 
         const normalizeTitleForDb = (title: unknown) => {
@@ -450,80 +412,55 @@ export function useCV(cvId: number | null) {
             return t;
         };
 
-        // ✅ META PREVIA (si existía) + derivación desde root convenience
-        const prevMeta = (updated as any)?.content?.meta ?? {};
+        const prevMeta = updated.content?.meta ?? {};
+        const headerImage = normalizeHeaderImageMeta(prevMeta?.headerImage);
 
-        const headerImageFromContent = normalizeHeaderImageMeta(prevMeta?.headerImage);
-
-        // fallback a lo que tu UI está seteando hoy (root)
-        const headerImageFromRoot: HeaderImageMeta = {
-            url: typeof updated.imageUrl === "string" ? updated.imageUrl : null,
-            publicId: typeof updated.imagePublicId === "string" ? updated.imagePublicId : null,
-            show: Boolean(updated.showProfileImage ?? false),
-        };
-
-        // prioridad: content.meta.headerImage > root legacy
-        const headerImage: HeaderImageMeta = {
-            url: headerImageFromContent.url ?? headerImageFromRoot.url,
-            publicId: headerImageFromContent.publicId ?? headerImageFromRoot.publicId,
-            show: Boolean(headerImageFromContent.show ?? headerImageFromRoot.show),
-        };
-
-        const content = {
-            ...(updated as any).content,
-            sections,
-            meta: {
-                ...prevMeta,
-                headerImage,
-            },
-        };
+        const isNew = updated.id == null;
 
         const payload = {
-            id: updated.id,
             title: normalizeTitleForDb(updated.title),
             summary: updated.summary ?? "",
-            content,
-            styleConfig: normalizeStyleConfig(updated.styleConfig),
-
+            content: {
+                ...(updated as any).content,
+                sections,
+                meta: {
+                    ...prevMeta,
+                    headerImage,
+                },
+            },
+            styleConfig: normalizeStyleConfig(updated.styleConfig) ?? null,
             birthDate: updated.birthDate ?? null,
-            isPublic: (updated as any).isPublic ?? undefined,
+
+            // ✅ mandar SIEMPRE boolean para que el toggle funcione bien
+            isPublic: Boolean(updated.isPublic),
         };
 
-        const res = await fetch(
-            payload.id === null ? "/api/cv" : `/api/cv/${payload.id}`,
-            {
-                method: payload.id === null ? "POST" : "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload),
-            }
-        );
-
-        const text = await res.text();
-        if (!res.ok) throw new Error("Save failed");
-
-        const data = JSON.parse(text);
-        const normalized = normalizeCV(data.cv);
-
-        const headerImage2 = (normalized as any)?.content?.meta?.headerImage as
-            | HeaderImageMeta
-            | undefined;
-
-        setCV({
-            id: normalized.id,
-            title: normalized.title,
-            summary: normalized.summary ?? "",
-            content: normalized.content,
-            styleConfig: (normalized as any).styleConfig,
-            birthDate: (normalized as any).birthDate ?? null,
-
-            // convenience
-            imageUrl: headerImage2?.url ?? null,
-            imagePublicId: headerImage2?.publicId ?? null,
-            showProfileImage: Boolean(headerImage2?.show ?? false),
+        const res = await fetch(isNew ? "/api/cv" : `/api/cv/${updated.id}`, {
+            method: isNew ? "POST" : "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
         });
+
+        const data = await res.json().catch(() => null);
+
+        if (!res.ok) {
+            throw new Error(data?.error || "Save failed");
+        }
+
+        const normalized = normalizeCV(data?.cv);
+        setCV(normalized);
 
         return normalized;
     };
 
-    return { cv, setCV, save, loading };
+    const remove = async (id: number) => {
+        const res = await fetch(`/api/cv/${id}`, { method: "DELETE" });
+        const data = await res.json().catch(() => null);
+        if (!res.ok) throw new Error(data?.error || "No se pudo eliminar el CV");
+        return data;
+    };
+
+    return { cv, setCV, save, remove, loading };
 }
+
+

@@ -3,13 +3,13 @@ import { NextRequest, NextResponse } from "next/server";
 import auth from "@/auth";
 import { prisma } from "@/lib/prisma";
 
-export async function GET(req: NextRequest) {
+export async function GET() {
     try {
         const session = await auth();
         const userId = session?.user?.id ? Number(session.user.id) : null;
         if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-        const { searchParams } = new URL(req.url);
+        /*const { searchParams } = new URL(req.url);
         const curriculumId = Number(searchParams.get("curriculumId"));
 
         if (!Number.isFinite(curriculumId) || curriculumId <= 0) {
@@ -21,10 +21,10 @@ export async function GET(req: NextRequest) {
             where: { id: curriculumId, userId },
             select: { id: true },
         });
-        if (!cv) return NextResponse.json({ error: "CV no encontrado" }, { status: 404 });
+        if (!cv) return NextResponse.json({ error: "CV no encontrado" }, { status: 404 });*/
 
         const images = await prisma.curriculumMedia.findMany({
-            where: { userId, curriculumId, status: "active" },
+            where: { userId, status: "active" },
             orderBy: { createdAt: "desc" },
             select: {
                 id: true,
@@ -35,7 +35,6 @@ export async function GET(req: NextRequest) {
                 createdAt: true,
             },
         });
-
         return NextResponse.json({ images });
     } catch (err) {
         console.error("cv/media/library error:", err);

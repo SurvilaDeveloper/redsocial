@@ -1,9 +1,11 @@
 // src/components/custom/WallHeader.tsx
 "use client";
 
-import { useState, useEffect } from "react";
-import { Session } from "next-auth";
-import { WallUserFull, WallUserBasic } from "@/types/wall";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import type { Session } from "next-auth";
+import type { WallUserFull, WallUserBasic } from "@/types/wall";
+import { Button } from "../ui/button";
+import { CVPreviewModal } from "../cv/CVPreviewModal";
 
 function hexToRgb(hex: string) {
     const value = hex.replace("#", "");
@@ -21,7 +23,6 @@ function isDarkColor(hex?: string | null) {
     return luminance < 140;
 }
 
-
 interface WallHeaderProps {
     session: Session | null;
     userId: number;
@@ -34,11 +35,9 @@ const WallHeader = ({ session, userId }: WallHeaderProps) => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
+    const [openCv, setOpenCv] = useState(false);
 
-
-
-    // Fetch fullUser
-    const fetchFullUser = async () => {
+    const fetchFullUser = useCallback(async () => {
         setLoading(true);
         setError(null);
         try {
@@ -48,15 +47,21 @@ const WallHeader = ({ session, userId }: WallHeaderProps) => {
 
             const normalizedUser: WallUserFull = {
                 ...data.user,
-                isOwner: data.meta?.isOwner ?? false,
-                isFriend: data.meta?.isFriend ?? false,
-                isFollower: data.meta?.isFollower ?? false,
-                visibility: data.user.visibility ?? undefined,
+                meta: {
+                    isOwner: Boolean(data?.meta?.isOwner ?? false),
+                    isFriend: Boolean(data?.meta?.isFriend ?? false),
+                    isFollower: Boolean(data?.meta?.isFollower ?? false),
+                    visibility: data?.meta?.visibility ?? data?.user?.visibility ?? undefined,
+
+                    // ✅ viene del backend (si lo agregaste en el endpoint wall)
+                    cv: data?.meta?.cv,
+                },
             };
+
 
             setFullUser(normalizedUser);
 
-            // Definir basicUser a partir de fullUser
+            // basicUser a partir de fullUser
             setBasicUser({
                 id: normalizedUser.id,
                 name: normalizedUser.name,
@@ -64,46 +69,58 @@ const WallHeader = ({ session, userId }: WallHeaderProps) => {
                 imageUrl: normalizedUser.imageUrl,
                 imageWallUrl: normalizedUser.imageWallUrl,
                 wallHeaderBackgroundColor: normalizedUser.wallHeaderBackgroundColor,
-                wallHeaderBackgroundType: normalizedUser.wallHeaderBackgroundType
+                wallHeaderBackgroundType: normalizedUser.wallHeaderBackgroundType,
             });
         } catch (err: any) {
-            setError(err.message || "Error al cargar la información");
+            setError(err?.message || "Error al cargar la información");
         } finally {
             setLoading(false);
         }
-    };
+    }, [userId]);
 
     useEffect(() => {
         fetchFullUser();
-    }, [userId]);
-
-    const handleToggle = () => setExpanded((prev) => !prev);
+    }, [fetchFullUser]);
 
     const displayBasic = !expanded;
-
     const displayUser = displayBasic ? basicUser : fullUser;
 
-    const isDarkBg =
-        displayUser?.wallHeaderBackgroundType === "color"
+    const isDarkBg = useMemo(() => {
+        return displayUser?.wallHeaderBackgroundType === "color"
             ? isDarkColor(displayUser.wallHeaderBackgroundColor)
             : true;
+    }, [displayUser]);
+
+    const handleToggle = useCallback(() => {
+        setExpanded((prev) => {
+            const next = !prev;
+            // ✅ si colapsa, cerramos modal por prolijidad UX
+            if (!next) setOpenCv(false);
+            return next;
+        });
+    }, []);
+
+    const canShowCvButton =
+        expanded && fullUser?.meta?.cv?.canView === true;
+
+    useEffect(() => {
+        if (!canShowCvButton) setOpenCv(false);
+    }, [canShowCvButton]);
 
     if (!displayUser) return null;
 
     return (
         <header className="w-full py-4 md:py-6 border-b border-slate-800 mb-2">
-            {displayUser.wallHeaderBackgroundType == "image" && (
+            {displayUser.wallHeaderBackgroundType === "image" && (
                 <div
-                    className="flex flex-col items-center justify-center gap-2 text-center
-             bg-cover bg-center bg-no-repeat h-[200px]"
+                    className="flex flex-col items-center justify-center gap-2 text-center bg-cover bg-center bg-no-repeat h-[200px]"
                     style={{
-                        backgroundImage: displayUser?.imageWallUrl
+                        backgroundImage: displayUser.imageWallUrl
                             ? `url(${displayUser.imageWallUrl})`
                             : undefined,
                         textShadow: "0 8px 6px rgba(0,0,0,1)",
                     }}
                 >
-
                     {displayUser.imageUrl && (
                         <img
                             src={displayUser.imageUrl}
@@ -112,20 +129,29 @@ const WallHeader = ({ session, userId }: WallHeaderProps) => {
                         />
                     )}
 
-                    {displayUser.name && <h1 className="text-xl md:text-2xl font-semibold">{displayUser.name}</h1>}
-                    {displayUser.nick && <span className="text-sm text-slate-200">@{displayUser.nick}</span>}
+                    {displayUser.name && (
+                        <h1 className="text-xl md:text-2xl font-semibold">
+                            {displayUser.name}
+                        </h1>
+                    )}
+                    {displayUser.nick && (
+                        <span className="text-sm text-slate-200">
+                            @{displayUser.nick}
+                        </span>
+                    )}
                 </div>
             )}
-            {displayUser.wallHeaderBackgroundType == "color" && (
+
+            {displayUser.wallHeaderBackgroundType === "color" && (
                 <div
-                    className="flex flex-col items-center justify-center gap-2 text-center
-             bg-cover bg-center bg-no-repeat h-[200px]"
+                    className="flex flex-col items-center justify-center gap-2 text-center bg-cover bg-center bg-no-repeat h-[200px]"
                     style={{
-                        backgroundColor: displayUser?.wallHeaderBackgroundColor ? displayUser?.wallHeaderBackgroundColor : "rgb(2,6,23)",
+                        backgroundColor: displayUser.wallHeaderBackgroundColor
+                            ? displayUser.wallHeaderBackgroundColor
+                            : "rgb(2,6,23)",
                         textShadow: "0 6px 10px rgba(0,0,0,1)",
                     }}
                 >
-
                     {displayUser.imageUrl && (
                         <img
                             src={displayUser.imageUrl}
@@ -134,32 +160,34 @@ const WallHeader = ({ session, userId }: WallHeaderProps) => {
                         />
                     )}
 
-                    {displayUser.name && <h1
-                        className={`text-xl md:text-2xl font-semibold ${isDarkBg ? "text-white" : "text-slate-900"
-                            }`}
-                    >
-                        {displayUser.name}
-                    </h1>
-                    }
-                    {displayUser.nick && <span
-                        className={`text-sm ${isDarkBg ? "text-slate-200" : "text-slate-700"
-                            }`}
-                    >
-                        @{displayUser.nick}
-                    </span>
-                    }
+                    {displayUser.name && (
+                        <h1
+                            className={`text-xl md:text-2xl font-semibold ${isDarkBg ? "text-white" : "text-slate-900"
+                                }`}
+                        >
+                            {displayUser.name}
+                        </h1>
+                    )}
+
+                    {displayUser.nick && (
+                        <span
+                            className={`text-sm ${isDarkBg ? "text-slate-200" : "text-slate-700"
+                                }`}
+                        >
+                            @{displayUser.nick}
+                        </span>
+                    )}
                 </div>
             )}
+
             {!displayUser.wallHeaderBackgroundType && (
                 <div
-                    className="flex flex-col items-center justify-center gap-2 text-center
-             bg-cover bg-center bg-no-repeat h-[200px]"
+                    className="flex flex-col items-center justify-center gap-2 text-center bg-cover bg-center bg-no-repeat h-[200px]"
                     style={{
                         backgroundColor: "rgb(2,6,23)",
                         textShadow: "0 8px 6px rgba(0,0,0,1)",
                     }}
                 >
-
                     {displayUser.imageUrl && (
                         <img
                             src={displayUser.imageUrl}
@@ -168,12 +196,31 @@ const WallHeader = ({ session, userId }: WallHeaderProps) => {
                         />
                     )}
 
-                    {displayUser.name && <h1 className="text-xl md:text-2xl font-semibold">{displayUser.name}</h1>}
-                    {displayUser.nick && <span className="text-sm text-slate-200">@{displayUser.nick}</span>}
+                    {displayUser.name && (
+                        <h1 className="text-xl md:text-2xl font-semibold">
+                            {displayUser.name}
+                        </h1>
+                    )}
+                    {displayUser.nick && (
+                        <span className="text-sm text-slate-200">
+                            @{displayUser.nick}
+                        </span>
+                    )}
                 </div>
             )}
 
             <div className="flex flex-col items-center gap-2 text-center">
+                {canShowCvButton && (
+                    <>
+                        <Button variant="secondary" onClick={() => setOpenCv(true)}>
+                            Ver CV
+                        </Button>
+
+                        {openCv && (
+                            <CVPreviewModal userId={userId} onClose={() => setOpenCv(false)} />
+                        )}
+                    </>
+                )}
 
                 {expanded && fullUser && (fullUser.occupation || fullUser.company) && (
                     <div className="text-sm text-slate-300">
@@ -200,7 +247,9 @@ const WallHeader = ({ session, userId }: WallHeaderProps) => {
                 )}
 
                 {expanded && fullUser?.bio && (
-                    <p className="mt-2 text-sm text-slate-300 max-w-xl px-4">{fullUser.bio}</p>
+                    <p className="mt-2 text-sm text-slate-300 max-w-xl px-4">
+                        {fullUser.bio}
+                    </p>
                 )}
 
                 {expanded && (
@@ -213,7 +262,10 @@ const WallHeader = ({ session, userId }: WallHeaderProps) => {
                     </div>
                 )}
 
-                <button onClick={handleToggle} className="mt-3 px-4 py-1 bg-blue-600 hover:bg-blue-700 rounded text-sm">
+                <button
+                    onClick={handleToggle}
+                    className="mt-3 px-4 py-1 bg-blue-600 hover:bg-blue-700 rounded text-sm"
+                >
                     {expanded ? "Ver menos información" : `Ver más información de ${displayUser.name ?? "el usuario"}`}
                 </button>
 
@@ -225,13 +277,3 @@ const WallHeader = ({ session, userId }: WallHeaderProps) => {
 };
 
 export default WallHeader;
-
-
-
-
-
-
-
-
-
-

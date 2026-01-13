@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 type ImageAsset = {
+    id?: number;
     publicId: string;
     url: string;
     thumbUrl?: string;
@@ -43,6 +44,9 @@ function sourceLabel(source: string) {
             return "Service listing";
         case "cloudinary.index":
             return "CloudinaryImage (index)";
+        case "cv.media":
+            return "CV Media";
+
         default:
             return source;
     }
@@ -95,18 +99,35 @@ export function ImageLibraryPicker({
     async function doDelete() {
         if (!toDelete?.publicId) return;
         setDeleting(true);
-        try {
-            const res = await fetch("/api/images/delete", {
-                method: "DELETE",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ publicId: toDelete.publicId }),
-            });
-            if (!res.ok) throw new Error("Delete failed");
-            await reload();
-            setConfirmOpen(false);
-            setToDelete(null);
-        } finally {
-            setDeleting(false);
+        if (toDelete.source === "cv.media") {
+            if (!toDelete?.id) return;
+            try {
+                const res = await fetch("/api/cv/media/delete", {
+                    method: "DELETE",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ id: toDelete.id }),
+                });
+                if (!res.ok) throw new Error("Delete failed");
+                await reload();
+                setConfirmOpen(false);
+                setToDelete(null);
+            } finally {
+                setDeleting(false);
+            }
+        } else {
+            try {
+                const res = await fetch("/api/images/delete", {
+                    method: "DELETE",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ publicId: toDelete.publicId }),
+                });
+                if (!res.ok) throw new Error("Delete failed");
+                await reload();
+                setConfirmOpen(false);
+                setToDelete(null);
+            } finally {
+                setDeleting(false);
+            }
         }
     }
 
@@ -123,7 +144,7 @@ export function ImageLibraryPicker({
 
     return (
         <>
-            <div className="space-y-2">
+            <div className="space-y-2 max-h-[300px] overflow-y-scroll">
                 {visibleImages.map((img) => {
                     const selected = selectedUrl === img.url;
 
@@ -135,17 +156,17 @@ export function ImageLibraryPicker({
                         <div
                             key={img.publicId}
                             className={[
-                                "flex items-center gap-3 rounded-md border px-3 py-2",
+                                "flex flex-col sm:flex-row items-center gap-0 sm:gap-3 rounded-md border px-3 py-2",
                                 "bg-slate-950/40",
                                 selected ? "border-emerald-500" : "border-slate-800 hover:border-slate-600",
                             ].join(" ")}
-                            onClick={() => onSelect(img.url)}
+                            //onClick={() => onSelect(img.url)}
                             role="button"
                             tabIndex={0}
                             title={img.publicId}
                         >
                             {/* Thumbnail */}
-                            <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-md border border-slate-800 bg-slate-900">
+                            <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-md border border-slate-800 bg-slate-900 z-0">
                                 <img
                                     src={previewSrc}
                                     alt=""
@@ -158,9 +179,9 @@ export function ImageLibraryPicker({
                             </div>
 
                             {/* Info */}
-                            <div className="min-w-0 flex-1">
+                            <div className="min-w-0 w-full">
                                 <div className="flex items-center gap-2 flex-wrap">
-                                    <div className="text-sm font-medium text-slate-100 truncate">
+                                    <div className="text-sm font-medium text-slate-100">
                                         {sourceLabel(img.source)}
                                     </div>
 
@@ -180,7 +201,7 @@ export function ImageLibraryPicker({
 
                                 <div className="mt-1 text-xs text-slate-400 flex flex-wrap gap-x-3 gap-y-1">
                                     <span>Creada: {formatDate(img.createdAt)}</span>
-                                    <span className="truncate">
+                                    <span className="">
                                         {img.ownerTitle ? `Pertenece a: ${img.ownerTitle}` : "Pertenece a: —"}
                                     </span>
                                 </div>
@@ -188,11 +209,11 @@ export function ImageLibraryPicker({
                             </div>
 
                             {/* Actions */}
-                            <div className="flex items-center gap-2">
+                            <div className="flex flex-row justify-between sm:justify-end items-center gap-2 w-full">
                                 <Button
                                     variant="outline"
                                     size="sm"
-                                    className="h-8"
+                                    className="h-6 border rounded-full"
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         onSelect(img.url);

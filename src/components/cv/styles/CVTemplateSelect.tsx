@@ -38,7 +38,6 @@ export function CVTemplateSelect({
 
             <SelectContent className="bg-black">
                 <SelectItem value="classic">Clásico</SelectItem>
-                <SelectItem value="twoColumns">Dos columnas</SelectItem>
                 <SelectItem value="compact">Compacto</SelectItem>
                 <SelectItem value="modernSidebar">Sidebar</SelectItem>
                 <SelectItem value="timeline">Timeline</SelectItem>

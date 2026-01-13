@@ -16,7 +16,7 @@ export function CVPageClient({ cvId }: { cvId: number | null }) {
     }
 
     return (
-        <div className="w-screen max-w-none px-3 lg:px-4 py-4 lg:py-6">
+        <div className="w-screen max-w-none px-0 lg:px-4 pb-4 lg:pb-6">
             <CVEditor cvId={cvId} />
         </div>
     );

@@ -55,7 +55,7 @@ export function ProjectsPreview({ data }: ProjectsPreviewProps) {
                                     href={normalizeUrl(url)}
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="cv-description underline underline-offset-2"
+                                    className="cv-link underline underline-offset-2"
                                     title={url}
                                 >
                                     {stripProtocol(url)}

@@ -11,12 +11,10 @@ export type WallUserBasic = {
 };
 
 export type WallUser = {
-
     bio: string | null;
     occupation: string | null;
     location: string | null;
     website: string | null;
-    //imageWallUrl: string | null;
     company: string | null;
 
     country: string | null;
@@ -30,11 +28,25 @@ export type WallUser = {
     githubHandle: string | null;
 };
 
+
 export type UserWallMeta = {
     isOwner: boolean;
     isFriend?: boolean;
     isFollower?: boolean;
     visibility?: number;
+
+    // ✅ NUEVO
+    cv?: WallCvMeta;
 };
 
-export type WallUserFull = WallUserBasic & WallUser & UserWallMeta;
+export type WallUserFull = WallUserBasic & WallUser & {
+    meta: UserWallMeta;
+};
+
+
+export type WallCvMeta = {
+    exists: boolean;
+    id: number | null;
+    isPublic: boolean;
+    canView: boolean;
+};

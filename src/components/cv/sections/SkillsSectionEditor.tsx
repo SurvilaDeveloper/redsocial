@@ -2,8 +2,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef } from "react";
-//import { useForm, useFieldArray } from "react-hookform";
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm, useFieldArray, type FieldError } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
@@ -24,10 +23,8 @@ import { Label } from "@/components/ui/label";
 import { SortableList } from "@/components/cv/dnd/SortableList";
 import { SortableRow } from "@/components/cv/dnd/SortableRow";
 
-import {
-    cvEditorStyles,
-    normalizeOptional,
-} from "@/components/cv/styles/editorStyles";
+import { cvEditorStyles } from "@/components/cv/styles/editorStyles";
+import { cn } from "@/lib/utils";
 
 /**
  * Factory para crear skills con id estable
@@ -46,6 +43,12 @@ type Props = {
 type FormValues = {
     skills: SkillData[];
 };
+
+// UI helper: texto de error consistente
+function ErrorText({ error }: { error?: FieldError }) {
+    if (!error?.message) return null;
+    return <p className="mt-1 text-[11px] text-red-300">{String(error.message)}</p>;
+}
 
 export function SkillsSectionEditor({ section, onChange }: Props) {
     const defaultValues = useMemo<FormValues>(() => {
@@ -87,7 +90,7 @@ export function SkillsSectionEditor({ section, onChange }: Props) {
 
             const next: SkillData[] = (values.skills ?? []).map((s) => ({
                 id: s?.id ?? crypto.randomUUID(),
-                name: (s?.name ?? "").trimStart(), // 👈 evita espacios al inicio
+                name: (s?.name ?? "").trimStart(), // evita espacios al inicio
                 level: (s?.level ?? "basic") as SkillData["level"],
             }));
 
@@ -97,15 +100,53 @@ export function SkillsSectionEditor({ section, onChange }: Props) {
         return () => sub.unsubscribe();
     }, [watch, onChange, section]);
 
-    const addSkill = () => append(createSkill());
+    /* =================== MAX + Add =================== */
+
+    const currentSkills = watch("skills") ?? [];
+
+    const hasDuplicates = (() => {
+        const seen = new Set<string>();
+        for (const s of currentSkills) {
+            const key = (s?.name ?? "").trim().toLowerCase();
+            if (!key) continue;
+            if (seen.has(key)) return true;
+            seen.add(key);
+        }
+        return false;
+    })();
+
+    const MAX_SKILLS = 30;
+    const skillsCount = watch("skills")?.length ?? fields.length;
+    const reachedMax = skillsCount >= MAX_SKILLS;
+    const blockAdd = reachedMax || hasDuplicates;
+
+    const addSkill = () => {
+        if (blockAdd) return;
+        append(createSkill());
+    };
+
+    /* =================== DnD =================== */
 
     // ids para dnd (preferimos el id real del item)
-    const ids = (watch("skills") ?? []).map((it, idx) =>
-        String(it?.id ?? fields[idx]?.id)
-    );
+    const ids = (watch("skills") ?? []).map((it, idx) => String(it?.id ?? fields[idx]?.id));
 
-    const hasAny = fields.length > 0;
-    const hasErrors = Object.keys(formState.errors ?? {}).length > 0;
+    const hasAny = (watch("skills")?.length ?? 0) > 0;
+
+    /* =================== Errors helpers =================== */
+
+    // error a nivel array (max / refine). Safety net.
+    const skillsArrayError =
+        (formState.errors as any)?.skills?.message ??
+        (formState.errors as any)?.skills?.root?.message ??
+        undefined;
+
+    const itemErrors = formState.errors?.skills;
+    const fieldError = (idx: number, key: keyof SkillData) => {
+        const row = itemErrors?.[idx] as Partial<Record<keyof SkillData, FieldError>> | undefined;
+        return row?.[key];
+    };
+
+    const inputErrorClass = "border-red-500/60 focus-visible:ring-red-500/30";
 
     return (
         <div className="space-y-4">
@@ -118,14 +159,41 @@ export function SkillsSectionEditor({ section, onChange }: Props) {
                     </p>
                 </div>
 
-                <Button
-                    type="button"
-                    onClick={addSkill}
-                    className="h-9 px-3 rounded-md bg-emerald-600 hover:bg-emerald-500 text-xs font-medium text-slate-50"
-                >
-                    + Agregar
-                </Button>
+                <div className="flex flex-col items-end gap-1">
+                    <Button
+                        type="button"
+                        onClick={addSkill}
+                        disabled={blockAdd}
+                        className={cn(
+                            "h-9 px-3 rounded-md text-xs font-medium",
+                            blockAdd
+                                ? "bg-slate-800 text-slate-400 cursor-not-allowed opacity-70"
+                                : "bg-emerald-600 hover:bg-emerald-500 text-slate-50"
+                        )}
+                    >
+                        + Agregar
+                    </Button>
+
+                    {hasDuplicates && (
+                        <p className="max-w-[260px] text-[11px] leading-snug text-slate-400 text-right">
+                            Tenés skills repetidos. Corregilos para poder agregar otro.
+                        </p>
+                    )}
+                    {reachedMax && !hasDuplicates && (
+                        <p className="max-w-[260px] text-[11px] leading-snug text-slate-400 text-right">
+                            Has alcanzado el límite de skills (30). Podés usar una sección personalizada si necesitás extenderte.
+                        </p>
+                    )}
+
+                </div>
             </div>
+
+            {/* Array error (safety net) */}
+            {skillsArrayError && !reachedMax && (
+                <div className="rounded-lg border border-red-500/40 bg-red-950/30 px-3 py-2 text-xs text-red-200">
+                    {String(skillsArrayError)}
+                </div>
+            )}
 
             {/* List */}
             <SortableList ids={ids} onMove={(from, to) => move(from, to)}>
@@ -134,12 +202,8 @@ export function SkillsSectionEditor({ section, onChange }: Props) {
                         const current = watch("skills")?.[i];
                         const rowId = String((current?.id ?? field.id) as any);
 
-                        const nameErr = (formState.errors as any)?.skills?.[i]?.name?.message as
-                            | string
-                            | undefined;
-                        const levelErr = (formState.errors as any)?.skills?.[i]?.level?.message as
-                            | string
-                            | undefined;
+                        const eName = fieldError(i, "name");
+                        const eLevel = fieldError(i, "level");
 
                         return (
                             <SortableRow
@@ -148,12 +212,8 @@ export function SkillsSectionEditor({ section, onChange }: Props) {
                                 id={rowId}
                                 title={
                                     <div className="flex items-center gap-2">
-                                        <span className="text-xs font-semibold text-slate-100">
-                                            Skill {i + 1}
-                                        </span>
-                                        <span className="text-[11px] text-slate-400">
-                                            (arrastrá para reordenar)
-                                        </span>
+                                        <span className="text-xs font-semibold text-slate-100">Skill {i + 1}</span>
+                                        <span className="text-[11px] text-slate-400">(arrastrá para reordenar)</span>
                                     </div>
                                 }
                                 headerRight={
@@ -176,12 +236,13 @@ export function SkillsSectionEditor({ section, onChange }: Props) {
                                         <div className={cvEditorStyles.block}>
                                             <Label className={cvEditorStyles.label}>Nombre</Label>
                                             <Input
-                                                className={cvEditorStyles.input}
+                                                className={cn(cvEditorStyles.input, eName && inputErrorClass)}
                                                 placeholder="Ej: React, TypeScript, SQL..."
                                                 {...register(`skills.${i}.name` as const)}
                                             />
-                                            {nameErr && <p className="text-xs text-red-400">{nameErr}</p>}
-                                            {!nameErr && (
+                                            {eName ? (
+                                                <ErrorText error={eName} />
+                                            ) : (
                                                 <p className="text-[11px] text-slate-500">
                                                     Tip: evitá repetir skills (React vs react).
                                                 </p>
@@ -201,7 +262,7 @@ export function SkillsSectionEditor({ section, onChange }: Props) {
                                                     });
                                                 }}
                                             >
-                                                <SelectTrigger className={cvEditorStyles.input}>
+                                                <SelectTrigger className={cn(cvEditorStyles.input, eLevel && inputErrorClass)}>
                                                     <SelectValue placeholder="Nivel" />
                                                 </SelectTrigger>
 
@@ -213,7 +274,7 @@ export function SkillsSectionEditor({ section, onChange }: Props) {
                                                 </SelectContent>
                                             </Select>
 
-                                            {levelErr && <p className="text-xs text-red-400">{levelErr}</p>}
+                                            <ErrorText error={eLevel} />
                                         </div>
                                     </div>
                                 </div>
@@ -223,8 +284,7 @@ export function SkillsSectionEditor({ section, onChange }: Props) {
 
                     {!hasAny && (
                         <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-4 text-sm text-slate-300">
-                            No hay skills todavía. Tocá{" "}
-                            <span className="font-medium">“+ Agregar”</span>.
+                            No hay skills todavía. Tocá <span className="font-medium">“+ Agregar”</span>.
                         </div>
                     )}
                 </div>
@@ -236,15 +296,21 @@ export function SkillsSectionEditor({ section, onChange }: Props) {
                     type="button"
                     variant="outline"
                     onClick={addSkill}
-                    className="h-9 px-3 text-xs border-emerald-500/60 text-emerald-100 bg-emerald-900/20 hover:bg-emerald-900/35 hover:text-emerald-50"
+                    disabled={reachedMax}
+                    className={cn(
+                        "h-9 px-3 text-xs",
+                        reachedMax
+                            ? "border-slate-700 text-slate-500 bg-slate-900/20 cursor-not-allowed opacity-70"
+                            : "border-emerald-500/60 text-emerald-100 bg-emerald-900/20 hover:bg-emerald-900/35 hover:text-emerald-50"
+                    )}
                 >
                     + Agregar skill
                 </Button>
 
-                {hasErrors && (
-                    <div className="rounded-lg border border-red-500/40 bg-red-950/30 px-3 py-2 text-xs text-red-200">
-                        Hay errores en la sección de skills.
-                    </div>
+                {reachedMax && (
+                    <p className="text-[11px] text-slate-400">
+                        Has alcanzado el límite de skills (30). Podés usar una sección personalizada si necesitás extenderte.
+                    </p>
                 )}
             </div>
         </div>

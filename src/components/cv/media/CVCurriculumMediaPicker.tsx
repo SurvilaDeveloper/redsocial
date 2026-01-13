@@ -40,11 +40,9 @@ function formatDate(iso?: string) {
 }
 
 export function CVCurriculumMediaPicker({
-    curriculumId,
     selectedUrl,
     onSelect,
 }: {
-    curriculumId: number | null;
     selectedUrl?: string | null;
     onSelect: (asset: { url: string; publicId: string; id: number; thumbUrl?: string | null }) => void;
 }) {
@@ -58,7 +56,7 @@ export function CVCurriculumMediaPicker({
     async function reload() {
         setLoading(true);
         try {
-            const res = await fetch(`/api/cv/media/library?curriculumId=${curriculumId}`, { cache: "no-store" });
+            const res = await fetch(`/api/cv/media/library`, { cache: "no-store" });
             const data = await res.json().catch(() => null);
             setImages(data?.images ?? []);
         } finally {
@@ -67,9 +65,10 @@ export function CVCurriculumMediaPicker({
     }
 
     useEffect(() => {
-        if (curriculumId) reload();
+        reload();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [curriculumId]);
+    }, []);
+
 
     async function doDelete() {
         if (!toDelete?.id) return;
@@ -99,7 +98,7 @@ export function CVCurriculumMediaPicker({
 
     return (
         <>
-            <div className="space-y-2">
+            <div className="space-y-2 max-h-[300px] overflow-y-scroll">
                 {visibleImages.map((img) => {
                     const selected = selectedUrl === img.url;
                     const previewSrc = (img.thumbUrl ?? img.url) + `?cb=${encodeURIComponent(img.publicId)}&t=${Date.now()}`;
@@ -108,23 +107,23 @@ export function CVCurriculumMediaPicker({
                         <div
                             key={img.id}
                             className={[
-                                "flex items-center gap-3 rounded-md border px-3 py-2",
+                                "flex sm:flex-row flex-col items-center sm:gap-3 gap-0 rounded-md border px-3 py-2",
                                 "bg-slate-950/40",
                                 selected ? "border-emerald-500" : "border-slate-800 hover:border-slate-600",
                             ].join(" ")}
-                            onClick={() => onSelect({ url: img.url, publicId: img.publicId, id: img.id, thumbUrl: img.thumbUrl ?? null })}
+                            //onClick={() => onSelect({ url: img.url, publicId: img.publicId, id: img.id, thumbUrl: img.thumbUrl ?? null })}
                             role="button"
                             tabIndex={0}
                             title={img.publicId}
                         >
-                            <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-md border border-slate-800 bg-slate-900">
+                            <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-md border border-slate-800 bg-slate-900 z-0">
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img src={previewSrc} alt="" className="h-full w-full object-cover" />
                             </div>
 
-                            <div className="min-w-0 flex-1">
+                            <div className="min-w-0 w-full">
                                 <div className="flex items-center gap-2 flex-wrap">
-                                    <div className="text-sm font-medium text-slate-100 truncate">CV Media</div>
+                                    <div className="text-sm font-medium text-slate-100">CV Media</div>
                                     {selected && <Badge className="h-5 px-2 text-[10px]">Seleccionada</Badge>}
                                 </div>
 
@@ -134,11 +133,11 @@ export function CVCurriculumMediaPicker({
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-2">
+                            <div className="flex flex-row items-center justify-between sm:justify-end gap-2 w-full">
                                 <Button
                                     variant="outline"
                                     size="sm"
-                                    className="h-8"
+                                    className="h-6 border rounded-full"
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         onSelect({ url: img.url, publicId: img.publicId, id: img.id, thumbUrl: img.thumbUrl ?? null });
