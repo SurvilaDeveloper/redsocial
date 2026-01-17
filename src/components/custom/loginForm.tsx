@@ -139,6 +139,12 @@ const LoginForm = ({
                 </p>
             )}
 
+            {message === "sessionexpired" && (
+                <p className="text-xs text-amber-300 bg-amber-950/40 border border-amber-700 px-3 py-2 rounded-md text-center">
+                    {cfg.TEXTS.expiredSession}
+                </p>
+            )}
+
             <Form {...form}>
                 <form
                     onSubmit={form.handleSubmit(onSubmit)}

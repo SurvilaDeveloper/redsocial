@@ -1,13 +1,12 @@
 // src/lib/social-relations.ts
-
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "./prisma";
 import { getUserRelations } from "@/lib/relations";
-import { RelationshipState } from "@/lib/relationship-state";
+import { RelationshipState } from "./relationship-state";
+
 
 export async function getSocialRelations(
     viewerId: number | null,
     ownerId: number,
-    prisma: PrismaClient
 ): Promise<SocialRelations> {
     if (!viewerId || viewerId === ownerId) {
         return {

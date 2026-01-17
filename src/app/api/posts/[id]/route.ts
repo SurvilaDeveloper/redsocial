@@ -126,7 +126,7 @@ export async function GET(
     }
 
     const relations: SocialRelations = viewerId
-        ? await getSocialRelations(viewerId, post.user_id, prisma)
+        ? await getSocialRelations(viewerId, post.user_id)
         : {
             following: false,
             isFollower: false,

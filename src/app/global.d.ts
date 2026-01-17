@@ -1,10 +1,26 @@
 // global.d.ts
 
+import { RelationshipState } from "@/lib/relationship-state";
 export { };
 
 declare global {
+
+    /*const RelationshipStateVal: {
+        readonly NONE: 0;
+        readonly NO_RELATION: 1;
+        readonly A_REQUESTED: 2;
+        readonly B_REQUESTED: 3;
+        readonly B_ACCEPTED_A_PENDING: 4;
+        readonly A_ACCEPTED_B_PENDING: 5;
+        readonly A_ACCEPTED: 6;
+        readonly B_ACCEPTED: 7;
+        readonly FRIENDS: 8;
+    };*/
+
     type RelationshipState =
-        import("@/lib/relationship-state").RelationshipState;
+        typeof RelationshipState[keyof typeof RelationshipState];
+
+    //import("@/lib/relationship-state").RelationshipState;
 
     type PostVisibility = 1 | 2 | 3 | 4;
 
@@ -93,7 +109,30 @@ declare global {
 
         commentsCount?: number;
     }
+
+    type EnableToView = {
+        profileImage: boolean;
+        coverImage: boolean;
+        fullProfile: boolean;
+
+        wall: boolean;
+        posts: boolean;
+        postComments: boolean;
+        postReplies: boolean;
+
+        media: boolean;
+        mediaComments: boolean;
+        mediaReplies: boolean;
+
+        friendsList: boolean;
+        followersList: boolean;
+        followingList: boolean;
+
+        likes: boolean;
+        privateMessages: boolean;
+    };
 }
+
 
 
 

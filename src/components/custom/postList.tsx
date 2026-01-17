@@ -4,17 +4,20 @@
 
 import { useEffect, useRef, useState, useMemo } from "react";
 import { PostCard } from "./postCard";
+import { FeedMessage } from "./feedMessage";
 
 export default function PostList({
     session,
     userId,
     viewerType,
     comingFrom,
+    enableToView,
 }: {
     session: any;
     userId: number;
     viewerType: "owner" | "user";
     comingFrom?: "mywall" | "wall" | "home";
+    enableToView?: EnableToView | null;
 }) {
     const [posts, setPosts] = useState<Post[]>([]);
     const [page, setPage] = useState(1);
@@ -30,6 +33,7 @@ export default function PostList({
     const [detailLoading, setDetailLoading] = useState(false);
     const [detailError, setDetailError] = useState<string | null>(null);
 
+    const enableToViewPosts = viewerType === "owner" ? true : enableToView?.posts
     // 🔹 Carga de posts del propio usuario
     useEffect(() => {
         async function fetchPosts() {
@@ -138,78 +142,85 @@ export default function PostList({
     return (
         <div
             id="PostListMyWall"
-            className="relative flex flex-col w-full gap-24 md:px-0"
+            className="relative flex flex-col w-full gap-10 md:px-0"
         >
-            {/* Feed de tu muro */}
-            {visiblePosts.map((post, index) => (
-                <div
-                    key={post.id}
-                    className="w-full"
-                    ref={index === visiblePosts.length - 1 ? lastPostRef : null}
-                >
-                    <PostCard
-                        session={session}
-                        post={post}
-                        variant="card"
-                        openCommentsInPage={false}   // 👈 igual que home: no navega
-                        enablePolling={false}        // 👈 nada de polling en el feed
-                        enableOwnerControls={true}   // 👈 acá SÍ ves editar/ocultar/visibilidad
-                        onOpenDetail={handleOpenDetail} // 👈 abre overlay con detalle
-                        comingFrom={comingFrom}
-                    />
-                </div>
-            ))}
-
-            {loading && (
-                <p className="text-xs text-slate-200 mt-2">Cargando...</p>
-            )}
-            {!hasMore && (
-                <p className="text-center text-xs opacity-70 text-slate-300 mt-2">
-                    No hay más posts
-                </p>
-            )}
-
-            {/* Overlay tipo Instagram para ver el post completo con comentarios */}
-            {detailOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80">
-                    <div className="relative w-full max-w-5xl max-h-[90vh] bg-slate-900 rounded-xl overflow-hidden shadow-2xl pt-10">
-                        {/* Botón cerrar, flotando arriba sin tapar la toolbar del post */}
-                        <button
-                            type="button"
-                            onClick={handleCloseDetail}
-                            className="absolute top-2 right-3 md:top-3 md:right-4 z-20 px-3 py-1 text-xs rounded-full bg-black/80 text-slate-100 hover:bg-black"
+            {enableToViewPosts &&
+                <>
+                    {/* Feed de tu muro */}
+                    {visiblePosts.map((post, index) => (
+                        <div
+                            key={post.id}
+                            className="w-full"
+                            ref={index === visiblePosts.length - 1 ? lastPostRef : null}
                         >
-                            ✕ Cerrar
-                        </button>
+                            <PostCard
+                                session={session}
+                                post={post}
+                                variant="card"
+                                openCommentsInPage={false}   // 👈 igual que home: no navega
+                                enablePolling={false}        // 👈 nada de polling en el feed
+                                enableOwnerControls={true}   // 👈 acá SÍ ves editar/ocultar/visibilidad
+                                onOpenDetail={handleOpenDetail} // 👈 abre overlay con detalle
+                                comingFrom={comingFrom}
+                            />
+                        </div>
+                    ))}
 
-                        {/* Contenido del detalle */}
-                        {detailLoading && (
-                            <div className="flex items-center justify-center h-[60vh] text-slate-200 text-sm">
-                                Cargando post...
-                            </div>
-                        )}
+                    {loading && (
+                        <p className="text-xs text-slate-200 mt-2">Cargando...</p>
+                    )}
+                    {!hasMore && (
+                        <p className="text-center text-xs opacity-70 text-slate-300 mt-2">
+                            No hay más posts
+                        </p>
+                    )}
 
-                        {detailError && !detailLoading && (
-                            <div className="p-4 text-red-400 text-sm">
-                                {detailError}
-                            </div>
-                        )}
+                    {/* Overlay tipo Instagram para ver el post completo con comentarios */}
+                    {detailOpen && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80">
+                            <div className="relative w-full max-w-5xl max-h-[90vh] bg-slate-900 rounded-xl overflow-hidden shadow-2xl pt-10">
+                                {/* Botón cerrar, flotando arriba sin tapar la toolbar del post */}
+                                <button
+                                    type="button"
+                                    onClick={handleCloseDetail}
+                                    className="absolute top-2 right-3 md:top-3 md:right-4 z-20 px-3 py-1 text-xs rounded-full bg-black/80 text-slate-100 hover:bg-black"
+                                >
+                                    ✕ Cerrar
+                                </button>
 
-                        {detailPost && !detailLoading && !detailError && (
-                            <div className="h-[90vh] overflow-y-auto">
-                                <PostCard
-                                    session={session}
-                                    post={detailPost}
-                                    variant="detail"
-                                    openCommentsInPage={false}
-                                    enablePolling={false}
-                                    enableOwnerControls={true}
-                                    comingFrom={comingFrom}
-                                />
+                                {/* Contenido del detalle */}
+                                {detailLoading && (
+                                    <div className="flex items-center justify-center h-[60vh] text-slate-200 text-sm">
+                                        Cargando post...
+                                    </div>
+                                )}
+
+                                {detailError && !detailLoading && (
+                                    <div className="p-4 text-red-400 text-sm">
+                                        {detailError}
+                                    </div>
+                                )}
+
+                                {detailPost && !detailLoading && !detailError && (
+                                    <div className="h-[90vh] overflow-y-auto">
+                                        <PostCard
+                                            session={session}
+                                            post={detailPost}
+                                            variant="detail"
+                                            openCommentsInPage={false}
+                                            enablePolling={false}
+                                            enableOwnerControls={true}
+                                            comingFrom={comingFrom}
+                                        />
+                                    </div>
+                                )}
                             </div>
-                        )}
-                    </div>
-                </div>
+                        </div>
+                    )}
+                </>
+            }
+            {!enableToViewPosts && (
+                <FeedMessage>No tienes permiso para ver las publicaciones de este usuario/a</FeedMessage>
             )}
 
         </div>

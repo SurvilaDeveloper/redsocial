@@ -1,4 +1,5 @@
 // src/lib/relationship-state.ts
+
 export enum RelationshipState {
     NONE = 0,
     NO_RELATION = 1,

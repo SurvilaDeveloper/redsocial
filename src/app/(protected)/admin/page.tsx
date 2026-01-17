@@ -1,30 +1,14 @@
-import { auth } from "@/auth"
-import { LogoutButton } from "@/components/custom/logoutButton"
-
-const AdminPage = async () => {
-
-    const session = await auth();
-
-    if (session?.user?.role != "admin") {
-        return (
-            <>
-                <h1>Admin page no authorized</h1>
-                <p>
-                    Usted no es administrador
-                </p>
-                <LogoutButton />
-            </>
-        )
-
-
-    }
+// src/app/(protected)/admin/page.tsx
+export default function AdminOverviewPage() {
     return (
-        <div>
-            <h1>AdminPage</h1>
-            <LogoutButton />
+        <div className="p-6">
+            <h1 className="text-2xl font-semibold">
+                Admin · Overview
+            </h1>
+            <p className="mt-2 text-slate-400">
+                Panel de control del sistema
+            </p>
         </div>
-
-    )
+    );
 }
 
-export default AdminPage

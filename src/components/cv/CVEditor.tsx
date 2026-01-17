@@ -38,7 +38,7 @@ import { CustomSectionEditor } from "./sections/CustomSectionEditor";
 import { CVPreviewModal } from "./CVPreviewModal";
 import { CVPreviewSheet } from "./CVPreviewSheet";
 
-import { Save, ChevronDown } from "lucide-react";
+import { Save, ChevronDown, ChevronUp, CircleX, Globe, GlobeLock, Eye } from "lucide-react";
 
 import {
     DndContext,
@@ -366,9 +366,32 @@ export function CVEditor({ cvId }: { cvId: number | null }) {
     );
 
     const dirtyLabel = useMemo(() => {
-        if (isSaving) return "Guardando…⏳";
-        return isDirty ? "Sin guardar🟡" : "Guardado✅";
+        if (isSaving) {
+            return (
+                <div className="flex flex-row items-center justify-center gap-1">
+                    <span className="hidden lg:block">Guardando…</span>
+                    <span>⏳</span>
+                </div>
+            );
+        }
+
+        if (isDirty) {
+            return (
+                <div className="flex flex-row items-center justify-center gap-1">
+                    <span className="hidden lg:block">Sin guardar</span>
+                    <span>🟡</span>
+                </div>
+            );
+        }
+
+        return (
+            <div className="flex flex-row items-center justify-center gap-1">
+                <span className="hidden lg:block">Guardado</span>
+                <span>✅</span>
+            </div>
+        );
     }, [isDirty, isSaving]);
+
 
     const openCloseFlow = useCallback(() => {
         if (isSaving) return;
@@ -540,11 +563,11 @@ export function CVEditor({ cvId }: { cvId: number | null }) {
     const themeColor = coerceThemeColor(styleConfig?.theme?.color);
 
     return (
-        <div className="space-y-4 pt-0">
+        <div className="">
             {/* ---------- Top bar fixed ---------- */}
-            <div className="fixed top-0 left-0 right-0 z-50 border-b border-slate-800 bg-slate-950/80 backdrop-blur">
-                <div className="mx-auto px-3 py-2">
-                    <div className="flex flex- row items-center justify-between gap-3">
+            <div className="fixed lg:top-12 top-10 left-0 right-0 z-0 border-b border-slate-800 bg-slate-950/80 backdrop-blur h-12">
+                <div className="mx-auto px-3 py-1">
+                    <div className="flex flex-row items-center justify-between gap-3">
                         {/* Left */}
                         <div className="flex items-center gap-3 min-w-0">
                             <div className="relative flex flex-row gap-2">
@@ -577,40 +600,64 @@ export function CVEditor({ cvId }: { cvId: number | null }) {
                                 />
 
                                 <div className="min-w-0">
-                                    <div className="text-[8px] text-muted-foreground">{dirtyLabel}</div>
+                                    <div className="text-[14px] text-muted-foreground">{dirtyLabel}</div>
                                 </div>
                             </div>
                         </div>
 
                         {/* Right */}
-                        <div className="flex flex-row items-center justify-end gap-0 w-full">
-                            <Button onClick={() => setPreviewOpen(true)} disabled={isSaving} className="lg:hidden">
-                                Preview
+                        <div className="relative flex flex-row items-center justify-end gap-0 w-full top-0 px-2">
+                            <Button
+                                onClick={() => setPreviewOpen(true)}
+                                disabled={isSaving}
+                                className="w-4 lg:hidden">
+                                <div className="flex flex-row items-center justify-center">
+                                    <Eye />
+                                </div>
+
                             </Button>
                             <Button
+                                className="w-4 lg:w-auto"
                                 variant={cv.isPublic ? "secondary" : "default"}
                                 onClick={handleTogglePublic}
                                 disabled={isSaving || isDeleting || isTogglingPublic || !cv.id}
                                 title={!cv.id ? "Primero guardá el CV" : cv.isPublic ? "Dejar de hacerlo público" : "Hacer público este CV"}
                             >
-                                {cv.isPublic ? "Dejar de hacer público" : "Hacer público"}
+                                {cv.isPublic ?
+                                    <>
+                                        <GlobeLock />
+                                        <span className="hidden lg:block">Dejar de hacer público</span>
+                                    </>
+
+
+                                    :
+                                    <>
+                                        <Globe />
+                                        <span className="hidden lg:block">Hacer público</span>
+                                    </>
+                                }
                             </Button>
 
                             <Button
+                                className="w-4 lg:w-auto"
                                 variant="destructive"
                                 onClick={() => setDeleteDialogOpen(true)}
                                 disabled={isSaving || isDeleting || !cv.id}
                                 title={!cv.id ? "Primero guardá el CV para poder eliminarlo" : "Eliminar CV"}
                             >
-                                Eliminar
+                                <CircleX />
+                                <span className="hidden lg:block">Eliminar</span>
+
                             </Button>
 
                             <Button
+                                className="w-4 lg:w-auto"
                                 onClick={handleSave}
                                 disabled={!isDirty || isSaving}
                                 title={!isDirty ? "No hay cambios para guardar" : "Guardar CV"}
                             >
                                 <Save />
+                                <span className="hidden lg:block">Guardar</span>
                             </Button>
 
                             <Button
@@ -692,22 +739,25 @@ export function CVEditor({ cvId }: { cvId: number | null }) {
             {previewOpen && <CVPreviewModal cv={effectiveCv} onClose={closePreview} />}
 
             {/* ---------- Main layout ---------- */}
-            <div className="w-full px-0">
+            <div className="w-full px-0 pt-0 mt-0">
                 <div className="lg:grid lg:grid-cols-2 lg:gap-2">
                     {/* ================= LEFT: Editor ================= */}
-                    <div className="space-y-0">
+                    <div className="">
                         {/* ✅ Título + Expand/Collapse pegados */}
                         <div className="flex flex-col items-center justify-center w-full gap-0">
-                            <div className="fixed top-[56px] left-0 flex flex-row items-center justify-start gap-1 bg-slate-900/70 z-10 w-full h-6 lg:w-auto">
-                                <Button type="button" variant="secondary" size="sm" className="h-8" onClick={expandAll}>
+                            <div className="fixed top-[88px] lg:top-24 left-0 flex flex-row items-center justify-start gap-0 bg-slate-950/80 z-0 w-full h-6 lg:w-auto border-b border-b-slate-800">
+                                <Button type="button" variant="secondary" size="sm" className="h-6 text-[12px] w-auto" onClick={expandAll}>
                                     Expandir todo
+                                    <ChevronDown />
+
                                 </Button>
-                                <Button type="button" variant="secondary" size="sm" className="h-8 " onClick={collapseAll}>
+                                <Button type="button" variant="secondary" size="sm" className="h-6 text-[12px] w-auto" onClick={collapseAll}>
                                     Colapsar todo
+                                    <ChevronUp />
                                 </Button>
                             </div>
 
-                            <div className="flex flex-row items-center justify-center gap-1 w-full pt-10">
+                            <div className="flex flex-row items-center justify-center gap-1 w-full pt-20">
                                 <span className="text-slate-400 text-[10px] text-nowrap">Edita el título</span>
                                 <input
                                     value={cv.title ?? ""}
@@ -839,7 +889,7 @@ export function CVEditor({ cvId }: { cvId: number | null }) {
 
                     {/* ================= RIGHT: Desktop Preview ================= */}
                     <div className="hidden lg:block">
-                        <div className="sticky top-[72px] h-[calc(100vh-72px)]">
+                        <div className="sticky top-[106px] h-[calc(100vh-72px)]">
                             <div className="h-full border-l border-slate-800 bg-slate-950/60 overflow-hidden flex flex-col">
                                 <div className="flex items-center justify-between px-3 py-2 border-b border-slate-800/70 bg-slate-950/40">
                                     <div className="text-xs font-medium text-slate-300">Preview</div>

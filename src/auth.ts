@@ -86,10 +86,19 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 where: { email: user.email! },
             });
 
-            if (!dbUser) {
-                // Primera vez OAuth → dejar continuar
-                return true;
+            if (!dbUser) return true;
+
+            // ⛔ Bloquear usuario inactivo o borrado
+            if ((dbUser.active ?? 1) === 0 || dbUser.deletedAt) {
+                await logSecurityEvent({
+                    userId: dbUser.id,
+                    type: SecurityEventType.LOGIN_BLOCKED_USER_INACTIVE, // si no existe, poné uno genérico
+                    ip,
+                    userAgent,
+                });
+                return false;
             }
+
 
             const userId = dbUser.id;
 
@@ -197,39 +206,54 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 token.role = "user";
             }
 
-            // 🔁 update() desde el cliente
+            // update() desde cliente (avatar, etc)
             if (trigger === "update" && session?.image) {
                 token.imageUrl = session.image;
             }
 
-            // 🔐 login / signup
+            // login/signup
             if (user) {
-                token.id = user.id;
-                token.role = (user as any).role || token.role;
-                token.sessionVersion = (user as any).sessionVersion;
+                const dbUser = await prisma.user.findUnique({
+                    where: { email: user.email! },
+                    select: {
+                        id: true,
+                        role: true,
+                        sessionVersion: true,
+                        active: true,
+                        imageUrl: true,
+                    },
+                });
 
-                token.imageUrl = (user as any).imageUrl ?? null;
-                token.image = user.image ?? null; // Google
+                // ✅ Mantener ids como string en el token
+                token.id = String(dbUser?.id ?? user.id);
+
+                token.role = (dbUser?.role ?? "user") as any;
+                token.sessionVersion = dbUser?.sessionVersion ?? 1;
+                token.active = dbUser?.active ?? 1;
+
+                token.imageUrl = dbUser?.imageUrl ?? null;
+                token.image = user.image ?? null;
             }
 
             return token;
-        }
-        ,
+        },
 
         async session({ session, token }) {
             if (session.user) {
-                session.user.id = token.id as string;
-                session.user.role = token.role as string;
-                session.user.sessionVersion = token.sessionVersion as number; // 👈
+                session.user.id = String(token.id);
+                session.user.role = token.role ?? "user";
+                session.user.sessionVersion = token.sessionVersion ?? 1;
+                session.user.active = token.active ?? 1;
 
-                // 👇 PRIORIDAD
                 session.user.image =
                     (token.imageUrl as string | null) ??
                     (token.image as string | null) ??
                     null;
             }
             return session;
-        },
+        }
+
+        ,
 
         async redirect({ url, baseUrl }) {
             if (url.startsWith(baseUrl)) {

@@ -12,8 +12,9 @@ datasource db {
 enum UserRole {
   novice
   user
-  premiun
+  premium
   shop
+  server
   admin
   moderator
 }

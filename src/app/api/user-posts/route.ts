@@ -73,7 +73,7 @@ export async function GET(req: NextRequest) {
         },
     });
 
-    const social = await getSocialRelations(viewerId, userId, prisma);
+    const social = await getSocialRelations(viewerId, userId);
 
     const shaped: Post[] = posts.map((post) =>
         shapePost(post, social)

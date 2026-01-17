@@ -3,6 +3,7 @@
 
 import { CVEditor } from "@/components/cv/CVEditor";
 import { useCV } from "@/hooks/useCV";
+import Navbar from "@/components/custom/navbar";
 
 export function CVPageClient({ cvId }: { cvId: number | null }) {
     const { cv, loading } = useCV(cvId);
@@ -16,7 +17,8 @@ export function CVPageClient({ cvId }: { cvId: number | null }) {
     }
 
     return (
-        <div className="w-screen max-w-none px-0 lg:px-4 pb-4 lg:pb-6">
+        <div className="flex flex-col w-screen max-w-none px-0 lg:px-4 pb-4 lg:pb-6">
+
             <CVEditor cvId={cvId} />
         </div>
     );

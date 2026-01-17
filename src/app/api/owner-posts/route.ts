@@ -2,9 +2,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import auth from "@/auth";
+import { RelationshipState } from "@/lib/relationship-state";
 
 import { shapePost } from "@/lib/shape-post";
-import { RelationshipState } from "@/lib/relationship-state";
 
 export async function GET(req: NextRequest) {
     const session = await auth();

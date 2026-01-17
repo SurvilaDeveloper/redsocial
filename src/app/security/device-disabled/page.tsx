@@ -1,9 +1,40 @@
 // src/app/security/device-disabled/page.tsx
+"use client";
 
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
+/**
+ * Página informativa: "Dispositivo deshabilitado".
+ *
+ * ¿Para qué existe?
+ * - Muestra un mensaje simple de confirmación cuando un dispositivo
+ *   ya fue revocado correctamente.
+ *
+ * ¿Cuándo se usa?
+ * - Este componente NO participa del flujo B actual (page + POST).
+ * - Fue diseñado originalmente para el flujo A:
+ *     GET /api/security/devices/disable?token=...
+ *     -> backend revoca
+ *     -> redirect a /security/device-disabled
+ *
+ * Estado actual del sistema:
+ * - El flujo activo es B:
+ *     /security/devices/disable/page.tsx
+ *     (esa page hace POST y muestra success/error inline)
+ *
+ * Por lo tanto:
+ * - Esta página es opcional.
+ * - Puede mantenerse como fallback / legacy / redirect futuro.
+ * - No es llamada actualmente por el flujo principal.
+ *
+ * ¿Conviene borrarla?
+ * - NO es urgente.
+ * - Puede servir si en el futuro:
+ *     - volvés a usar redirects desde backend
+ *     - querés una URL "limpia" de confirmación final
+ */
 export default function DeviceDisabledPage() {
     return (
         <div className="flex min-h-screen items-center justify-center bg-muted px-4">
@@ -41,4 +72,5 @@ export default function DeviceDisabledPage() {
         </div>
     );
 }
+
 

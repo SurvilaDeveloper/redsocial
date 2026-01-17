@@ -45,7 +45,7 @@ async function getCv(userId: string): Promise<Curriculum | "forbidden" | null> {
 }
 
 
-export default async function Page({ params }: { params: { userId: string } }) {
+export default async function CVUserIdPage({ params }: { params: { userId: string } }) {
     const cv = await getCv(params.userId);
 
     if (cv === null) notFound();

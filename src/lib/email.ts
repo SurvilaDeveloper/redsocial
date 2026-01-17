@@ -186,7 +186,7 @@ export async function sendDisableDeviceEmail({
     os: string;
     token: string;
 }) {
-    const confirmUrl = `${BASE_URL}/api/security/devices/disable?token=${token}`;
+    const confirmUrl = `${BASE_URL}/security/devices/disable?token=${token}`;
 
     try {
         await resend.emails.send({

@@ -5,9 +5,11 @@ import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { MAIN_MENU_ITEMS } from "./mainMenuConfig";
 import { MoreVertical, X } from "lucide-react";
+import { UserCog } from "lucide-react";
+import Link from "next/link";
 import { cfg } from "@/config";
 
-export function MainMenuMobileMenu() {
+export function MainMenuMobileMenu(session: any) {
     const [open, setOpen] = useState(false);
     const pathname = usePathname();
     const router = useRouter();
@@ -42,6 +44,15 @@ export function MainMenuMobileMenu() {
                         <div className="px-3 py-1 text-[11px] uppercase tracking-wide text-slate-400">
                             Menú
                         </div>
+                        {session.session.user.role === "admin" &&
+                            <Link
+                                href={"/admin"}
+                                className="text-slate-200 hover:bg-slate-800/70 hover:text-sky-100 flex flex-row items-center gap-2 rounded-md px-3 py-2 transition-colors"
+                            >
+                                <UserCog className="w-4 h-4 shrink-0" />
+                                Página de Administrador
+                            </Link>
+                        }
 
                         {MAIN_MENU_ITEMS.map((item) => {
                             const Icon = item.icon;

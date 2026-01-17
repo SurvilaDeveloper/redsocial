@@ -9,7 +9,7 @@ interface Props {
     params: Promise<{ id: string }>;
 }
 
-export default async function CVPage({ params }: Props) {
+export default async function CVIdPage({ params }: Props) {
     const { id } = await params;
     const session = await auth();
 
@@ -29,7 +29,9 @@ export default async function CVPage({ params }: Props) {
         redirect("/cv"); // 🔁 volver al flujo único
     }
 
-    return <CVPageClient cvId={cv.id} />;
+    return (
+        <CVPageClient cvId={cv.id} />
+    );
 }
 
 

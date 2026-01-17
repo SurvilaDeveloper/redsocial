@@ -15,6 +15,7 @@ const sp = {
     myWall: "Mi muro",
     search: "Buscar",
     tokenExpired: "El token enviado al email ha expirado",
+    expiredSession: "La sesión ha expirado",
 }
 
 const en = {
@@ -34,6 +35,7 @@ const en = {
     myWall: "My wall",
     search: "Search",
     tokenExpired: "The token sent to the email has expired",
+    expiredSession: "The session has expired",
 }
 
 const texts = (language: string) => {

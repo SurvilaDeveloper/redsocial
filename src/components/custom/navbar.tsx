@@ -89,7 +89,7 @@ const Navbar = () => {
             {/* Bloque derecho: idioma + perfil */}
             <div className="flex items-center gap-4 md:gap-6">
                 <LanguageSwitcher />
-                <MainMenuMobileMenu />
+                <MainMenuMobileMenu session={session} />
                 <NavbarProfile />
             </div>
         </nav>

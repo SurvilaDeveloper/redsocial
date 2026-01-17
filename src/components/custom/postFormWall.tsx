@@ -150,6 +150,8 @@ const PostFormWall = () => {
                 top-10
                 md:top-12
                 z-50
+                max-h-[calc(100vh-70px)]
+                overflow-y-scroll
                 "
 
         >

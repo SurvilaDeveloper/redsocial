@@ -1,3 +1,132 @@
+# 🔐 Red Social – Plataforma de usuarios con foco en seguridad
+
+Este proyecto es una **aplicación web construida con Next.js** orientada a la gestión de usuarios, autenticación y seguridad de cuenta, diseñada con criterios de **producto real** y no como un simple demo.
+
+El foco principal está puesto en:
+- seguridad
+- claridad arquitectónica
+- mantenibilidad
+- buena experiencia de usuario
+
+---
+
+## 🧠 Idea general
+
+La aplicación implementa funcionalidades típicas de una plataforma moderna de usuarios, pero con especial atención a **cómo** se implementan:
+
+- Autenticación y sesiones
+- Configuración de privacidad
+- Gestión de dispositivos
+- Acciones sensibles con confirmación por email
+- Invalidación de sesiones
+- Auditoría de eventos de seguridad
+
+Muchas de estas decisiones están inspiradas en cómo funcionan productos reales (redes sociales, plataformas SaaS, etc.).
+
+---
+
+## 🧱 Stack tecnológico
+
+- **Next.js (App Router)**
+- **TypeScript**
+- **NextAuth / auth custom**
+- **Prisma ORM**
+- **Base de datos relacional**
+- **UI con componentes propios**
+- **Email transaccional (confirmaciones de seguridad)**
+
+---
+
+## 🔐 Seguridad como feature
+
+La seguridad no está tratada como un agregado, sino como una parte central del diseño.
+
+Algunos ejemplos implementados:
+
+- Gestión de **dispositivos confiables**
+  - listado de otros dispositivos
+  - revocación segura con confirmación por email
+  - volver a confiar en un dispositivo revocado
+- Tokens de un solo uso (one-time)
+- Expiración de tokens
+- Almacenamiento de hashes en lugar de valores crudos
+- Invalidación global de sesiones (`sessionVersion`)
+- Eventos de auditoría
+
+---
+
+## 🧭 Arquitectura
+
+El proyecto está organizado con una separación clara entre:
+
+- **UI**
+  - páginas de cuenta
+  - flujos de confirmación
+- **API**
+  - endpoints REST con responsabilidades bien definidas
+- **Dominio**
+  - dispositivos
+  - sesiones
+  - tokens
+- **Documentación**
+  - flujos sensibles explicados en `.md`
+
+La intención es que cualquier persona que lea el código pueda **entender el flujo completo** sin necesidad de contexto externo.
+
+---
+
+## 📄 Documentación interna
+
+Además de este README general, el repositorio incluye documentación específica para flujos críticos, por ejemplo:
+
+- Gestión de dispositivos
+- Revocación y confianza de accesos
+- Decisiones de seguridad
+
+Estas notas están pensadas para:
+- mantenimiento a largo plazo
+- evitar errores de diseño
+- facilitar futuras extensiones
+
+---
+
+## 🤝 Forma de trabajo
+
+Este proyecto se desarrolla de manera iterativa, analizando cada flujo antes de implementarlo.
+
+Trabajo en conjunto con **ChatGPT como asistente técnico**, utilizándolo para:
+- revisar decisiones de arquitectura
+- detectar inconsistencias
+- mejorar claridad del código
+- documentar flujos complejos
+
+Las decisiones finales, el código y el diseño general son propios, usando la herramienta como apoyo técnico y de revisión.
+
+---
+
+## 🚧 Estado del proyecto
+
+El proyecto está en **desarrollo activo**.  
+No es un producto terminado, sino una base sólida pensada para crecer.
+
+---
+
+## 📌 Objetivo
+
+Este repositorio sirve como:
+- proyecto personal serio
+- demostración de criterio técnico
+- base reutilizable para productos reales
+- espacio de aprendizaje aplicado
+
+---
+
+Si llegaste hasta acá, gracias por tomarte el tiempo de revisar el proyecto 🙂
+
+
+---
+---
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started

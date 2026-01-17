@@ -1,8 +1,31 @@
+// src/app/security/devices/disable/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
+/**
+ * Página de confirmación de revocación de dispositivo.
+ *
+ * ¿Cómo se llega acá?
+ * - El usuario recibe un email luego de solicitar la revocación
+ *   desde /editaccount (request-disable).
+ * - El link del email apunta a:
+ *     /security/devices/disable?token=XXX
+ *
+ * ¿Qué hace esta página?
+ * - Lee el token desde la query (?token=...).
+ * - Llama a POST /api/security/devices/disable con { token }.
+ * - Muestra feedback visual:
+ *     - loading: validando token / procesando
+ *     - success: dispositivo revocado correctamente
+ *     - error: token inválido, expirado o ya usado
+ *
+ * Importante:
+ * - Esta page NO revoca directamente.
+ * - La revocación real ocurre en el backend:
+ *     POST /api/security/devices/disable
+ */
 type Status = "loading" | "success" | "error";
 
 export default function DisableDevicePage() {
@@ -13,34 +36,33 @@ export default function DisableDevicePage() {
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
+        // Si no hay token en la URL, no se puede continuar
         if (!token) {
             setStatus("error");
             setError("Token inválido o inexistente.");
             return;
         }
 
+        // Confirma la revocación llamando al backend
         const disableDevice = async () => {
             try {
-                const res = await fetch(
-                    "/api/security/devices/disable",
-                    {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                        },
-                        body: JSON.stringify({ token }),
-                    }
-                );
+                const res = await fetch("/api/security/devices/disable", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ token }),
+                });
 
                 if (!res.ok) {
                     const data = await res.json();
-                    throw new Error(data?.error || "Error al deshabilitar el dispositivo");
+                    throw new Error(
+                        data?.error || "Error al deshabilitar el dispositivo"
+                    );
                 }
 
                 setStatus("success");
             } catch (err: any) {
                 setStatus("error");
-                setError(err.message ?? "Ocurrió un error inesperado");
+                setError(err?.message ?? "Ocurrió un error inesperado");
             }
         };
 
@@ -70,7 +92,8 @@ export default function DisableDevicePage() {
                             El dispositivo fue revocado correctamente.
                         </p>
                         <p className="mt-2 text-sm text-neutral-400">
-                            Si este acceso no fue tuyo, todas tus sesiones activas fueron cerradas.
+                            Si este acceso no fue tuyo, todas tus sesiones activas fueron
+                            cerradas.
                         </p>
                     </>
                 )}
@@ -92,3 +115,4 @@ export default function DisableDevicePage() {
         </div>
     );
 }
+

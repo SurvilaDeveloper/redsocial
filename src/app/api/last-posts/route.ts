@@ -89,7 +89,6 @@ export async function GET(req: NextRequest) {
             const social = await getSocialRelations(
                 viewerId,
                 ownerId,
-                prisma
             );
 
             const canView = canViewPost(

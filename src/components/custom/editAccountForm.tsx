@@ -100,6 +100,21 @@ export default function AccountForm({ config }: { config: Configuration }) {
     const [devices, setDevices] = useState<Device[]>([]);
     const [loadingDevices, setLoadingDevices] = useState(false);
 
+    /**
+     * Obtiene la lista de dispositivos asociados a la cuenta del usuario.
+     *
+     * ¿Quién la usa?
+     * - Se llama automáticamente cuando el usuario entra a la pestaña "Otros dispositivos".
+     * - Vive únicamente en esta UI (/editaccount).
+     *
+     * ¿Qué devuelve el backend?
+     * - GET /api/security/devices
+     * - Lista de dispositivos "trustedDevice" del usuario autenticado.
+     *
+     * Importante:
+     * - NO filtra ni revoca nada.
+     * - Solo muestra estado (activo / revocado) e info básica.
+     */
     const fetchDevices = async () => {
         setLoadingDevices(true);
         try {
@@ -113,7 +128,23 @@ export default function AccountForm({ config }: { config: Configuration }) {
             setLoadingDevices(false);
         }
     };
-
+    /**
+     * Inicia el flujo de revocación de un dispositivo.
+     *
+     * ⚠️ IMPORTANTE:
+     * - Esta función NO revoca el dispositivo directamente.
+     * - Solo solicita la revocación y envía un email de confirmación.
+     *
+     * Flujo completo:
+     * 1) Usuario hace click en "Revocar".
+     * 2) Se llama a POST /api/security/devices/request-disable con { deviceId }.
+     * 3) El backend genera un token one-time y envía un email.
+     * 4) El usuario confirma desde el email:
+     *    /security/devices/disable?token=...
+     *
+     * ¿Por qué email?
+     * - Revocar dispositivos es una acción sensible de seguridad.
+     */
     const handleDisable = async (deviceId: number) => {
         try {
             const res = await fetch("/api/security/devices/request-disable", {
@@ -136,7 +167,22 @@ export default function AccountForm({ config }: { config: Configuration }) {
         }
     };
 
-
+    /**
+     * Vuelve a confiar en un dispositivo previamente revocado.
+     *
+     * Diferencia clave con "Revocar":
+     * - NO usa email ni token.
+     * - Es una acción directa y menos sensible.
+     *
+     * Flujo:
+     * 1) Usuario hace click en "Confiar".
+     * 2) Se llama a POST /api/security/devices/:id/trust.
+     * 3) El backend valida:
+     *    - usuario autenticado
+     *    - dispositivo pertenece al usuario
+     *    - dispositivo estaba revocado
+     * 4) revokedAt vuelve a null.
+     */
     const handleEnable = async (deviceId: number) => {
         try {
             const res = await fetch(`/api/security/devices/${deviceId}/trust`, {
@@ -149,8 +195,6 @@ export default function AccountForm({ config }: { config: Configuration }) {
             alert("No se pudo habilitar el dispositivo");
         }
     };
-
-
 
     useEffect(() => {
         if (page === "devices") {

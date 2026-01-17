@@ -37,7 +37,7 @@ export default function RootLayout({
           <ClientSessionProvider>
             {/* Contenedor principal de la app */}
             <div className="min-h-screen">
-              <Navbar />
+              {/*<Navbar />*/}
               {/* Main se encarga del layout interno de cada página */}
               <Main>
                 {children}

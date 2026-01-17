@@ -14,7 +14,7 @@ function AsideLeft({ session, children }: AsideLeftProps) {
         <div className="hidden lg:block w-[220px] xl:w-[260px] fixed left-0 top-0 h-full pt-12 px-2 py-3 text-sm text-slate-100 bg-[rgb(1,3,12)]">
             {hasSession ? (
                 <>
-                    <MainMenuDesktop />
+                    <MainMenuDesktop session={session} />
                     {children}
                 </>
             ) : (
