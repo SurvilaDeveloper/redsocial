@@ -1,6 +1,8 @@
 // global.d.ts
 
-import { RelationshipState } from "@/lib/relationship-state";
+//import { RelationshipState } from "@/lib/relationship-state";
+import type { Configuration } from "@/types/configuration";
+import type { RelationshipState as RelationshipStateEnum } from "@/lib/relationship-state";
 export { };
 
 declare global {
@@ -17,8 +19,7 @@ declare global {
         readonly FRIENDS: 8;
     };*/
 
-    type RelationshipState =
-        typeof RelationshipState[keyof typeof RelationshipState];
+    type RelationshipState = RelationshipStateEnum;
 
     //import("@/lib/relationship-state").RelationshipState;
 
@@ -76,8 +77,9 @@ declare global {
 
     interface Post {
         id: number;
-        post_comment?: PostComment[];
-        user_id: number;
+
+        // ✅ nuevo
+        authorId: number;
 
         title: string | null;
         description: string | null;
@@ -92,7 +94,8 @@ declare global {
 
         relations: PostRelations;
 
-        user?: MiniUser;
+        // ✅ nuevo
+        author?: MiniUser;
 
         images?: {
             id: number;
@@ -108,7 +111,35 @@ declare global {
         }[];
 
         commentsCount?: number;
+        post_comment?: PostComment[];
+
+        enableToView?: EnableToView | null;
+        ownerConfiguration?: Configuration | null;
+        wallEntryMeta?: WallEntryMeta;
+
     }
+
+
+
+    type WallEntryType = "PUBLISHED" | "SHARED";
+
+    interface WallEntry {
+        id: number;
+        createdAt: string;
+        active?: number | null;
+
+        wallUserId: number;   // dueño del muro
+        actorUserId: number;  // quien hizo la acción (publicar/compartir)
+        type: WallEntryType;
+
+        postId: number;
+
+        // opcional para cuando lo incluís desde Prisma
+        post?: Post;
+        wallUser?: MiniUser;
+        actorUser?: MiniUser;
+    }
+
 
     type EnableToView = {
         profileImage: boolean;
@@ -129,8 +160,17 @@ declare global {
         followingList: boolean;
 
         likes: boolean;
-        privateMessages: boolean;
     };
+
+    type WallEntryMeta = {
+        id: number;
+        type: WallEntryType;
+        createdAt: string;
+        wallUserId: number;
+        actorUserId: number;
+        actorUser?: MiniUser | null;
+    };
+
 }
 
 

@@ -1,0 +1,441 @@
+AppInputs — Guía de uso (inputs + select/switch/checkbox + RHF/Zod)
+==================================================================
+
+Este módulo (src/components/inputs/AppInputs.tsx) define una colección de componentes reutilizables para:
+- Inputs “puros” (para usarlos sin react-hook-form)
+- Wrappers “Form*” para integrarlos con react-hook-form (y validar con Zod vía zodResolver)
+
+El objetivo es:
+- unificar estilos, UX y accesibilidad
+- evitar repetir lógica (loading, iconos, errores, responsive, etc.)
+- tener una API consistente para todos los campos
+
+------------------------------------------------------------------
+1) Requisitos e instalaciones
+------------------------------------------------------------------
+
+1.1 Paquetes de formularios/validación
+Asegurate de tener estos paquetes:
+
+- react-hook-form
+- zod
+- @hookform/resolvers
+
+Instalación:
+npm i react-hook-form zod @hookform/resolvers
+
+
+1.2 UI (shadcn)
+Este archivo asume que existen estos componentes en src/components/ui/:
+
+- input
+- textarea
+- form
+- select
+- switch
+- checkbox
+
+Si te falta alguno, agregalo con shadcn (recomendado):
+npx shadcn@latest add input textarea form select switch checkbox
+
+Nota importante sobre checkbox:
+- checkbox instala además @radix-ui/react-checkbox (lo necesitás porque el archivo usa CheckedState)
+Si por algún motivo no se instaló:
+npm i @radix-ui/react-checkbox
+
+
+1.3 Iconos
+El archivo usa lucide-react (Eye/EyeOff/Loader2):
+npm i lucide-react
+
+
+------------------------------------------------------------------
+2) Imports recomendados
+------------------------------------------------------------------
+
+Si tenés src/components/inputs/index.ts (barrel), importá desde ahí:
+
+import {
+  BaseInput,
+  TextInput,
+  EmailInput,
+  NumberInput,
+  DateInput,
+  PasswordInput,
+  TextareaInput,
+  SelectField,
+  SelectNumberField,
+  SwitchField,
+  CheckboxField,
+
+  FormTextInput,
+  FormEmailInput,
+  FormNumberInput,
+  FormDateInput,
+  FormPasswordInput,
+  FormTextareaInput,
+  FormInput,
+  FormSelectField,
+  FormSelectNumberField,
+  FormSwitchField,
+  FormCheckboxField,
+} from "@/components/inputs";
+
+
+------------------------------------------------------------------
+3) Conceptos clave
+------------------------------------------------------------------
+
+3.1 Inputs “puros” vs “Form*” (RHF/Zod)
+- Inputs puros: TextInput, PasswordInput, SelectField, etc.
+  -> Usalos cuando NO estás usando react-hook-form.
+  -> Para errores, les pasás error="mensaje" manualmente.
+
+- Wrappers Form*: FormTextInput, FormPasswordInput, FormSelectField, etc.
+  -> Usalos cuando estás dentro de un formulario con react-hook-form.
+  -> Se conectan con control + name y muestran errores automáticamente (FormMessage).
+  -> Los errores normalmente vienen de Zod si usás zodResolver.
+
+
+3.2 Responsive por props (sin clases tailwind dinámicas)
+El sistema usa dimensiones por props (strings CSS) y un media query configurable:
+
+- height / width: string CSS base ("36px", "100%", "2.5rem", "clamp(...)")
+- mq: breakpoint del media query:
+    - number (se interpreta como px)
+    - o string Tailwind: "sm" | "md" | "lg" | "xl" | "2xl"
+- mqHeight / mqWidth: dimensiones cuando se cumple el mq
+
+Ejemplos:
+<TextInput height="36px" width="100%" />
+<TextInput mq="lg" mqWidth="260px" width="100%" />
+<TextInput mq={900} mqWidth="420px" width="100%" />
+
+
+3.3 Props comunes en casi todos
+Casi todos soportan:
+- label?: string
+- description?: string
+- required?: boolean
+- placeholder?: string
+- className?: string        (wrapper)
+- inputClassName?: string   (input/textarea/trigger)
+- variant?: "default" | "ghost" | "danger"
+- loading?: boolean
+- background?: string
+- textColor?: string
+- height/width/mq/mqHeight/mqWidth
+
+Extra:
+- BaseInput soporta leftSlot / rightSlot (para iconos o cosas a los costados)
+- PasswordInput usa su propio “ojito” de lucide (blanco) para mostrar/ocultar
+
+
+------------------------------------------------------------------
+4) Componentes “puros” (sin react-hook-form)
+------------------------------------------------------------------
+
+4.1 BaseInput
+Input genérico con type configurable. Acepta leftSlot / rightSlot.
+
+Ejemplo:
+<BaseInput
+  type="text"
+  label="Nombre"
+  placeholder="Tu nombre"
+  leftSlot={<User size={16} />}
+  rightSlot={<span className="text-xs text-slate-400">Opcional</span>}
+  height="36px"
+  width="100%"
+/>
+
+
+4.2 TextInput / EmailInput / NumberInput / DateInput
+Son BaseInput con type fijo.
+
+Ejemplos:
+<TextInput label="Nick" placeholder="Ingresá tu nick" />
+<EmailInput label="Email" placeholder="tu@email.com" />
+<NumberInput label="Edad" placeholder="18" />
+<DateInput label="Nacimiento" />
+
+
+4.3 PasswordInput
+Password con toggle Eye/EyeOff propio (blanco). Si loading=true muestra spinner y deshabilita.
+
+Ejemplo:
+<PasswordInput
+  label="Contraseña"
+  placeholder="••••••••"
+  loading={saving}
+/>
+
+
+4.4 TextareaInput
+Textarea con el mismo esquema (label/description/error/variant/dimensiones).
+
+Ejemplo:
+<TextareaInput
+  label="Bio"
+  placeholder="Contanos algo..."
+  height="110px"
+/>
+
+
+4.5 SelectField (string)
+Select con options [{label, value}] donde value es string (por diseño de shadcn Select).
+
+Ejemplo:
+<SelectField
+  label="Idioma"
+  placeholder="Seleccioná"
+  options={[
+    { label: "Español", value: "es" },
+    { label: "English", value: "en" },
+  ]}
+  value={language}
+  onValueChange={setLanguage}
+  width="100%"
+  mq="lg"
+  mqWidth="260px"
+/>
+
+
+4.6 SelectNumberField (number | null)
+Wrapper sobre SelectField que convierte el value a number automáticamente.
+- options siguen siendo strings (value: String(id))
+- value en estado es number | null
+
+Ejemplo:
+<SelectNumberField
+  label="Provincia"
+  options={states.map(s => ({ label: s.name, value: String(s.id) }))}
+  value={provinceId}
+  onValueChange={setProvinceId}
+  emptyValue={null}
+/>
+
+
+4.7 SwitchField (boolean)
+Ejemplo:
+<SwitchField
+  label="Notificaciones por email"
+  checked={emailNotifications}
+  onCheckedChange={setEmailNotifications}
+/>
+
+
+4.8 CheckboxField (boolean)
+Ejemplo:
+<CheckboxField
+  label="Acepto términos"
+  checked={termsAccepted}
+  onCheckedChange={setTermsAccepted}
+/>
+
+
+------------------------------------------------------------------
+5) Wrappers RHF (Zod-friendly) — Form*
+------------------------------------------------------------------
+
+Estos componentes están pensados para usarse dentro de:
+
+- const form = useForm(...);
+- <Form {...form}><form onSubmit={form.handleSubmit(...)}</form></Form>
+
+Todos requieren:
+- control={form.control}
+- name="campoDelSchema"
+
+
+5.1 Setup típico con Zod + RHF
+
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Form } from "@/components/ui/form";
+import { FormTextInput, FormPasswordInput } from "@/components/inputs";
+
+const schema = z.object({
+  nick: z.string().min(2, "Muy corto"),
+  password: z.string().min(8, "Mínimo 8 caracteres"),
+});
+
+type Values = z.infer<typeof schema>;
+
+export default function Example() {
+  const form = useForm<Values>({
+    resolver: zodResolver(schema),
+    defaultValues: { nick: "", password: "" },
+    mode: "onChange",
+  });
+
+  const onSubmit = (data: Values) => console.log(data);
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <FormTextInput
+          control={form.control}
+          name="nick"
+          label="Nick"
+          placeholder="Tu nick"
+          height="36px"
+        />
+
+        <FormPasswordInput
+          control={form.control}
+          name="password"
+          label="Contraseña"
+          placeholder="••••••••"
+          height="36px"
+        />
+
+        <button type="submit">Guardar</button>
+      </form>
+    </Form>
+  );
+}
+
+
+5.2 FormTextInput / FormEmailInput / FormNumberInput / FormDateInput
+
+Ejemplos:
+<FormTextInput control={form.control} name="nick" label="Nick" />
+<FormEmailInput control={form.control} name="email" label="Email" />
+<FormNumberInput control={form.control} name="age" label="Edad" />
+<FormDateInput control={form.control} name="birth" label="Nacimiento" />
+
+
+5.3 FormPasswordInput
+
+<FormPasswordInput
+  control={form.control}
+  name="password"
+  label="Contraseña"
+/>
+
+
+5.4 FormTextareaInput
+
+<FormTextareaInput
+  control={form.control}
+  name="bio"
+  label="Bio"
+  height="120px"
+/>
+
+
+5.5 FormInput (genérico con type libre)
+Para tipos como "tel", "url", "time", "search", etc.
+
+<FormInput
+  control={form.control}
+  name="phone"
+  type="tel"
+  label="Teléfono"
+  placeholder="11 1234 5678"
+/>
+
+
+5.6 FormSelectField (string)
+
+<FormSelectField
+  control={form.control}
+  name="language"
+  label="Idioma"
+  placeholder="Seleccioná"
+  options={[
+    { label: "Español", value: "es" },
+    { label: "English", value: "en" },
+  ]}
+/>
+
+
+5.7 FormSelectNumberField (number | null)
+Ideal para countryId/provinceId/cityId (IDs de DB).
+
+<FormSelectNumberField
+  control={form.control}
+  name="countryId"
+  label="País"
+  options={countries.map(c => ({ label: c.name, value: String(c.id) }))}
+  emptyValue={null}
+/>
+
+
+5.8 FormSwitchField (boolean)
+
+<FormSwitchField
+  control={form.control}
+  name="emailNotifications"
+  label="Notificaciones por email"
+/>
+
+
+5.9 FormCheckboxField (boolean)
+
+<FormCheckboxField
+  control={form.control}
+  name="termsAccepted"
+  label="Acepto términos"
+/>
+
+
+------------------------------------------------------------------
+6) Recomendación MUY IMPORTANTE para numbers con Zod
+------------------------------------------------------------------
+
+RHF suele manejar valores como string. Si tu schema espera number, conviene convertir con Zod preprocess.
+
+Ejemplo robusto:
+import { z } from "zod";
+
+const toNumberOrNull = (v: unknown) => {
+  if (v === "" || v == null) return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+};
+
+const schema = z.object({
+  countryId: z.preprocess(toNumberOrNull, z.number().int().nullable()),
+});
+
+Esto evita problemas de:
+- strings que no pasan validación de number
+- campos vacíos
+- NaN
+
+
+------------------------------------------------------------------
+7) Checklist si algo no compila
+------------------------------------------------------------------
+
+1) Verificá que existan los componentes shadcn:
+- src/components/ui/checkbox.tsx
+- src/components/ui/select.tsx
+- src/components/ui/switch.tsx
+- src/components/ui/form.tsx
+- etc.
+
+2) Si falta alguno:
+npx shadcn@latest add checkbox select switch form input textarea
+
+3) Si falla @radix-ui/react-checkbox:
+npm i @radix-ui/react-checkbox
+
+4) Si faltan iconos:
+npm i lucide-react
+
+
+------------------------------------------------------------------
+8) Recomendación de uso en el proyecto
+------------------------------------------------------------------
+
+- En formularios con RHF: usar siempre los Form* (FormTextInput, FormSelectNumberField, etc.)
+- Fuera de formularios: usar los “puros” (TextInput, SelectNumberField, SwitchField, etc.)
+- Para IDs numéricos: usar SelectNumberField / FormSelectNumberField
+- Para control de dimensiones responsivo: usar height/width + mq/mqHeight/mqWidth
+- Para requests: usar loading para deshabilitar y mostrar spinner
+
+Fin.

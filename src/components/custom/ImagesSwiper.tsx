@@ -1,13 +1,14 @@
 // src/components/custom/ImagesSwiper.tsx
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import PostImageCard from "./PostImageCard";
 
-type NavigationMode = "thumbnails" | "dots" | "numbers";
-type ImageReaction = "LIKE" | "UNLIKE" | null;
+export type NavigationMode = "thumbnails" | "dots" | "numbers" | "none";
+export type ImageReaction = "LIKE" | "UNLIKE" | null;
+export type SwiperFit = "width" | "height";
 
-interface SwiperImage {
+export interface SwiperImage {
     id: number;
     post_id: number;
     imageUrl: string;
@@ -19,11 +20,20 @@ interface SwiperImage {
     userReaction?: ImageReaction;
 }
 
-interface ImagesSwiperProps {
+export interface ImagesSwiperProps {
     id?: string;
     imageArray: SwiperImage[];
     navigation?: NavigationMode;
     sessionUserId: number | null;
+
+    // ✅ control opcional del slide
+    currentSlide?: number;
+    onSlideChange?: (index: number) => void;
+
+    // ✅ NUEVO: cómo se ajusta el swiper
+    // - "width" (default): se ajusta al ancho del contenedor
+    // - "height": se ajusta al alto del contenedor (el padre debe tener altura definida)
+    fit?: SwiperFit;
 }
 
 export const ImagesSwiper: React.FC<ImagesSwiperProps> = ({
@@ -31,8 +41,25 @@ export const ImagesSwiper: React.FC<ImagesSwiperProps> = ({
     imageArray,
     navigation = "thumbnails",
     sessionUserId,
+    currentSlide: currentSlideProp,
+    onSlideChange,
+    fit = "width",
 }) => {
-    const [currentSlide, setCurrentSlide] = useState(0);
+    const [internalSlide, setInternalSlide] = useState(0);
+    const isControlled = typeof currentSlideProp === "number";
+    const currentSlide = isControlled ? (currentSlideProp as number) : internalSlide;
+
+    const setSlide = (index: number) => {
+        if (index < 0 || index >= imageArray.length) return;
+
+        if (isControlled) {
+            onSlideChange?.(index);
+        } else {
+            setInternalSlide(index);
+            onSlideChange?.(index);
+        }
+    };
+
     const [dragOffset, setDragOffset] = useState(0);
 
     const dragStartX = useRef<number | null>(null);
@@ -43,32 +70,32 @@ export const ImagesSwiper: React.FC<ImagesSwiperProps> = ({
     const thumbnailsRef = useRef<HTMLDivElement | null>(null);
 
     const [containerWidth, setContainerWidth] = useState(0);
+    const [containerHeight, setContainerHeight] = useState(0);
 
     if (!imageArray || imageArray.length === 0) return null;
 
     // ==========================
-    // Medir ancho del contenedor
+    // Medir tamaño del contenedor
     // ==========================
     useEffect(() => {
         const el = containerRef.current;
         if (!el) return;
 
-        const updateWidth = () => {
+        const updateSize = () => {
             setContainerWidth(el.clientWidth);
+            setContainerHeight(el.clientHeight);
         };
 
-        updateWidth();
+        updateSize();
 
-        const ro = new ResizeObserver(() => {
-            updateWidth();
-        });
+        const ro = new ResizeObserver(() => updateSize());
         ro.observe(el);
 
-        window.addEventListener("resize", updateWidth);
+        window.addEventListener("resize", updateSize);
 
         return () => {
             ro.disconnect();
-            window.removeEventListener("resize", updateWidth);
+            window.removeEventListener("resize", updateSize);
         };
     }, []);
 
@@ -76,20 +103,22 @@ export const ImagesSwiper: React.FC<ImagesSwiperProps> = ({
     // Navegación básica
     // ==========================
     const goToSlide = (index: number) => {
-        if (index < 0 || index >= imageArray.length) return;
-        setCurrentSlide(index);
+        setSlide(index);
         setDragOffset(0);
     };
 
     const nextSlide = () => {
-        setCurrentSlide((prev) =>
-            prev >= imageArray.length - 1 ? imageArray.length - 1 : prev + 1
-        );
+        const next =
+            currentSlide >= imageArray.length - 1
+                ? imageArray.length - 1
+                : currentSlide + 1;
+        setSlide(next);
         setDragOffset(0);
     };
 
     const prevSlide = () => {
-        setCurrentSlide((prev) => (prev <= 0 ? 0 : prev - 1));
+        const prev = currentSlide <= 0 ? 0 : currentSlide - 1;
+        setSlide(prev);
         setDragOffset(0);
     };
 
@@ -141,13 +170,12 @@ export const ImagesSwiper: React.FC<ImagesSwiperProps> = ({
         const thresh = 5;
 
         if (!isHorizontalDrag.current) {
-            if (Math.abs(dx) < thresh && Math.abs(dy) < thresh) {
-                return;
-            }
+            if (Math.abs(dx) < thresh && Math.abs(dy) < thresh) return;
 
             if (Math.abs(dx) > Math.abs(dy)) {
                 isHorizontalDrag.current = true;
             } else {
+                // scroll vertical => liberamos
                 dragStartX.current = null;
                 dragStartY.current = null;
                 setDragOffset(0);
@@ -156,11 +184,9 @@ export const ImagesSwiper: React.FC<ImagesSwiperProps> = ({
         }
 
         if (isHorizontalDrag.current) {
-            // Ya no llamamos a preventDefault aquí
             setDragOffset(dx);
         }
     };
-
 
     const handleTouchEnd = () => {
         if (!isHorizontalDrag.current) {
@@ -214,13 +240,205 @@ export const ImagesSwiper: React.FC<ImagesSwiperProps> = ({
             }
         });
 
-        setCurrentSlide(bestIndex);
+        setSlide(bestIndex);
         setDragOffset(0);
     };
 
     // ==========================
     // Drag en thumbnails (scroll)
     // ==========================
+    const thumbDragStartX = useRef<number | null>(null);
+
+    const handleThumbMouseDown = (e: React.MouseEvent) => {
+        e.preventDefault();
+        thumbDragStartX.current = e.clientX;
+        document.addEventListener("mousemove", handleThumbMouseMove);
+        document.addEventListener("mouseup", handleThumbMouseUp);
+    };
+
+    const handleThumbMouseMove = (e: MouseEvent) => {
+        if (thumbDragStartX.current === null || !thumbnailsRef.current) return;
+        const distance = thumbDragStartX.current - e.clientX;
+        thumbnailsRef.current.scrollLeft += distance;
+        thumbDragStartX.current = e.clientX;
+    };
+
+    const handleThumbMouseUp = () => {
+        thumbDragStartX.current = null;
+        document.removeEventListener("mousemove", handleThumbMouseMove);
+        document.removeEventListener("mouseup", handleThumbMouseUp);
+    };
+
+    const handleThumbTouchStart = (e: React.TouchEvent) => {
+        thumbDragStartX.current = e.touches[0].clientX;
+    };
+
+    const handleThumbTouchMove = (e: React.TouchEvent) => {
+        if (thumbDragStartX.current === null || !thumbnailsRef.current) return;
+        const distance = thumbDragStartX.current - e.touches[0].clientX;
+        thumbnailsRef.current.scrollLeft += distance;
+        thumbDragStartX.current = e.touches[0].clientX;
+    };
+
+    const handleThumbTouchEnd = () => {
+        thumbDragStartX.current = null;
+    };
+
+    // ==========================
+    // Navegación inferior
+    // ==========================
+    const renderNavigation = () => {
+        if (imageArray.length <= 1) return null;
+        if (navigation === "none") return null;
+
+        if (navigation === "thumbnails") {
+            return (
+                <div
+                    className="carousel-thumbnails"
+                    ref={thumbnailsRef}
+                    onMouseDown={handleThumbMouseDown}
+                    onTouchStart={handleThumbTouchStart}
+                    onTouchMove={handleThumbTouchMove}
+                    onTouchEnd={handleThumbTouchEnd}
+                >
+                    {imageArray.map((img, index) => (
+                        <img
+                            key={img.id}
+                            src={img.imageUrl}
+                            alt={`Imagen ${img.index}`}
+                            className={`thumbnail ${index === currentSlide ? "active" : ""}`}
+                            onClick={() => goToSlide(index)}
+                        />
+                    ))}
+                </div>
+            );
+        }
+
+        if (navigation === "dots") {
+            return (
+                <div className="carousel-thumbnails">
+                    {imageArray.map((img, index) => (
+                        <button
+                            key={img.id}
+                            className={`navigation-dot ${index === currentSlide ? "active" : ""}`}
+                            onClick={() => goToSlide(index)}
+                            type="button"
+                        >
+                            <span />
+                        </button>
+                    ))}
+                </div>
+            );
+        }
+
+        return (
+            <div className="carousel-thumbnails">
+                {imageArray.map((img, index) => (
+                    <button
+                        key={img.id}
+                        className={`navigation-numbers ${index === currentSlide ? "active" : ""}`}
+                        onClick={() => goToSlide(index)}
+                        type="button"
+                    >
+                        {index + 1}
+                    </button>
+                ))}
+            </div>
+        );
+    };
+
+    // ==========================
+    // Fit (width/height)
+    // ==========================
+    const effectiveWidth = containerWidth;
+    const effectiveHeight = containerHeight;
+
+    const canRender =
+        effectiveWidth > 0 && (fit === "width" || effectiveHeight > 0);
+
+    // Track: siempre se mueve por width
+    const trackStyle: React.CSSProperties = useMemo(() => {
+        return {
+            transform: `translateX(${-currentSlide * effectiveWidth + dragOffset}px)`,
+            transition:
+                dragOffset === 0
+                    ? "transform 1.00s cubic-bezier(0.5, 0.6, 0.5, 1.2)"
+                    : "none",
+            // si calzamos por alto, forzamos altura del viewport del track
+            height: fit === "height" ? effectiveHeight : undefined,
+        };
+    }, [currentSlide, dragOffset, effectiveWidth, effectiveHeight, fit]);
+
+    // Slide: siempre ancho fijo, y opcionalmente alto fijo
+    const slideStyle: React.CSSProperties = useMemo(() => {
+        return {
+            width: effectiveWidth || "100%",
+            height: fit === "height" ? effectiveHeight : undefined,
+        };
+    }, [effectiveWidth, effectiveHeight, fit]);
+
+    return (
+        <div
+            id={id}
+            className="inline-carousel"
+            ref={containerRef}
+            onMouseDown={handleMouseDown}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            style={{
+                cursor: imageArray.length > 1 ? "grab" : "default",
+                // en fit height, el carrusel debe poder estirarse a la altura del padre
+                height: fit === "height" ? "100%" : undefined,
+            }}
+        >
+            <div
+                className="carousel-track"
+                style={!canRender ? { opacity: 0 } : { ...trackStyle, opacity: 1 }}
+            >
+                {imageArray.map((img) => (
+                    <div key={img.id} className="carousel-slide-item" style={slideStyle}>
+                        {/* wrapper que permite "ocupar el alto" en fit="height" */}
+                        <div style={{ width: "100%", height: fit === "height" ? "100%" : "auto" }}>
+                            <PostImageCard image={img} sessionUserId={sessionUserId} isFirst={true} variant={fit === "height" ? "swiper" : "grid"} />
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            {/* Flechas */}
+            {imageArray.length > 1 && currentSlide > 0 && (
+                <button className="nav-button prev" onClick={prevSlide} type="button">
+                    ‹
+                </button>
+            )}
+
+            {imageArray.length > 1 && currentSlide < imageArray.length - 1 && (
+                <button className="nav-button next" onClick={nextSlide} type="button">
+                    ›
+                </button>
+            )}
+
+            {renderNavigation()}
+        </div>
+    );
+};
+
+// ======================================================
+// ✅ Thumbnails externos (para renderizar “afuera”)
+// ======================================================
+export function ImagesSwiperThumbnails({
+    imageArray,
+    currentSlide,
+    onSelect,
+}: {
+    imageArray: SwiperImage[];
+    currentSlide: number;
+    onSelect: (index: number) => void;
+}) {
+    const thumbnailsRef = useRef<HTMLDivElement | null>(null);
+    const dragStartX = useRef<number | null>(null);
+
     const handleThumbMouseDown = (e: React.MouseEvent) => {
         e.preventDefault();
         dragStartX.current = e.clientX;
@@ -256,147 +474,26 @@ export const ImagesSwiper: React.FC<ImagesSwiperProps> = ({
         dragStartX.current = null;
     };
 
-    // ==========================
-    // Navegación inferior
-    // ==========================
-    const renderNavigation = () => {
-        if (imageArray.length <= 1) return null;
-
-        if (navigation === "thumbnails") {
-            return (
-                <div
-                    className="carousel-thumbnails"
-                    ref={thumbnailsRef}
-                    onMouseDown={handleThumbMouseDown}
-                    onTouchStart={handleThumbTouchStart}
-                    onTouchMove={handleThumbTouchMove}
-                    onTouchEnd={handleThumbTouchEnd}
-                >
-                    {imageArray.map((img, index) => (
-                        <img
-                            key={img.id}
-                            src={img.imageUrl}
-                            alt={`Imagen ${img.index}`}
-                            className={`thumbnail ${index === currentSlide ? "active" : ""
-                                }`}
-                            onClick={() => goToSlide(index)}
-                        />
-                    ))}
-                </div>
-            );
-        }
-
-        if (navigation === "dots") {
-            return (
-                <div className="carousel-thumbnails">
-                    {imageArray.map((img, index) => (
-                        <button
-                            key={img.id}
-                            className={`navigation-dot ${index === currentSlide ? "active" : ""
-                                }`}
-                            onClick={() => goToSlide(index)}
-                        >
-                            <span></span>
-                        </button>
-                    ))}
-                </div>
-            );
-        }
-
-        return (
-            <div className="carousel-thumbnails">
-                {imageArray.map((img, index) => (
-                    <button
-                        key={img.id}
-                        className={`navigation-numbers ${index === currentSlide ? "active" : ""
-                            }`}
-                        onClick={() => goToSlide(index)}
-                    >
-                        {index + 1}
-                    </button>
-                ))}
-            </div>
-        );
-    };
-
-    // ==========================
-    // Estilos del track
-    // ==========================
-    const trackStyle: React.CSSProperties = {
-        transform: `translateX(${-currentSlide * containerWidth + dragOffset
-            }px)`,
-        transition:
-            dragOffset === 0
-                ? "transform 1.00s cubic-bezier(0.5, 0.6, 0.5, 1.2)"
-                : "none",
-    };
+    if (!imageArray || imageArray.length <= 1) return null;
 
     return (
         <div
-            id={id}
-            className="inline-carousel"
-            ref={containerRef}
-            onMouseDown={handleMouseDown}
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-            style={{
-                cursor: imageArray.length > 1 ? "grab" : "default",
-            }}
+            className="carousel-thumbnails"
+            ref={thumbnailsRef}
+            onMouseDown={handleThumbMouseDown}
+            onTouchStart={handleThumbTouchStart}
+            onTouchMove={handleThumbTouchMove}
+            onTouchEnd={handleThumbTouchEnd}
         >
-            <div
-                className="carousel-track"
-                style={
-                    containerWidth === 0
-                        ? { opacity: 0 }
-                        : { ...trackStyle, opacity: 1 }
-                }
-            >
-                {imageArray.map((img, index) => (
-                    <div
-                        key={img.id}
-                        className="carousel-slide-item"
-                        style={{
-                            width: containerWidth || "100%",
-                        }}
-                    >
-                        {/* 👇 Usamos PostImageCard dentro del slide */}
-                        <PostImageCard
-                            image={img}
-                            sessionUserId={sessionUserId}
-                            // en el swiper queremos que todas sean "grandes"
-                            isFirst={true}
-                        />
-                    </div>
-                ))}
-            </div>
-
-            {/* Flechas */}
-            {imageArray.length > 1 && currentSlide > 0 && (
-                <button
-                    className="nav-button prev"
-                    onClick={prevSlide}
-                    type="button"
-                >
-                    ‹
-                </button>
-            )}
-
-            {imageArray.length > 1 &&
-                currentSlide < imageArray.length - 1 && (
-                    <button
-                        className="nav-button next"
-                        onClick={nextSlide}
-                        type="button"
-                    >
-                        ›
-                    </button>
-                )}
-
-            {renderNavigation()}
+            {imageArray.map((img, index) => (
+                <img
+                    key={img.id}
+                    src={img.imageUrl}
+                    alt={`Imagen ${img.index}`}
+                    className={`thumbnail ${index === currentSlide ? "active" : ""}`}
+                    onClick={() => onSelect(index)}
+                />
+            ))}
         </div>
     );
-};
-
-
-
+}

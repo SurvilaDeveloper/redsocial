@@ -29,7 +29,7 @@ const LoginPage = async ({
             "
         >
             <div className="w-full max-w-md px-4">
-                <div className="bg-slate-900/80 border border-slate-700 rounded-2xl shadow-2xl p-6 md:p-8">
+                <div className="bg-slate-900/80 border border-slate-700 rounded-2xl shadow-2xl p-6 lg:p-8">
                     <h1 className="text-2xl font-semibold mb-2 text-center">
                         Iniciar sesión
                     </h1>

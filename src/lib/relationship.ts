@@ -1,6 +1,7 @@
 //src/lib/relationship.ts
 
 import { prisma } from "@/lib/prisma";
+import { RelationshipState } from "./relationship-state";
 
 //determina el estado de la relación de amistad entre dos usuarios
 export function relationState(o: {
@@ -12,16 +13,16 @@ export function relationState(o: {
 
     if (!o) return 0;
 
-    if (o.a_b_req === 0 && o.a_b_res === 0 && o.b_a_req === 0 && o.b_a_res === 0) return 1;
-    if (o.a_b_req === 1 && o.a_b_res === 0 && o.b_a_req === 0 && o.b_a_res === 0) return 2;
-    if (o.a_b_req === 0 && o.a_b_res === 0 && o.b_a_req === 1 && o.b_a_res === 0) return 3;
-    if (o.a_b_req === 0 && o.a_b_res === 1 && o.b_a_req === 1 && o.b_a_res === 0) return 4;
-    if (o.a_b_req === 1 && o.a_b_res === 0 && o.b_a_req === 0 && o.b_a_res === 1) return 5;
-    if (o.a_b_req === 0 && o.a_b_res === 1 && o.b_a_req === 0 && o.b_a_res === 0) return 6;
-    if (o.a_b_req === 0 && o.a_b_res === 0 && o.b_a_req === 0 && o.b_a_res === 1) return 7;
-    if (o.a_b_req === 1 && o.a_b_res === 1 && o.b_a_req === 1 && o.b_a_res === 1) return 8;
+    if (o.a_b_req === 0 && o.a_b_res === 0 && o.b_a_req === 0 && o.b_a_res === 0) return RelationshipState.NO_RELATION;
+    if (o.a_b_req === 1 && o.a_b_res === 0 && o.b_a_req === 0 && o.b_a_res === 0) return RelationshipState.A_REQUESTED;
+    if (o.a_b_req === 0 && o.a_b_res === 0 && o.b_a_req === 1 && o.b_a_res === 0) return RelationshipState.B_REQUESTED;
+    if (o.a_b_req === 0 && o.a_b_res === 1 && o.b_a_req === 1 && o.b_a_res === 0) return RelationshipState.B_ACCEPTED_A_PENDING;
+    if (o.a_b_req === 1 && o.a_b_res === 0 && o.b_a_req === 0 && o.b_a_res === 1) return RelationshipState.A_ACCEPTED_B_PENDING;
+    if (o.a_b_req === 0 && o.a_b_res === 1 && o.b_a_req === 0 && o.b_a_res === 0) return RelationshipState.A_ACCEPTED;
+    if (o.a_b_req === 0 && o.a_b_res === 0 && o.b_a_req === 0 && o.b_a_res === 1) return RelationshipState.B_ACCEPTED;
+    if (o.a_b_req === 1 && o.a_b_res === 1 && o.b_a_req === 1 && o.b_a_res === 1) return RelationshipState.FRIENDS;
 
-    return 0;
+    return RelationshipState.NONE;
 }
 
 //leedores el estado de la relación de amistad entre dos usuarios

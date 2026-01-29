@@ -114,7 +114,7 @@ export default async function AdminUserDetailPage({
     return (
         <div className="p-6">
             {/* Header */}
-            <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div className="mb-6 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                 <div>
                     <h1 className="text-2xl font-semibold">Admin · User</h1>
                     <p className="mt-1 text-sm text-slate-400">

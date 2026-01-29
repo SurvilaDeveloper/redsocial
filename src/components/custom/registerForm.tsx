@@ -162,12 +162,12 @@ const RegisterForm = () => {
                     />
 
                     {/* Imagen de perfil */}
-                    <div className="flex flex-col md:flex-row md:items-center w-full gap-4 md:gap-6 mt-2">
-                        <FormItem className="md:flex-1">
+                    <div className="flex flex-col lg:flex-row lg:items-center w-full gap-4 lg:gap-6 mt-2">
+                        <FormItem className="lg:flex-1">
                             <FormLabel
                                 className="
                                     flex justify-center items-center 
-                                    rounded-md w-full md:w-60 h-10 
+                                    rounded-md w-full lg:w-60 h-10 
                                     border border-emerald-500 
                                     bg-emerald-900/40 
                                     hover:bg-emerald-800/60 
@@ -195,11 +195,11 @@ const RegisterForm = () => {
                         </FormItem>
 
                         {preview && (
-                            <div className="mt-1 md:mt-0 flex flex-col items-center gap-1">
+                            <div className="mt-1 lg:mt-0 flex flex-col items-center gap-1">
                                 <p className="text-[11px] text-slate-400">
                                     Vista previa:
                                 </p>
-                                <div className="w-[80px] md:w-[96px] aspect-square relative overflow-hidden rounded-full border border-slate-600 bg-slate-950">
+                                <div className="w-[80px] lg:w-[96px] aspect-square relative overflow-hidden rounded-full border border-slate-600 bg-slate-950">
                                     <Image
                                         src={preview}
                                         alt="Vista previa de la imagen de perfil"

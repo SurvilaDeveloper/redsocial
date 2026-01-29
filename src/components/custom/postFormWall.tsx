@@ -1,5 +1,4 @@
 // src/components/custom/postFormWall.tsx
-
 "use client";
 
 import { z } from "zod";
@@ -11,7 +10,6 @@ import { Button } from "@/components/ui/button";
 import {
     Form,
     FormControl,
-    FormDescription,
     FormField,
     FormItem,
     FormLabel,
@@ -31,7 +29,12 @@ import { useGlobalContext } from "@/context/globalcontext";
 import { cfg } from "@/config";
 import { ImageIcon, RefreshCcw, X } from "lucide-react";
 
-const PostFormWall = () => {
+type Props = {
+    wallUserId: number;
+    canPublish?: boolean; // si lo resolvés server-side, pasalo y listo
+};
+
+const PostFormWall = ({ wallUserId, canPublish }: Props) => {
     const { l } = useGlobalContext();
 
     const [image, setImage] = useState<File | null>(null);
@@ -44,20 +47,9 @@ const PostFormWall = () => {
 
     const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-    const expandPostInput = () => {
-        setExpanded(true);
-    }
-
-    const collapsePostInput = () => {
-        setExpanded(false);
-    }
-
     const form = useForm<z.infer<typeof postSchema>>({
         resolver: zodResolver(postSchema),
-        defaultValues: {
-            title: "",
-            description: "",
-        },
+        defaultValues: { title: "", description: "" },
         mode: "onChange",
     });
 
@@ -107,10 +99,7 @@ const PostFormWall = () => {
         setError(null);
 
         startTransition(async () => {
-            let imageUrl: {
-                url: string;
-                publicId: string;
-            } | null = null;
+            let imageUrl: { url: string; publicId: string } | null = null;
 
             if (image) {
                 try {
@@ -121,55 +110,72 @@ const PostFormWall = () => {
                 }
             }
 
-            const response = await createPost(values, imageUrl);
+            // ✅ publica en wallUserId
+            const response = await createPost(values, imageUrl, undefined, wallUserId);
 
             if (response?.error) {
                 setError(response.error);
                 return;
             }
 
-            router.push("/");
+            // UX: cerramos, limpiamos y refrescamos el feed actual
+            clearImage();
+            form.reset({ title: "", description: "" });
+            setExpanded(false);
+
+            // si querés evitar reload, podés levantar un callback onCreated y hacer prepend.
+            router.refresh?.();
             window.location.reload();
         });
+    }
+
+    // Si canPublish viene y es false, ocultamos el formulario
+    if (canPublish === false) {
+        return (
+            <div
+                className="
+          w-full rounded-sm border border-slate-800 bg-[rgba(0,0,0,0.9)]
+          px-2 py-2 text-[12px] text-slate-300
+        "
+            >
+                No tenés permiso para publicar en este muro.
+            </div>
+        );
     }
 
     return (
         <div
             id="PostFormWall"
             className="
-                w-full
-                rounded-sm 
-                border 
-                border-slate-800 
-                bg-[rgba(10,39,78,0.9)] 
-                shadow-md 
-                px-1 py-1 
-                md:px-1 md:py-1 
-                mb-0
-                sticky 
-                top-10
-                md:top-12
-                z-50
-                max-h-[calc(100vh-70px)]
-                overflow-y-scroll
-                "
-
+        w-full
+        rounded-sm
+        border
+        border-slate-800
+        bg-[rgba(0,0,0,0.9)]
+        shadow-md
+        px-0 py-0
+        lg:px-0 lg:py-0
+        mb-0
+        sticky
+        top-10
+        lg:top-12
+        z-50
+        max-h-[calc(100vh-70px)]
+        overflow-y-auto
+      "
         >
             {expanded ? (
-                <div >
+                <div className="p-2">
                     <button
                         type="button"
-                        onClick={collapsePostInput}
+                        onClick={() => setExpanded(false)}
                         className="text-slate-400 hover:text-slate-300 text-sm"
                     >
                         <X size={16} className="text-white" />
                     </button>
+
                     <Form {...form}>
-                        <form
-                            onSubmit={form.handleSubmit(onSubmit)}
-                            className="space-y-0.1"
-                        >
-                            {/* Título */}
+                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-0.1">
                             <FormField
                                 control={form.control}
                                 name="title"
@@ -184,20 +190,18 @@ const PostFormWall = () => {
                                                 type="text"
                                                 {...field}
                                                 className="
-                                            h-6
-                                            text-[12px]
-                                            bg-slate-950
-                                            border-slate-700
-                                            focus-visible:ring-blue-500
-                                            "
+                          h-6 text-[12px]
+                          bg-slate-950 border-slate-700
+                          focus-visible:ring-blue-500
+                        "
                                             />
                                         </FormControl>
+
                                         <div
                                             className={`
-                                        mt-[2px] text-[10px]
-
-                                        ${counterClass(titleValue.length, TITLE_MAX)}
-                                    `}
+                        mt-[2px] text-[10px]
+                        ${counterClass(titleValue.length, TITLE_MAX)}
+                      `}
                                         >
                                             {titleValue.length} / {TITLE_MAX}
                                         </div>
@@ -206,7 +210,6 @@ const PostFormWall = () => {
                                 )}
                             />
 
-                            {/* Descripción */}
                             <FormField
                                 control={form.control}
                                 name="description"
@@ -220,20 +223,18 @@ const PostFormWall = () => {
                                                 placeholder="Escribe algo..."
                                                 {...field}
                                                 className="
-                                            text-[12px]
-                                            min-h-[48px]
-                                            bg-slate-950
-                                            border-slate-700
-                                            focus-visible:ring-blue-500
-                                        "
+                          text-[12px] min-h-[48px]
+                          bg-slate-950 border-slate-700
+                          focus-visible:ring-blue-500
+                        "
                                             />
                                         </FormControl>
+
                                         <div
                                             className={`
-                                        mt-[2px] text-[10px]
-
-                                        ${counterClass(descValue.length, DESC_MAX)}
-                                    `}
+                        mt-[2px] text-[10px]
+                        ${counterClass(descValue.length, DESC_MAX)}
+                      `}
                                         >
                                             {descValue.length} / {DESC_MAX}
                                         </div>
@@ -242,14 +243,12 @@ const PostFormWall = () => {
                                 )}
                             />
 
-                            {/* Imagen + botones */}
                             <FormItem>
                                 <FormLabel className="text-[11px] text-slate-400 leading-none">
                                     Imagen (opcional)
                                 </FormLabel>
                                 <FormControl>
                                     <div className="flex flex-wrap items-center gap-1">
-                                        {/* input real (oculto) */}
                                         <Input
                                             ref={fileInputRef}
                                             type="file"
@@ -263,14 +262,10 @@ const PostFormWall = () => {
                                                 type="button"
                                                 onClick={openFilePicker}
                                                 className="
-                                            h-7 
-                                            px-2 
-                                            text-[11px] 
-                                            bg-slate-600 
-                                            text-white 
-                                            rounded-md 
-                                            hover:bg-blue-600
-                                        "
+                          h-7 px-2 text-[11px]
+                          bg-slate-600 text-white rounded-md
+                          hover:bg-blue-600
+                        "
                                             >
                                                 <ImageIcon className="mr-1" size={16} />
                                                 Seleccionar imagen
@@ -281,19 +276,12 @@ const PostFormWall = () => {
                                                     type="button"
                                                     onClick={openFilePicker}
                                                     className="
-                                            h-7 
-                                            px-2 
-                                            text-[11px] 
-                                                bg-slate-600 
-                                                text-white 
-                                                rounded-md 
-                                                hover:bg-blue-600
-                                            "
+                            h-7 px-2 text-[11px]
+                            bg-slate-600 text-white rounded-md
+                            hover:bg-blue-600
+                          "
                                                 >
-                                                    <RefreshCcw
-                                                        className="mr-1"
-                                                        size={16}
-                                                    />
+                                                    <RefreshCcw className="mr-1" size={16} />
                                                     Cambiar
                                                 </Button>
 
@@ -302,13 +290,9 @@ const PostFormWall = () => {
                                                     variant="outline"
                                                     onClick={clearImage}
                                                     className="
-                                            h-7 
-                                            px-2 
-                                            text-[11px] 
-                                                rounded-md 
-                                                border-slate-600 
-                                                text-slate-200
-                                            "
+                            h-7 px-2 text-[11px]
+                            rounded-md border-slate-600 text-slate-200
+                          "
                                                 >
                                                     <X className="mr-1" size={16} />
                                                     Quitar
@@ -320,51 +304,37 @@ const PostFormWall = () => {
                                 <FormMessage />
                             </FormItem>
 
-                            {/* Preview */}
                             {preview && (
                                 <div className="mt-2 flex justify-center">
                                     <img
                                         src={preview}
                                         alt="vista previa"
                                         className="
-                                    w-full 
-                                    max-w-[400px] 
-                                    rounded-lg 
-                                    border border-slate-700 
-                                    bg-black 
-                                    object-contain
-                                "
+                      w-full max-w-[400px]
+                      rounded-lg border border-slate-700 bg-black object-contain
+                    "
                                     />
                                 </div>
                             )}
 
-                            {/* Error global */}
                             {error && (
                                 <div className="mt-2 text-xs text-red-400">
                                     <p>{error}</p>
-                                    <Link
-                                        href="/login"
-                                        className="underline text-red-300"
-                                    >
+                                    <Link href="/login" className="underline text-red-300">
                                         {cfg.TEXTS.acceder}
                                     </Link>
                                 </div>
                             )}
 
-                            {/* Botón enviar */}
                             <div className="pt-1 flex justify-end">
                                 <Button
                                     type="submit"
                                     disabled={isPending}
                                     className="
-                                h-7 
-                                px-2 
-                                text-[11px] 
-                                rounded-md 
-                                bg-blue-600 
-                                hover:bg-blue-500 
-                                disabled:opacity-60
-                            "
+                    h-7 px-2 text-[11px]
+                    rounded-md bg-blue-600 hover:bg-blue-500
+                    disabled:opacity-60
+                  "
                                 >
                                     {isPending ? "Publicando..." : "Publicar"}
                                 </Button>
@@ -376,17 +346,23 @@ const PostFormWall = () => {
                 <div className="h-8 text-[12px] bg-slate-950 text-slate-400 hover:text-slate-300 mb-0">
                     <button
                         type="button"
-                        onClick={expandPostInput}
-                        className="h-8 text-[12px] bg-slate-950 border border-slate-800 rounded-[4px] text-slate-400 hover:text-slate-300 w-full text-left px-2"
+                        onClick={() => setExpanded(true)}
+                        className="
+              h-8 text-[12px]
+              bg-slate-950 border border-slate-800 rounded-[4px]
+              text-slate-400 hover:text-slate-300
+              w-full text-left px-2
+            "
                     >
                         Escribe algo...
                     </button>
                 </div>
             )}
-
         </div>
     );
 };
 
 export default PostFormWall;
+
+
 

@@ -7,30 +7,30 @@ import { shapePost } from "@/lib/shape-post";
 import { getSocialRelations } from "@/lib/social-relations";
 import { RelationshipState } from "@/lib/relationship-state";
 
+import { getUserConfiguration } from "@/lib/configuration/getUserConfiguration";
+import { areIEnableToView, myOwnPermissions } from "@/lib/permissions";
+import { canViewPost } from "@/lib/post-visibility";
+
+import type { Configuration } from "@/types/configuration";
+
 export async function GET(
     req: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
-
     const { id } = await params;
     const session = await auth();
 
-    const viewerId =
-        session?.user?.id != null ? Number(session.user.id) : null;
-
+    const viewerId = session?.user?.id != null ? Number(session.user.id) : null;
     const postId = Number(id);
 
     if (Number.isNaN(postId)) {
-        return NextResponse.json(
-            { error: "Invalid post id" },
-            { status: 400 }
-        );
+        return NextResponse.json({ error: "Invalid post id" }, { status: 400 });
     }
 
     const post = await prisma.post.findUnique({
         where: { id: postId },
         include: {
-            user: {
+            author: {
                 select: {
                     id: true,
                     name: true,
@@ -43,6 +43,24 @@ export async function GET(
             images: {
                 where: { active: 1 },
                 orderBy: { index: "asc" },
+                include: {
+                    _count: {
+                        select: {
+                            image_like: true,
+                            image_unlike: true,
+                        },
+                    },
+                    ...(viewerId && {
+                        image_like: {
+                            where: { userId: viewerId },
+                            select: { id: true },
+                        },
+                        image_unlike: {
+                            where: { userId: viewerId },
+                            select: { id: true },
+                        },
+                    }),
+                },
             },
 
             post_comment: {
@@ -59,14 +77,8 @@ export async function GET(
                         },
                     },
 
-                    // 👍 nombres CORRECTOS según schema
-                    likes: viewerId
-                        ? { where: { userId: viewerId } }
-                        : true,
-
-                    unlikes: viewerId
-                        ? { where: { userId: viewerId } }
-                        : true,
+                    likes: viewerId ? { where: { userId: viewerId } } : true,
+                    unlikes: viewerId ? { where: { userId: viewerId } } : true,
 
                     responses: {
                         where: { active: 1 },
@@ -81,24 +93,18 @@ export async function GET(
                                     image: true,
                                 },
                             },
-
-                            likes: viewerId
-                                ? { where: { userId: viewerId } }
-                                : true,
-
-                            unlikes: viewerId
-                                ? { where: { userId: viewerId } }
-                                : true,
+                            likes: viewerId ? { where: { userId: viewerId } } : true,
+                            unlikes: viewerId ? { where: { userId: viewerId } } : true,
                         },
                     },
                 },
             },
 
-            // ✅ En Post sí está perfecto usar _count
             _count: {
                 select: {
                     post_like: true,
                     post_unlike: true,
+                    post_comment: { where: { active: 1 } },
                 },
             },
 
@@ -115,27 +121,37 @@ export async function GET(
         },
     });
 
-
     if (!post || post.deletedAt) {
         return NextResponse.json({ error: "Post not found" }, { status: 404 });
     }
 
-    // 🔐 Visibilidad
-    if (post.visibility !== 1 && post.user_id !== viewerId) {
+    const ownerId = post.authorId;
+
+    const relations: SocialRelations =
+        viewerId != null
+            ? await getSocialRelations(viewerId, ownerId)
+            : {
+                following: false,
+                isFollower: false,
+                relState: RelationshipState.NONE,
+            };
+
+    const allowed = canViewPost((post.visibility ?? 1) as PostVisibility, {
+        isOwner: viewerId === ownerId,
+        isLogged: viewerId !== null,
+        isFriend: relations.relState === RelationshipState.FRIENDS,
+        following: relations.following,
+    });
+
+    if (!allowed) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const relations: SocialRelations = viewerId
-        ? await getSocialRelations(viewerId, post.user_id)
-        : {
-            following: false,
-            isFollower: false,
-            relState: RelationshipState.NONE,
-        };
+    const shapedPost = shapePost(post, relations) as Post;
 
-    const shapedPost = shapePost(post, relations);
+    // commentsCount correcto ya lo arma shapePost, pero si querés forzarlo:
+    shapedPost.commentsCount = Number((post._count?.post_comment as any) ?? 0);
 
-    // 🧠 Shape comentarios y respuestas
     const shapedComments: PostComment[] = post.post_comment.map((comment) => ({
         id: comment.id,
         comment: comment.comment,
@@ -147,12 +163,11 @@ export async function GET(
 
         likesCount: comment.likes.length,
         unlikesCount: comment.unlikes.length,
-        userReaction: comment.likes.some(l => l.userId === viewerId)
+        userReaction: comment.likes.some((l) => l.userId === viewerId)
             ? "LIKE"
-            : comment.unlikes.some(u => u.userId === viewerId)
+            : comment.unlikes.some((u) => u.userId === viewerId)
                 ? "UNLIKE"
                 : null,
-
 
         responses: comment.responses.map((response) => ({
             id: response.id,
@@ -164,19 +179,34 @@ export async function GET(
 
             likesCount: response.likes.length,
             unlikesCount: response.unlikes.length,
-            userReaction: response.likes.some(l => l.userId === viewerId)
+            userReaction: response.likes.some((l) => l.userId === viewerId)
                 ? "LIKE"
-                : response.unlikes.some(u => u.userId === viewerId)
+                : response.unlikes.some((u) => u.userId === viewerId)
                     ? "UNLIKE"
                     : null,
-
         })),
     }));
 
     shapedPost.post_comment = shapedComments;
 
+    const ownerConfig: Configuration | null = await getUserConfiguration(ownerId);
+    shapedPost.ownerConfiguration = ownerConfig;
+
+    shapedPost.enableToView =
+        viewerId === ownerId
+            ? myOwnPermissions
+            : areIEnableToView(
+                ownerConfig,
+                viewerId !== null,
+                relations.relState === RelationshipState.FRIENDS,
+                relations.following
+            );
+
     return NextResponse.json({ data: shapedPost });
 }
+
+
+
 
 
 

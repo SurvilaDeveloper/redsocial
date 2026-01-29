@@ -214,7 +214,7 @@ const UserProfileMiniCard = ({
                             {isFollowerState && (
                                 <span
                                     id="isFollowingYou"
-                                    className="flex flex-row items-center text-[0.6rem] border border-emerald-400 text-emerald-200 bg-emerald-900/30 rounded-full px-1 py-[1px] leading-none whitespace-nowrap h-[16px]"
+                                    className="flex flex-row items-center text-[0.6rem] border border-yellow-800 text-yellow-500 bg-black rounded-full px-1 py-[1px] leading-none whitespace-nowrap h-[16px]"
                                 >
                                     Te sigue
                                 </span>

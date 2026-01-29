@@ -1,4 +1,4 @@
-// src/components/custom/postCard.tsx
+// src/components/custom/myPostCard.tsx
 "use client";
 
 import { useMemo, useRef, useState, useEffect } from "react";
@@ -7,7 +7,7 @@ import { formatDate } from "@/lib/dateUtils";
 import UserProfileMiniCard from "./userProfileMiniCard";
 import { useRouter } from "next/navigation";
 import PostCardCommentsContainer from "./postCardCommentsContainer";
-import PostCardCommentsResponsesContainer from "./postCardCommetsResponsesContainer";
+import PostCardCommentsResponsesContainer from "./postCardCommentsResponsesContainer";
 import {
     MessageCircle,
     MessageCircleOff,
@@ -32,24 +32,22 @@ import {
 
 
 
-export function PostCard({
+export function MyPostCard({
     session,
     post,
     variant = "card",
-    openCommentsInPage = false,
     enablePolling = false,
-    enableOwnerControls = false,
+    //enableOwnerControls = false,
     onOpenDetail,
-    comingFrom,
+    //comingFrom,
 }: {
     session: any;
     post: Post;
     variant?: "card" | "detail";
-    openCommentsInPage?: boolean;
     enablePolling?: boolean;
-    enableOwnerControls?: boolean;
+    //enableOwnerControls?: boolean;
     onOpenDetail?: (postId: number) => void;
-    comingFrom?: "mywall" | "wall" | "home";
+    //comingFrom?: "mywall" | "wall" | "home";
 }) {
     const router = useRouter();
     const [showFullDesc, setShowFullDesc] = useState(false);
@@ -180,7 +178,11 @@ export function PostCard({
         if (!canCreatePostComment || sessionUserId == null) return;
 
         const content = newComment.trim();
-        setNewComment("");
+        if (!content) return;
+
+        // guardamos lo que había escrito el usuario
+        const previousDraft = newComment;
+
         setCommentMsg(null);
 
         const tempId = -Date.now();
@@ -204,10 +206,7 @@ export function PostCard({
 
         setCommentsExpanded(true);
         setExpandedCommentId(tempId);
-
         setLocalComments((prev) => [optimistic, ...prev]);
-
-        scrollToComment(tempId);
 
         setCommentLoading(true);
 
@@ -224,9 +223,7 @@ export function PostCard({
             const data = await res.json().catch(() => null);
 
             if (!res.ok) {
-                throw new Error(
-                    data?.error || "No se pudo guardar el comentario"
-                );
+                throw new Error("❌");
             }
 
             const created = data?.data;
@@ -246,22 +243,27 @@ export function PostCard({
                 )
             );
 
-            setExpandedCommentId((prev) =>
-                prev === tempId ? realId : prev
-            );
-            scrollToComment(realId);
+            setExpandedCommentId((prev) => (prev === tempId ? realId : prev));
 
-            setCommentMsg("Comentario guardado ✅");
+            // ✅ recién acá limpiamos el textarea
+            setNewComment("");
+
+            setCommentMsg("✅");
         } catch (err: any) {
             const msg = err?.message ?? "Error";
-            setLocalComments((prev) =>
-                prev.filter((c) => c.id !== tempId)
-            );
+
+            // sacamos el optimista
+            setLocalComments((prev) => prev.filter((c) => c.id !== tempId));
+
+            // ✅ restauramos lo que estaba escrito
+            setNewComment(previousDraft);
+
             setCommentMsg(msg);
         } finally {
             setCommentLoading(false);
         }
     };
+
 
     // ✅ reglas de visibilidad
     const viewerIdRaw = session?.user?.id;
@@ -424,7 +426,7 @@ export function PostCard({
 
     // 💡 Helpers owner toolbar
     const handleToggleActiveOwner = async () => {
-        if (!enableOwnerControls || !isOwner) return;
+        //if (!enableOwnerControls || !isOwner) return;
 
         const prevActive = currentPost.active ?? 1;
         const nextActive = prevActive === 1 ? 0 : 1;
@@ -447,7 +449,7 @@ export function PostCard({
     const handleChangeVisibilityOwner = async (
         value: PostVisibility
     ) => {
-        if (!enableOwnerControls || !isOwner) return;
+        //if (!enableOwnerControls || !isOwner) return;
 
         setOwnerActionsLoading(true);
         try {
@@ -466,7 +468,7 @@ export function PostCard({
     };
 
     const handleSoftDeleteOwner = async () => {
-        if (!enableOwnerControls || !isOwner) return;
+        //if (!enableOwnerControls || !isOwner) return;
         setDeleteLoading(true);
         try {
             const res = await softDeletePost(currentPost.id);
@@ -555,7 +557,7 @@ export function PostCard({
             )}
 
             {/* === TOOLBAR DE DUEÑO (MyWall) === */}
-            {enableOwnerControls && isOwner && !isDeleted && comingFrom === "mywall" && (
+            {!isDeleted && (
                 <div className="mb-2 flex flex-row items-center gap-2 w-full h-6 text-white bg-[rgb(62,62,62)] px-3 py-1 rounded-md">
                     {/* Editar */}
                     <Link
@@ -680,7 +682,7 @@ export function PostCard({
             )}
 
             {/* Toolbar cuando está eliminado (solo dueño)*/}
-            {enableOwnerControls && isOwner && isDeleted && (
+            {isDeleted && (
                 <div className="mb-2 flex flex-row items-center gap-2 w-full text-red-200 bg-[rgb(64,20,20)] px-3 py-1 rounded-md">
                     <span className="text-xs font-semibold">
                         Este post está en la papelera (deletedAt tiene valor).
@@ -724,6 +726,8 @@ export function PostCard({
                     </div>
                 </div>
             )}
+
+
 
             {/* ====== HEADER (usuario + fecha + título) ====== */}
             {currentPost.user && (
@@ -838,7 +842,7 @@ export function PostCard({
                                 commentLoading={commentLoading}
                                 commentMsg={commentMsg}
                                 submitPostComment={submitPostComment}
-                                PostCardCommetsResponsesContainer={
+                                PostCardCommentsResponsesContainer={
                                     PostCardCommentsResponsesContainer
                                 }
                             />
@@ -846,9 +850,9 @@ export function PostCard({
                     </div>
                 ) : (
                     // 📌 Vista detalle CON imágenes: columnas (post izquierda, comentarios derecha)
-                    <div className="mt-3 flex flex-col md:flex-row gap-4">
+                    <div className="mt-3 flex flex-col lg:flex-row gap-4">
                         {/* Columna izquierda: imágenes + descripción + reacciones */}
-                        <section className="md:w-2/3 w-full flex flex-col gap-2">
+                        <section className="lg:w-1/2 w-full flex flex-col gap-2">
                             {sortedImages.length === 1 && (
                                 <PostImageCard
                                     image={sortedImages[0]}
@@ -879,7 +883,7 @@ export function PostCard({
                             </pre>
 
                             {/* ⭐ Reacciones del post (like / unlike) */}
-                            <div className="mt-2 flex flex-row items-center gap-3">
+                            <div className="flex flex-row items-center gap-3">
                                 <button
                                     type="button"
                                     onClick={handleLike}
@@ -917,7 +921,7 @@ export function PostCard({
                         {/* Columna derecha: comentarios */}
                         <aside
                             id="comments"
-                            className="md:w-1/3 w-full md:border-l border-neutral-800 md:pl-3 md:h-screen overflow-y-scroll h-fit pb-[100px]"
+                            className="lg:w-1/2 w-full lg:border-l border-neutral-800 lg:pl-3 lg:h-screen overflow-y-scroll h-fit pb-[100px]"
                         >
                             <div className="flex items-center justify-between mb-2">
                                 <span className="text-xs text-gray-400">
@@ -939,7 +943,7 @@ export function PostCard({
                                 commentLoading={commentLoading}
                                 commentMsg={commentMsg}
                                 submitPostComment={submitPostComment}
-                                PostCardCommetsResponsesContainer={
+                                PostCardCommentsResponsesContainer={
                                     PostCardCommentsResponsesContainer
                                 }
                             />
@@ -1015,61 +1019,31 @@ export function PostCard({
                             <ThumbsDown className="w-4 h-4" />
                             <span>{unlikesCount}</span>
                         </button>
+                        {/* Botón de comentarios + contenedor inline */}
+                        <button
+                            type="button"
+                            onClick={handleCommentsClick}
+                            className="mt-0 text-xs text-gray-300 hover:text-gray-200 select-none w-fit"
+                        >
+                            {commentsExpanded ? (
+                                <div className="flex flex-row gap-1">
+                                    <span>Ocultar</span>
+                                    <MessageCircleOff className="w-5 h-5 text-gray-400 hover:text-gray-100" />
+                                    <span>{activeCommentsCount}</span>
+                                </div>
+                            ) : (
+                                <div className="flex flex-row gap-1">
+                                    <span>Ver</span>
+                                    <MessageCircle className="w-5 h-5 text-gray-400 hover:text-gray-100" />
+                                    <span>{activeCommentsCount}</span>
+                                </div>
+                            )}
+                        </button>
                     </div>
 
-                    {/* Botón de comentarios + contenedor inline */}
-                    <button
-                        type="button"
-                        onClick={handleCommentsClick}
-                        className="mt-3 text-xs text-gray-300 hover:text-gray-200 select-none w-fit"
-                    >
-                        {openCommentsInPage ? (
-                            <div className="flex flex-row">
-                                <MessageCircle className="w-6 h-6 text-gray-400 hover:text-gray-100" />
-                                <span>{activeCommentsCount}</span>
-                            </div>
-                        ) : commentsExpanded ? (
-                            <div className="flex flex-row">
-                                <MessageCircleOff className="w-6 h-6 text-gray-400 hover:text-gray-100" />
-                                <span>{activeCommentsCount}</span>
-                            </div>
-                        ) : (
-                            <div className="flex flex-row">
-                                <MessageCircle className="w-6 h-6 text-gray-400 hover:text-gray-100" />
-                                <span>{activeCommentsCount}</span>
-                            </div>
-                        )}
-                    </button>
 
-                    {!openCommentsInPage && commentsExpanded && (
-                        <PostCardCommentsContainer
-                            session={session}
-                            sessionUserId={sessionUserId}
-                            localComments={localComments}
-                            setLocalComments={setLocalComments}
-                            expandedCommentId={expandedCommentId}
-                            onToggleComment={toggleComment}
-                            commentRefs={commentRefs}
-                            newComment={newComment}
-                            setNewComment={setNewComment}
-                            canCreatePostComment={
-                                canCreatePostComment
-                            }
-                            commentLoading={commentLoading}
-                            commentMsg={commentMsg}
-                            submitPostComment={submitPostComment}
-                            PostCardCommetsResponsesContainer={
-                                PostCardCommentsResponsesContainer
-                            }
-                        />
-                    )}
                 </>
             )}
         </div>
     );
-
 }
-
-
-
-

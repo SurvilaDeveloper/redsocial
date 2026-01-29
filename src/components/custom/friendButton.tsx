@@ -27,16 +27,16 @@ const FriendButton = ({
 
     const sendReqChip =
         baseChip +
-        " border-sky-400 text-sky-200 bg-sky-900/30 hover:bg-sky-900/60";
+        " border-blue-800 text-blue-500 bg-black hover:bg-blue-900/60";
     const areFriendsChip =
         baseChip +
-        " border-yellow-400 text-yellow-200 bg-yellow-900/30 hover:bg-yellow-900/60";
+        " border-orange-800 text-orange-500 bg-black hover:bg-orange-900/60";
     const wantBeFriendChip =
         baseChip +
-        " border-pink-400 text-pink-200 bg-pink-900/30 hover:bg-pink-900/60";
+        " border-pink-800 text-pink-500 bg-black hover:bg-pink-900/60";
     const sentReqChip =
         baseChip +
-        " border-rose-400 text-rose-200 bg-rose-900/30";
+        " border-rose-900 text-rose-600 bg-black";
 
     return (
         <div className="flex items-center h-[16px]">

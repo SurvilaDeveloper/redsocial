@@ -47,7 +47,7 @@ export default function RoleEditor({ userId, currentRole, isAdminTarget }: Props
                 ) : null}
             </div>
 
-            <div className="mt-3 flex flex-col gap-3 md:flex-row md:items-end">
+            <div className="mt-3 flex flex-col gap-3 lg:flex-row lg:items-end">
                 <div className="flex-1">
                     <label className="mb-1 block text-xs text-slate-400">Rol actual</label>
                     <select

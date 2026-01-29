@@ -70,7 +70,7 @@ export default function ForceLogoutButton({ userId, isAdminTarget }: Props) {
                     no se permite forzar logout.
                 </p>
             ) : (
-                <div className="mt-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div className="mt-3 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                     <div className="text-sm text-slate-300">
                         Esto cerrará cualquier sesión activa. El usuario podrá volver a entrar iniciando sesión.
                     </div>

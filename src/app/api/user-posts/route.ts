@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
 
     const posts = await prisma.post.findMany({
         where: {
-            user_id: userId,
+            authorId: userId,
             deletedAt: null,
             active: 1,
         },
@@ -38,46 +38,21 @@ export async function GET(req: NextRequest) {
         skip: (page - 1) * pageSize,
         take: pageSize,
         include: {
-            images: {
-                orderBy: { index: "asc" },
-            },
-            user: {
-                select: {
-                    id: true,
-                    name: true,
-                    imageUrl: true,
-                    imagePublicId: true,
-                    image: true,
-                },
-            },
-            post_comment: {
-                where: { active: 1 },
-                select: { id: true },
+            images: { orderBy: { index: "asc" } },
+            author: {
+                select: { id: true, name: true, imageUrl: true, imagePublicId: true, image: true },
             },
             _count: {
-                select: {
-                    post_like: true,
-                    post_unlike: true,
-                },
+                select: { post_like: true, post_unlike: true, post_comment: true },
             },
             ...(viewerId && {
-                post_like: {
-                    where: { userId: viewerId },
-                    select: { id: true },
-                },
-                post_unlike: {
-                    where: { userId: viewerId },
-                    select: { id: true },
-                },
+                post_like: { where: { userId: viewerId }, select: { id: true } },
+                post_unlike: { where: { userId: viewerId }, select: { id: true } },
             }),
         },
     });
 
     const social = await getSocialRelations(viewerId, userId);
-
-    const shaped: Post[] = posts.map((post) =>
-        shapePost(post, social)
-    );
-
+    const shaped: Post[] = posts.map((post) => shapePost(post, social));
     return NextResponse.json({ allPosts: shaped });
 }

@@ -17,5 +17,12 @@ export type Configuration = {
     followingListVisibility: number;
 
     likesVisibility: number;
-    privateMessagesVisibility: number;
+
+    postsWhoCanShare: number;
+
+    postCommentsWhoCanWrite: number;
+    postRepliesWhoCanWrite: number;
+
+    mediaCommentsWhoCanWrite: number;
+    mediaRepliesWhoCanWrite: number;
 };

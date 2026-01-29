@@ -156,7 +156,13 @@ export const configurationSchema = z.object({
     followingListVisibility: z.number().int().min(1).max(4),
 
     likesVisibility: z.number().int().min(1).max(4),
-    privateMessagesVisibility: z.number().int().min(2).max(4),
+
+    postsWhoCanShare: z.number().int().min(2).max(4),
+
+    postCommentsWhoCanWrite: z.number().int().min(2).max(4),
+    postRepliesWhoCanWrite: z.number().int().min(2).max(4),
+    mediaCommentsWhoCanWrite: z.number().int().min(2).max(4),
+    mediaRepliesWhoCanWrite: z.number().int().min(2).max(4),
 })
 
 export const changePasswordSchema = z
@@ -186,7 +192,34 @@ export const changePasswordSchema = z
         }
     );
 
+/* ----------------------------------------------------------------------- */
+/*                                 REPORT                                  */
+/* ----------------------------------------------------------------------- */
 
+import type { ReportReason } from "@/lib/reportReasons";
+
+export const reportSchema = z.object({
+    reason: z.enum([
+        "spam",
+        "harassment",
+        "hate",
+        "sexual",
+        "violence",
+        "illegal",
+        "privacy",
+        "impersonation",
+        "misinformation",
+        "other",
+    ] satisfies ReportReason[] as any),
+    details: z
+        .string()
+        .trim()
+        .max(500, "Máximo 500 caracteres")
+        .optional()
+        .transform((v) => (v && v.length ? v : undefined)),
+});
+
+export type ReportInput = z.infer<typeof reportSchema>;
 
 
 

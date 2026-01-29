@@ -1,54 +1,48 @@
 // src/components/custom/editProfileForm.tsx
 "use client";
 
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
-import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CalendarIcon, Earth, Phone } from "lucide-react";
+import {
+    AlertTriangle,
+    CalendarIcon,
+    CheckCircle2,
+    EyeIcon,
+    Globe,
+    Image as ImageIcon,
+    MapPin,
+    Share2,
+    User,
+    X,
+} from "lucide-react";
 
 import { profileSchema } from "@/lib/zod";
 import { cn } from "@/lib/utils";
 
-import {
-    Form,
-    FormControl,
-    FormDescription,
-    FormField,
-    FormItem,
-    FormLabel,
-    FormMessage,
-} from "@/components/ui/form";
-
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
-
+import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
 
-import { ProfileMe } from "@/types/profile";
+import {
+    FormTextInput,
+    FormTextareaInput,
+    FormInput,
+    FormSelectNumberField,
+} from "@/components/inputs";
+
+import type { ProfileMe } from "@/types/profile";
 
 import countriesData from "@/data/geodata/countries.json";
-import statesRaw from "@/data/geodata/states_by_country.json"
-import citiesRaw from "@/data/geodata/cities_by_state.json"
+import statesRaw from "@/data/geodata/states_by_country.json";
+import citiesRaw from "@/data/geodata/cities_by_state.json";
 
-import VisibilitySelect from "./VisibilitySelect";
-import {
-    VISIBILITY_SELECT_1,
-    VISIBILITY_SELECT_2,
-} from "@/lib/visibility-options";
+import WallHeaderShell from "./WallHeaderShell";
 
-
+import { useToast } from "@/hooks/use-toast";
 
 /* -------------------------------------------------------------------------- */
 /*                                   TYPES                                    */
@@ -64,18 +58,92 @@ const citiesData = citiesRaw as CitiesByState;
 type PageId = "personal" | "location" | "socialnets";
 
 /**
- * Extensión local del schema para IDs geográficos (solo frontend)
+ * Extensión local del schema para IDs geográficos (solo frontend).
+ * (El backend puede guardar además country/province/city como nombres resueltos.)
  */
 type ProfileFormValues = {
     countryId: number | null;
     provinceId: number | null;
     cityId: number | null;
-} & Omit<
-    ReturnType<typeof profileSchema.parse>,
-    never
->;
+} & Omit<ReturnType<typeof profileSchema.parse>, never>;
 
+type SaveStatus =
+    | { type: "idle"; message: null }
+    | { type: "success"; message: string }
+    | { type: "error"; message: string };
 
+/* -------------------------------------------------------------------------- */
+/*                               UI helpers (local)                           */
+/* -------------------------------------------------------------------------- */
+
+function PageShell({ children }: { children: React.ReactNode }) {
+    return (
+        <div className="flex flex-col items-center gap-4 lg:w-[720px] w-full p-2">
+            <div className="w-full rounded-2xl border border-slate-800/80 bg-slate-950/50 shadow-[0_0_0_1px_rgba(255,255,255,0.02)]">
+                <div className="p-4 lg:p-6">{children}</div>
+            </div>
+        </div>
+    );
+}
+
+function SectionCard({
+    title,
+    icon,
+    actions,
+    children,
+    className,
+}: {
+    title: string;
+    icon?: React.ReactNode;
+    actions?: React.ReactNode;
+    children: React.ReactNode;
+    className?: string;
+}) {
+    return (
+        <section
+            className={cn(
+                "rounded-xl border border-slate-800/80 bg-slate-900/25",
+                "shadow-[0_0_0_1px_rgba(255,255,255,0.02)]",
+                "p-4 lg:p-5 space-y-4",
+                className
+            )}
+        >
+            <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                    {icon ? <span className="text-slate-400">{icon}</span> : null}
+                    <h3 className="text-[11px] font-semibold tracking-[0.22em] text-slate-300/90 uppercase">
+                        {title}
+                    </h3>
+                </div>
+                {actions ? <div className="shrink-0">{actions}</div> : null}
+            </div>
+
+            <div className="space-y-2">{children}</div>
+        </section>
+    );
+}
+
+function InlineNotice({
+    type,
+    message,
+}: {
+    type: "success" | "error";
+    message: string;
+}) {
+    return (
+        <div
+            className={cn(
+                "flex items-center gap-2 rounded-lg border px-3 py-2 text-sm",
+                type === "success" &&
+                "bg-emerald-600/10 border-emerald-700/60 text-emerald-200",
+                type === "error" && "bg-red-600/10 border-red-700/60 text-red-200"
+            )}
+        >
+            {type === "success" ? <CheckCircle2 size={16} /> : <AlertTriangle size={16} />}
+            <span className="leading-snug">{message}</span>
+        </div>
+    );
+}
 
 /* -------------------------------------------------------------------------- */
 /*                                 COMPONENT                                  */
@@ -83,129 +151,75 @@ type ProfileFormValues = {
 
 export default function ProfileForm({ user }: { user: ProfileMe }) {
     const { update } = useSession();
+    const { toast } = useToast();
+    /* ------------------------------ navigation / status ------------------------------ */
+
+    const [page, setPage] = useState<PageId>("personal");
+    const [status, setStatus] = useState<SaveStatus>({ type: "idle", message: null });
+    const [saving, setSaving] = useState(false);
+
+    // confirmación para descartar cambios
+    const [discardAsk, setDiscardAsk] = useState(false);
+    const [pendingPage, setPendingPage] = useState<null | PageId>(null);
+    const [pendingExit, setPendingExit] = useState(false);
+
+    /* ------------------------------ images state ------------------------------ */
 
     const [profileFile, setProfileFile] = useState<File | null>(null);
     const [wallFile, setWallFile] = useState<File | null>(null);
-    const [wallColor, setWallColor] = useState<string | null>(null)
-    const [wallHeaderBackgroundTypeState, setWallHeaderBackgroundTypeState] = useState<string | null>(user.wallHeaderBackgroundType)
 
-    const [preview, setPreview] = useState<string | null>(
-        user.imageUrl ?? user.image ?? "/user.jpg"
-    );
+    const initialWallType = user.wallHeaderBackgroundType ?? null;
+    const initialWallColor = user.wallHeaderBackgroundColor ?? null;
 
-    const [wallPreview, setWallPreview] = useState<string | null>(
-        user.wallHeaderBackgroundType == "color" ? user.wallHeaderBackgroundColor : user.wallHeaderBackgroundType == "image" ? user.imageWallUrl : "/wall.jpg"
-    );
+    const [wallColor, setWallColor] = useState<string | null>(initialWallColor);
+    const [wallHeaderBackgroundTypeState, setWallHeaderBackgroundTypeState] =
+        useState<string | null>(initialWallType);
 
+    const initialProfilePreview = user.imageUrl ?? user.image ?? "/user.jpg";
+    const initialWallPreview =
+        user.wallHeaderBackgroundType === "color"
+            ? user.wallHeaderBackgroundColor
+            : user.wallHeaderBackgroundType === "image"
+                ? user.imageWallUrl
+                : "/wall.jpg";
+
+    const [preview, setPreview] = useState<string | null>(initialProfilePreview);
+    const [wallPreview, setWallPreview] = useState<string | null>(initialWallPreview);
 
     const [uploadingProfile, setUploadingProfile] = useState(false);
     const [uploadingWall, setUploadingWall] = useState(false);
 
-    const [profileImageUrl, setProfileImageUrl] = useState<string | null>(
-        user.imageUrl ?? null
-    );
-
-    const [wallImageUrl, setWallImageUrl] = useState<string | null>(
-        user.imageWallUrl ?? null
-    );
+    const [profileImageUrl, setProfileImageUrl] = useState<string | null>(user.imageUrl ?? null);
+    const [wallImageUrl, setWallImageUrl] = useState<string | null>(user.imageWallUrl ?? null);
 
     const [profileImagePublicId, setProfileImagePublicId] = useState<string | null>(
         user.imagePublicId ?? null
     );
-
     const [wallImagePublicId, setWallImagePublicId] = useState<string | null>(
         user.imageWallPublicId ?? null
     );
 
+    /**
+     * 1) previewOpen: colapsa/expande TODO el bloque de vista previa (nuevo).
+     * 2) previewExpanded: el estado interno que ya usabas dentro de WallHeaderShell.
+     */
+    const [previewOpen, setPreviewOpen] = useState(false); // ✅ inicia colapsado
+    const [previewExpanded, setPreviewExpanded] = useState(false);
 
-
-    const [discardAsk, setDiscardAsk] = useState(false);
-
-    const [page, setPage] = useState<PageId>("personal");
-
-    const [saveError, setSaveError] = useState<string | null>(null);
-    const [saveOk, setSaveOk] = useState<string | null>(null);
-    const [saving, setSaving] = useState(false);
-
-    const [configuration, setConfiguration] = useState({
-        profileImageVisibility: user.configuration?.profileImageVisibility ?? 1,
-        coverImageVisibility: user.configuration?.coverImageVisibility ?? 1,
-        fullProfileVisibility: user.configuration?.fullProfileVisibility ?? 1,
-
-        wallVisibility: user.configuration?.wallVisibility ?? 1,
-        postsVisibility: user.configuration?.postsVisibility ?? 1,
-        postCommentsVisibility: user.configuration?.postCommentsVisibility ?? 1,
-        postRepliesVisibility: user.configuration?.postRepliesVisibility ?? 1,
-
-        mediaVisibility: user.configuration?.mediaVisibility ?? 1,
-        mediaCommentsVisibility: user.configuration?.mediaCommentsVisibility ?? 1,
-        mediaRepliesVisibility: user.configuration?.mediaRepliesVisibility ?? 1,
-
-        friendsListVisibility: user.configuration?.friendsListVisibility ?? 2,
-        followersListVisibility: user.configuration?.followersListVisibility ?? 1,
-        followingListVisibility: user.configuration?.followingListVisibility ?? 1,
-
-        likesVisibility: user.configuration?.likesVisibility ?? 1,
-        privateMessagesVisibility: user.configuration?.privateMessagesVisibility ?? 2,
-    });
-
-    async function uploadImage(
-        file: File,
-        endpoint: "/api/upload-profile-image" | "/api/upload-wall-image"
-    ) {
-        const formData = new FormData();
-        formData.append("file", file);
-
-        const res = await fetch(endpoint, {
-            method: "POST",
-            body: formData,
-        });
-
-        const json = await res.json();
-
-        if (!res.ok) {
-            throw new Error(json?.error ?? "Error subiendo imagen");
-        }
-
-        return json as { url: string; publicId: string };
-    }
-
-
-    /* ----------------------------- GEO DATA -------------------------------- */
+    /* ----------------------------- geo state ------------------------------ */
 
     const [countries, setCountries] = useState<GeoOption[]>([]);
     const [states, setStates] = useState<GeoOption[]>([]);
     const [cities, setCities] = useState<GeoOption[]>([]);
 
-
-
-    const [geoLoading, setGeoLoading] = useState({
-        countries: false,
-        states: false,
-        cities: false,
-    });
-
-    const toggleDiscardAsk = () => {
-        setDiscardAsk((prev) => !prev);
-    };
-
-    const renderVisibilitySelect = (
-        key: keyof typeof configuration,
-        label: string,
-        options: typeof VISIBILITY_SELECT_1
-    ) => (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-center">
-            <Label className="text-sm">{label}</Label>
-            <VisibilitySelect
-                value={configuration[key]}
-                options={options}
-                onChange={(value) =>
-                    setConfiguration((prev) => ({ ...prev, [key]: value }))
-                }
-            />
-        </div>
+    const geoLoading = useMemo(
+        () => ({ countries: false, states: false, cities: false }),
+        []
     );
 
+    useEffect(() => {
+        setCountries(countriesData as any);
+    }, []);
 
     /* ---------------------------- FORM SETUP -------------------------------- */
 
@@ -257,62 +271,117 @@ export default function ProfileForm({ user }: { user: ProfileMe }) {
 
     const countryId = form.watch("countryId");
     const provinceId = form.watch("provinceId");
-
-    // Habilitar el select de ciudad si hay provinceId seleccionado o valor por defecto cargado
-    const provinceAvailable = provinceId ?? defaultValues.provinceId;
+    const effectiveCountryId = countryId ?? defaultValues.countryId;
     const effectiveProvinceId = provinceId ?? defaultValues.provinceId;
 
+    /* ----------------------------- Preview ------------------------------- */
 
-    /* ------------------------------ GEO API --------------------------------- */
+    // enableToView en preview: todo true para ver el diseño completo
+    const previewEnableToView = useMemo(
+        () => ({ profileImage: true, coverImage: true, fullProfile: true }),
+        []
+    );
+
+    const previewFullUser = useMemo(() => {
+        const name = user?.name ?? "Usuario";
+
+        const nick = (form.watch("nick") ?? user.nick ?? null) as string | null;
+
+        const occupation = (form.watch("occupation") ?? user.occupation ?? null) as string | null;
+        const company = (form.watch("company") ?? user.company ?? null) as string | null;
+        const bio = (form.watch("bio") ?? user.bio ?? null) as string | null;
+        const website = (form.watch("website") ?? user.website ?? null) as string | null;
+
+        const twitterHandle = (form.watch("twitterHandle") ?? user.twitterHandle ?? null) as string | null;
+        const facebookHandle = (form.watch("facebookHandle") ?? user.facebookHandle ?? null) as string | null;
+        const instagramHandle = (form.watch("instagramHandle") ?? user.instagramHandle ?? null) as string | null;
+        const linkedinHandle = (form.watch("linkedinHandle") ?? user.linkedinHandle ?? null) as string | null;
+        const githubHandle = (form.watch("githubHandle") ?? user.githubHandle ?? null) as string | null;
+
+        const city = (form.watch("city") ?? user.city ?? null) as string | null;
+        const province = (form.watch("province") ?? user.province ?? null) as string | null;
+        const country = (form.watch("country") ?? user.country ?? null) as string | null;
+
+        // avatar + cover
+        const avatarSrc = preview ?? user.imageUrl ?? user.image ?? "/user.jpg";
+
+        // cover: si type = image => wallPreview (blob/url), si type = color => wallPreview (#hex)
+        const wallType = (wallHeaderBackgroundTypeState ?? null) as "image" | "color" | null;
+        const wallBgColor = wallType === "color" ? (wallPreview ?? null) : null;
+        const wallImgUrl = wallType === "image" ? (wallPreview ?? null) : null;
+
+        return {
+            id: user.id,
+            name,
+            nick,
+
+            imageUrl: avatarSrc,
+            imageWallUrl: wallImgUrl,
+            wallHeaderBackgroundType: wallType,
+            wallHeaderBackgroundColor: wallBgColor,
+
+            occupation,
+            company,
+            city,
+            province,
+            country,
+            website,
+            bio,
+
+            twitterHandle,
+            facebookHandle,
+            instagramHandle,
+            linkedinHandle,
+            githubHandle,
+
+            // para que el botón "Ver CV" aparezca también en preview (match visual)
+            meta: { cv: { canView: true } },
+        };
+    }, [form, preview, wallPreview, wallHeaderBackgroundTypeState, user]);
+
+    const previewDisplayUser = useMemo(() => {
+        // en el wall real: colapsado muestra "basicUser".
+        // Para match 100% visual, hacemos un "basic" igual al real:
+        if (previewExpanded) return previewFullUser;
+
+        return {
+            id: previewFullUser.id,
+            name: previewFullUser.name,
+            nick: previewFullUser.nick,
+            imageUrl: previewFullUser.imageUrl,
+            imageWallUrl: previewFullUser.imageWallUrl,
+            wallHeaderBackgroundType: previewFullUser.wallHeaderBackgroundType,
+            wallHeaderBackgroundColor: previewFullUser.wallHeaderBackgroundColor,
+        };
+    }, [previewExpanded, previewFullUser]);
+
+    /* ------------------------------ GEO effects ------------------------------ */
 
     useEffect(() => {
-        setCountries(countriesData);
-    }, []);
-
-
-    useEffect(() => {
-        setCities([]);
-        // Solo limpiar cityId si el usuario cambió la provincia manualmente
-        if (provinceId !== defaultValues.provinceId) {
-            form.setValue("cityId", null);
-        }
-
-        if (!provinceId && !defaultValues.provinceId) return;
-
-        const effectiveProvinceId = provinceId ?? defaultValues.provinceId;
-
-        // Para cargar ciudades
-        const newCities = effectiveProvinceId !== null
-            ? citiesData[effectiveProvinceId] ?? []
-            : [];
-        setCities(newCities);
-
-    }, [provinceId, form]);
-
-
-    useEffect(() => {
-        const effectiveCountryId = countryId ?? defaultValues.countryId;
-
         if (effectiveCountryId == null) {
             setStates([]);
             return;
         }
-
-        const newStates = statesData[effectiveCountryId] ?? [];
-        setStates(newStates);
-    }, [countryId, defaultValues.countryId]);
-
+        setStates(statesData[effectiveCountryId] ?? []);
+    }, [effectiveCountryId]);
 
     useEffect(() => {
-        const effectiveProvinceId = provinceId ?? defaultValues.provinceId;
         if (!effectiveProvinceId) {
             setCities([]);
             return;
         }
-        const newCities = citiesData[effectiveProvinceId] ?? [];
-        setCities(newCities);
-    }, [provinceId, defaultValues.provinceId]);
+        setCities(citiesData[effectiveProvinceId] ?? []);
+    }, [effectiveProvinceId]);
 
+    // Si el usuario cambia provincia manualmente, limpiamos cityId
+    useEffect(() => {
+        if (provinceId !== defaultValues.provinceId) {
+            form.setValue("cityId", null);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [provinceId]);
+
+    // liberar ObjectURLs al cambiar preview/wallPreview
     useEffect(() => {
         return () => {
             if (preview?.startsWith("blob:")) URL.revokeObjectURL(preview);
@@ -320,30 +389,118 @@ export default function ProfileForm({ user }: { user: ProfileMe }) {
         };
     }, [preview, wallPreview]);
 
+    /* ------------------------------ dirty state ------------------------------ */
 
+    const imagesDirty =
+        Boolean(profileFile || wallFile) ||
+        wallHeaderBackgroundTypeState !== initialWallType ||
+        (wallHeaderBackgroundTypeState === "color" &&
+            (wallColor ?? null) !== (initialWallColor ?? null));
+
+    const isDirty = form.formState.isDirty || imagesDirty;
+
+    /* ------------------------------ navigation guards ------------------------------ */
+
+    const handleTryExit = useCallback(() => {
+        if (isDirty) {
+            setPendingExit(true);
+            setPendingPage(null);
+            setDiscardAsk(true);
+            return;
+        }
+        window.location.href = "/";
+    }, [isDirty]);
+
+    const handleTryChangePage = useCallback(
+        (next: PageId) => {
+            if (next === page) return;
+            if (isDirty) {
+                setPendingExit(false);
+                setPendingPage(next);
+                setDiscardAsk(true);
+                return;
+            }
+            setPage(next);
+        },
+        [isDirty, page]
+    );
+
+    const handleConfirmDiscard = useCallback(() => {
+        // reset form + reset imágenes a lo inicial
+        form.reset(defaultValues);
+        setProfileFile(null);
+        setWallFile(null);
+
+        setWallHeaderBackgroundTypeState(initialWallType);
+        setWallColor(initialWallColor);
+
+        setPreview(initialProfilePreview);
+        setWallPreview(initialWallPreview);
+
+        setStatus({ type: "idle", message: null });
+
+        setDiscardAsk(false);
+
+        if (pendingExit) {
+            window.location.href = "/";
+            return;
+        }
+        if (pendingPage) {
+            setPage(pendingPage);
+            setPendingPage(null);
+            return;
+        }
+    }, [
+        defaultValues,
+        form,
+        initialProfilePreview,
+        initialWallPreview,
+        initialWallType,
+        initialWallColor,
+        pendingExit,
+        pendingPage,
+    ]);
+
+    /* ---------------------------- upload helper ---------------------------- */
+
+    async function uploadImage(
+        file: File,
+        endpoint: "/api/upload-profile-image" | "/api/upload-wall-image"
+    ) {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const res = await fetch(endpoint, { method: "POST", body: formData });
+        const json = await res.json();
+
+        if (!res.ok) throw new Error(json?.error ?? "Error subiendo imagen");
+
+        return json as { url: string; publicId: string };
+    }
 
     /* ------------------------------ SUBMIT ---------------------------------- */
 
     async function onSubmit(values: ProfileFormValues) {
-        setSaveError(null);
-        setSaveOk(null);
+        setStatus({ type: "idle", message: null });
         setSaving(true);
 
         try {
-            // 1️⃣ Resolver nombres de país / provincia / ciudad
+            // 1) Resolver nombres de país / provincia / ciudad
             const countryName = values.countryId
-                ? countriesData.find(c => c.id === values.countryId)?.name ?? null
+                ? (countriesData as any as GeoOption[]).find((c) => c.id === values.countryId)?.name ?? null
                 : null;
 
-            const provinceName = (values.countryId && values.provinceId)
-                ? statesData[values.countryId]?.find(s => s.id === values.provinceId)?.name ?? null
-                : null;
+            const provinceName =
+                values.countryId && values.provinceId
+                    ? statesData[values.countryId]?.find((s) => s.id === values.provinceId)?.name ?? null
+                    : null;
 
-            const cityName = (values.provinceId && values.cityId)
-                ? citiesData[values.provinceId]?.find(ci => ci.id === values.cityId)?.name ?? null
-                : null;
+            const cityName =
+                values.provinceId && values.cityId
+                    ? citiesData[values.provinceId]?.find((ci) => ci.id === values.cityId)?.name ?? null
+                    : null;
 
-            // 2️⃣ Subir imágenes SOLO si el usuario cambió algo
+            // 2) Subir imágenes SOLO si el usuario cambió algo
             let uploadedProfileImageUrl = profileImageUrl;
             let uploadedProfileImagePublicId = profileImagePublicId;
 
@@ -352,33 +509,25 @@ export default function ProfileForm({ user }: { user: ProfileMe }) {
 
             if (profileFile) {
                 setUploadingProfile(true);
-                const uploaded = await uploadImage(
-                    profileFile,
-                    "/api/upload-profile-image"
-                );
-
+                const uploaded = await uploadImage(profileFile, "/api/upload-profile-image");
                 uploadedProfileImageUrl = uploaded.url;
                 uploadedProfileImagePublicId = uploaded.publicId;
-
-                setProfileImagePublicId(uploaded.publicId); // solo para UI futura
+                setProfileImageUrl(uploaded.url);
+                setProfileImagePublicId(uploaded.publicId);
                 setUploadingProfile(false);
             }
 
             if (wallFile) {
                 setUploadingWall(true);
-                const uploaded = await uploadImage(
-                    wallFile,
-                    "/api/upload-wall-image"
-                );
-
+                const uploaded = await uploadImage(wallFile, "/api/upload-wall-image");
                 uploadedWallImageUrl = uploaded.url;
                 uploadedWallImagePublicId = uploaded.publicId;
-
-                setWallImagePublicId(uploaded.publicId); // solo para UI futura
+                setWallImageUrl(uploaded.url);
+                setWallImagePublicId(uploaded.publicId);
                 setUploadingWall(false);
             }
 
-            // 3️⃣ Armar payload final
+            // 3) Payload final
             const valuesToSend = {
                 ...values,
                 imageUrl: uploadedProfileImageUrl,
@@ -392,7 +541,7 @@ export default function ProfileForm({ user }: { user: ProfileMe }) {
                 city: cityName,
             };
 
-            // 4️⃣ PATCH perfil
+            // 4) PATCH perfil
             const res = await fetch("/api/profile/me", {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
@@ -402,125 +551,296 @@ export default function ProfileForm({ user }: { user: ProfileMe }) {
             const json = await res.json().catch(() => null);
 
             if (!res.ok) {
-                setSaveError(json?.error ?? "Error actualizando perfil");
+                setStatus({
+                    type: "error",
+                    message: json?.error ?? "Error actualizando perfil",
+                });
                 return;
             }
-            // 🟢 PERFIL GUARDADO OK
+
             await update({
-                image: json?.data?.imageUrl ?? profileImageUrl ?? null,
+                image: json?.data?.imageUrl ?? uploadedProfileImageUrl ?? null,
             });
-            setSaveOk("Perfil actualizado ✅");
+
+            form.reset(values, { keepDirty: false, keepErrors: true });
+            setProfileFile(null);
+            setWallFile(null);
+
+            setStatus({ type: "success", message: "Perfil actualizado" });
         } catch (err) {
             console.error(err);
-            setSaveError("Error actualizando perfil");
+            setStatus({ type: "error", message: "Error actualizando perfil" });
         } finally {
             setSaving(false);
+            setUploadingProfile(false);
+            setUploadingWall(false);
         }
     }
 
-    /* ------------------------------- UI ------------------------------------- */
+    /* ------------------------------ UI bits ---------------------------------- */
 
-    const handleImagePreview = (
-        e: React.ChangeEvent<HTMLInputElement>,
-        setter: (value: string | null) => void
-    ) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-
-        const url = URL.createObjectURL(file);
-        setter(url);
-    };
-
-    const tabs: { id: PageId; label: string }[] = [
-        { id: "personal", label: "Datos personales" },
-        { id: "location", label: "Ubicación" },
-        { id: "socialnets", label: "Redes sociales" }
-
+    const tabs: { id: PageId; label: string; icon: React.ReactNode }[] = [
+        { id: "personal", label: "Datos personales", icon: <User size={16} /> },
+        { id: "location", label: "Ubicación", icon: <MapPin size={16} /> },
+        { id: "socialnets", label: "Redes", icon: <Share2 size={16} /> },
     ];
 
+    const geoCountryOptions = useMemo(
+        () => (countries as GeoOption[]).map((c) => ({ label: c.name, value: String(c.id) })),
+        [countries]
+    );
+    const geoStateOptions = useMemo(
+        () => (states as GeoOption[]).map((s) => ({ label: s.name, value: String(s.id) })),
+        [states]
+    );
+    const geoCityOptions = useMemo(
+        () => (cities as GeoOption[]).map((ci) => ({ label: ci.name, value: String(ci.id) })),
+        [cities]
+    );
+
+    const dateMax = useMemo(() => new Date().toISOString().slice(0, 10), []);
+
     return (
-        <div className="flex flex-col gap-4 w-full">
-            {/* Tabs */}
-            <div className="flex flex-col lg:flex-row rounded-lg border border-slate-800 bg-slate-950/80 overflow-hidden">
-                {tabs.map((tab) => (
-                    <button
-                        key={tab.id}
-                        type="button"
-                        onClick={() => setPage(tab.id)}
-                        className={cn(
-                            "flex-1 px-3 py-2 text-xs sm:text-sm font-medium border-b sm:border-b-0 sm:border-r border-slate-800/70 focus:outline-none",
-                            page === tab.id
-                                ? "bg-emerald-900/40 text-emerald-200"
-                                : "bg-slate-950/0 text-slate-300 hover:bg-slate-900/70"
-                        )}
+        <PageShell>
+            {/* Header */}
+            <div className="flex items-start justify-between gap-3 mb-4">
+                <div className="space-y-1">
+                    <h2 className="text-lg lg:text-xl font-semibold text-slate-100">Editar perfil</h2>
+                    <p className="text-xs lg:text-sm text-slate-400">
+                        Actualizá tu info personal, ubicación y enlaces.
+                    </p>
+                </div>
+
+                <div className="hidden lg:flex items-center gap-2">
+                    <Badge
+                        variant="secondary"
+                        className="border border-slate-700/60 bg-slate-900/40 text-slate-200"
                     >
-                        {tab.label}
-                    </button>
-                ))}
+                        {page === "personal" ? "Datos" : page === "location" ? "Ubicación" : "Redes"}
+                    </Badge>
+                </div>
             </div>
 
-            <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                    {/* ================== PESTAÑA PERSONAL ================== */}
-                    {page === "personal" && (
-                        <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4 md:p-6 space-y-6">
-                            {/* Imagen de muro */}
-                            <div className="flex flex-col gap-3">
-                                <p className="text-xs text-slate-400">Imagen de portada de tu muro</p>
-                                <div className="relative min-h-[240px] rounded-md overflow-hidden">
-                                    {wallHeaderBackgroundTypeState == "image" && wallPreview && (
-                                        <Image
-                                            src={wallPreview}
-                                            alt="Vista previa de la imagen del muro"
-                                            fill
-                                            className="object-cover"
+            {/* Tabs */}
+            <div className="w-full rounded-xl border border-slate-800 bg-slate-950/60 overflow-hidden">
+                <div className="grid grid-cols-1 lg:grid-cols-3">
+                    {tabs.map((tab, idx) => (
+                        <button
+                            key={tab.id}
+                            type="button"
+                            onClick={() => handleTryChangePage(tab.id)}
+                            className={cn(
+                                "relative px-3 py-3 text-xs lg:text-sm font-medium",
+                                "text-left lg:text-center",
+                                "border-b lg:border-b-0 lg:border-r border-slate-800/70",
+                                idx === 2 && "lg:border-r-0",
+                                "focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40",
+                                page === tab.id
+                                    ? "bg-emerald-500/10 text-emerald-200"
+                                    : "bg-transparent text-slate-300 hover:bg-slate-900/50"
+                            )}
+                        >
+                            <span className="inline-flex items-center gap-2 justify-start lg:justify-center">
+                                <span className={cn(page === tab.id ? "text-emerald-300" : "text-slate-400")}>
+                                    {tab.icon}
+                                </span>
+                                {tab.label}
+                            </span>
+
+                            <span
+                                className={cn(
+                                    "absolute left-0 right-0 bottom-0 h-[2px] transition",
+                                    page === tab.id ? "bg-emerald-500/70" : "bg-transparent"
+                                )}
+                            />
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            <div className="mt-4 space-y-4">
+                {status.type !== "idle" ? (
+                    <InlineNotice
+                        type={status.type === "success" ? "success" : "error"}
+                        message={status.message}
+                    />
+                ) : null}
+
+                {(uploadingProfile || uploadingWall) && (
+                    <div className="text-xs text-slate-400">
+                        {uploadingProfile ? "Subiendo imagen de perfil..." : null}
+                        {uploadingProfile && uploadingWall ? " " : null}
+                        {uploadingWall ? "Subiendo imagen del muro..." : null}
+                    </div>
+                )}
+
+                <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                        {/* ================== PERSONAL ================== */}
+                        {page === "personal" && (
+                            <div className="space-y-4">
+                                {/* Preview (colapsable completo) */}
+                                <SectionCard
+                                    title="Vista previa"
+                                    icon={<EyeIcon size={16} />}
+                                    actions={
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            onClick={() => setPreviewOpen((v) => !v)}
+                                            className="h-8 px-2 text-xs border-slate-700 bg-slate-900/40 text-slate-200 hover:bg-slate-900/70"
+                                        >
+                                            {previewOpen ? "Ocultar" : "Mostrar"}
+                                        </Button>
+                                    }
+                                >
+                                    {!previewOpen ? (
+                                        <p className="text-xs text-slate-400">
+                                            La vista previa está colapsada para que no ocupe lugar.
+                                        </p>
+                                    ) : (
+                                        <WallHeaderShell
+                                            mode="preview"
+                                            expanded={previewExpanded}
+                                            onToggleExpanded={() => setPreviewExpanded((v) => !v)}
+                                            displayUser={previewDisplayUser as any}
+                                            fullUser={previewFullUser as any}
+                                            enableToView={previewEnableToView as any}
+                                            loading={false}
+                                            error={null}
+                                            canShowCvButton={true}
+                                            onOpenCv={() => {
+                                                toast({
+                                                    title: "CV no disponible",
+                                                    description: "Los usuarios podrán ver tu CV cuando hayas creado uno.",
+                                                });
+                                            }}
                                         />
                                     )}
-                                    {!wallHeaderBackgroundTypeState && wallPreview && (
-                                        <>
-                                            <Image
-                                                src={wallPreview}
-                                                alt="Vista previa de la imagen del muro"
-                                                fill
-                                                className="object-cover"
-                                            />
-                                            <div>COLOR</div>
-                                        </>
+                                </SectionCard>
 
+                                <SectionCard title="Portada del muro" icon={<ImageIcon size={16} />}>
+                                    <p className="text-xs text-slate-400">
+                                        Elegí una imagen o un color para la portada del muro.
+                                    </p>
 
-                                    )}
+                                    <div className="relative rounded-xl overflow-hidden border border-slate-800 bg-slate-950">
+                                        <div className="relative min-h-[220px] lg:min-h-[240px]">
+                                            {wallHeaderBackgroundTypeState === "image" && wallPreview ? (
+                                                <Image src={wallPreview} alt="Vista previa del muro" fill className="object-cover" />
+                                            ) : wallHeaderBackgroundTypeState === "color" && wallPreview ? (
+                                                <div className="w-full h-[240px]" style={{ backgroundColor: wallPreview }} />
+                                            ) : wallPreview ? (
+                                                <Image src={wallPreview} alt="Vista previa del muro" fill className="object-cover" />
+                                            ) : null}
 
-                                    {wallHeaderBackgroundTypeState == "color" && wallPreview && (
-                                        <div className="w-full h-[240px]" style={{ backgroundColor: wallPreview }}>
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/20 to-transparent" />
+
+                                            <div className="absolute bottom-3 left-3 right-3 flex flex-col lg:flex-row gap-2 lg:items-center lg:justify-between">
+                                                <div className="flex items-center gap-2">
+                                                    <Badge className="bg-slate-900/60 border border-slate-700/70 text-slate-200">
+                                                        {wallHeaderBackgroundTypeState === "color" ? "Color" : "Imagen"}
+                                                    </Badge>
+                                                    <span className="text-xs text-slate-300/90">Portada del muro</span>
+                                                </div>
+
+                                                <div className="flex flex-col sm:flex-row gap-2">
+                                                    {/* Upload wall image */}
+                                                    <label
+                                                        className={cn(
+                                                            "inline-flex items-center justify-center",
+                                                            "h-9 px-3 rounded-md",
+                                                            "border border-emerald-500/60",
+                                                            "bg-emerald-600/80 hover:bg-emerald-500",
+                                                            "text-xs font-medium text-slate-50 cursor-pointer"
+                                                        )}
+                                                    >
+                                                        Elegir imagen
+                                                        <input
+                                                            type="file"
+                                                            accept="image/*"
+                                                            className="hidden"
+                                                            onChange={(e) => {
+                                                                const file = e.target.files?.[0];
+                                                                if (!file) return;
+
+                                                                setWallFile(file);
+                                                                setWallColor(null);
+                                                                setWallHeaderBackgroundTypeState("image");
+
+                                                                const url = URL.createObjectURL(file);
+                                                                setWallPreview(url);
+                                                            }}
+                                                        />
+                                                    </label>
+
+                                                    {/* Pick wall color */}
+                                                    <label
+                                                        htmlFor="wallColor"
+                                                        className={cn(
+                                                            "inline-flex items-center justify-center",
+                                                            "h-9 px-3 rounded-md",
+                                                            "border border-emerald-500/60",
+                                                            "bg-emerald-600/15 hover:bg-emerald-600/20",
+                                                            "text-xs font-medium text-emerald-200 cursor-pointer"
+                                                        )}
+                                                    >
+                                                        Elegir color
+                                                        <input
+                                                            id="wallColor"
+                                                            type="color"
+                                                            className="hidden"
+                                                            onChange={(e) => {
+                                                                setWallColor(e.target.value);
+                                                                setWallFile(null);
+                                                                setWallHeaderBackgroundTypeState("color");
+                                                                setWallPreview(e.target.value);
+                                                            }}
+                                                        />
+                                                    </label>
+                                                </div>
+                                            </div>
                                         </div>
-                                    )}
+                                    </div>
+                                </SectionCard>
 
+                                <SectionCard title="Imagen de perfil" icon={<User size={16} />}>
+                                    <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+                                        <div className="flex items-center gap-4">
+                                            <div className="relative">
+                                                {preview ? (
+                                                    <Image
+                                                        src={preview}
+                                                        alt="Vista previa de la imagen de perfil"
+                                                        width={104}
+                                                        height={104}
+                                                        className="object-cover rounded-full border border-slate-700 bg-black"
+                                                    />
+                                                ) : null}
+                                                {profileFile ? (
+                                                    <span className="absolute -bottom-1 -right-1 inline-flex items-center justify-center h-6 w-6 rounded-full bg-emerald-600 text-white shadow">
+                                                        <CheckCircle2 size={14} />
+                                                    </span>
+                                                ) : null}
+                                            </div>
 
+                                            <div className="space-y-1">
+                                                <p className="text-sm font-medium text-slate-100">Foto de perfil</p>
+                                                <p className="text-xs text-slate-400">Recomendado: cuadrada, buena luz.</p>
+                                            </div>
+                                        </div>
 
-                                    {/* BOTONES wall background*/}
-                                    <div
-                                        className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-3"
-                                    >
-                                        <FormItem>
-                                            <FormLabel
-                                                className="
-                                                inline-flex
-                                                items-center
-                                                justify-center
-                                                min-w-[160px]
-                                                px-0 py-2
-                                                rounded-full
-                                                border border-emerald-500
-                                                bg-emerald-600/90 hover:bg-emerald-500
-                                                text-xs font-medium text-slate-50
-                                                cursor-pointer
-                                                text-center"
+                                        <div className="lg:ml-auto flex flex-col sm:flex-row gap-2">
+                                            <label
+                                                className={cn(
+                                                    "inline-flex items-center justify-center",
+                                                    "h-9 px-3 rounded-md",
+                                                    "border border-emerald-500/60",
+                                                    "bg-emerald-600/80 hover:bg-emerald-500",
+                                                    "text-xs font-medium text-slate-50 cursor-pointer"
+                                                )}
                                             >
-                                                Elegir imagen del muro
-                                            </FormLabel>
-
-
-                                            <FormControl>
+                                                Cambiar imagen
                                                 <input
                                                     type="file"
                                                     accept="image/*"
@@ -529,658 +849,378 @@ export default function ProfileForm({ user }: { user: ProfileMe }) {
                                                         const file = e.target.files?.[0];
                                                         if (!file) return;
 
-                                                        setWallFile(file);
-                                                        setWallColor(null)
-                                                        setWallHeaderBackgroundTypeState("image")
-                                                        setWallPreview(URL.createObjectURL(file));
+                                                        setProfileFile(file);
+                                                        const url = URL.createObjectURL(file);
+                                                        setPreview(url);
                                                     }}
                                                 />
-                                            </FormControl>
-                                        </FormItem>
+                                            </label>
 
-                                        <FormItem>
-                                            <FormLabel
-                                                htmlFor="wallColor"
-                                                className="
-                                                inline-flex
-                                                items-center
-                                                justify-center
-                                                min-w-[160px]
-                                                px-0
-                                                py-2
-                                                rounded-full
-                                                border 
-                                                border-emerald-500
-                                                bg-emerald-600/90
-                                                hover:bg-emerald-500
-                                                text-xs font-medium
-                                                text-slate-50
-                                                cursor-pointer
-                                                text-center"
-                                            >
-                                                Elegir color del muro
-                                            </FormLabel>
-
-
-                                            <FormControl>
-                                                <input
-                                                    id="wallColor"
-                                                    type="color"
-                                                    className="hidden"
-                                                    onChange={(e) => {
-                                                        setWallColor(e.target.value);
-                                                        setWallFile(null)
-                                                        setWallHeaderBackgroundTypeState("color")
-                                                        setWallPreview(e.target.value)
+                                            {profileFile ? (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setProfileFile(null);
+                                                        setPreview(initialProfilePreview);
                                                     }}
-                                                />
-                                            </FormControl>
-                                        </FormItem>
-                                    </div>
-                                    {/*</div>*/}
-
-
-
-                                </div>
-                            </div>
-
-                            {/* Imagen de perfil */}
-                            <div className="flex flex-col md:flex-row items-center md:items-start gap-4 md:gap-8">
-                                <FormItem className="flex flex-col items-center gap-2">
-                                    <FormLabel className="inline-flex items-center justify-center px-4 py-2 rounded-md border border-emerald-500 bg-emerald-600/90 hover:bg-emerald-500 text-xs font-medium text-slate-50 cursor-pointer">
-                                        Cambiar imagen de perfil
-                                    </FormLabel>
-                                    <FormControl>
-                                        <input
-                                            type="file"
-                                            accept="image/*"
-                                            className="hidden"
-                                            onChange={(e) => {
-                                                const file = e.target.files?.[0];
-                                                if (!file) return;
-
-                                                setProfileFile(file);
-                                                setPreview(URL.createObjectURL(file));
-                                            }}
-                                        />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-
-                                {preview && (
-                                    <div className="flex items-center justify-center">
-                                        <Image
-                                            src={preview}
-                                            alt="Vista previa de la imagen de perfil"
-                                            width={112}
-                                            height={112}
-                                            className="object-cover rounded-full border-2 border-dashed border-slate-500 bg-black"
-                                        />
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="border-t border-slate-800/70 pt-4 space-y-4">
-                                {/* Nick */}
-                                <FormField
-                                    control={form.control}
-                                    name="nick"
-                                    render={({ field }) => (
-                                        <FormItem className="space-y-1">
-                                            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                                                <Label htmlFor="nick" className="sm:w-40 text-sm">
-                                                    Pseudónimo
-                                                </Label>
-                                                <FormControl>
-                                                    <Input
-                                                        id="nick"
-                                                        placeholder="Ingresa tu nick"
-                                                        className="bg-slate-950 border-slate-700 text-slate-100"
-                                                        {...field}
-                                                        value={field.value ?? ""}
-                                                    />
-                                                </FormControl>
-                                            </div>
-                                            <FormMessage className="text-xs text-red-400" />
-                                        </FormItem>
-                                    )}
-                                />
-
-                                {/* Bio */}
-                                <FormField
-                                    control={form.control}
-                                    name="bio"
-                                    render={({ field }) => (
-                                        <FormItem className="space-y-1">
-                                            <Label htmlFor="bio" className="text-sm">
-                                                Texto de presentación
-                                            </Label>
-                                            <FormControl>
-                                                <Textarea
-                                                    id="bio"
-                                                    placeholder="Contanos algo sobre vos..."
-                                                    className="bg-slate-950 border-slate-700 text-slate-100 min-h-[80px]"
-                                                    {...field}
-                                                    value={field.value ?? ""}
-                                                />
-                                            </FormControl>
-                                            <FormMessage className="text-xs text-red-400" />
-                                        </FormItem>
-                                    )}
-                                />
-
-                                {/* Ocupación */}
-                                <FormField
-                                    control={form.control}
-                                    name="occupation"
-                                    render={({ field }) => (
-                                        <FormItem className="space-y-1">
-                                            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                                                <Label htmlFor="occupation" className="sm:w-40 text-sm">
-                                                    Ocupación
-                                                </Label>
-                                                <FormControl>
-                                                    <Input
-                                                        id="occupation"
-                                                        placeholder="¿Cuál es tu ocupación?"
-                                                        className="bg-slate-950 border-slate-700 text-slate-100"
-                                                        {...field}
-                                                        value={field.value ?? ""}
-                                                    />
-                                                </FormControl>
-                                            </div>
-                                            <FormMessage className="text-xs text-red-400" />
-                                        </FormItem>
-                                    )}
-                                />
-
-                                {/* Compañía */}
-                                <FormField
-                                    control={form.control}
-                                    name="company"
-                                    render={({ field }) => (
-                                        <FormItem className="space-y-1">
-                                            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                                                <Label htmlFor="company" className="sm:w-40 text-sm">
-                                                    Compañía
-                                                </Label>
-                                                <FormControl>
-                                                    <Input
-                                                        id="company"
-                                                        placeholder="¿En qué compañía trabajás?"
-                                                        className="bg-slate-950 border-slate-700 text-slate-100"
-                                                        {...field}
-                                                        value={field.value ?? ""}
-                                                    />
-                                                </FormControl>
-                                            </div>
-                                            <FormMessage className="text-xs text-red-400" />
-                                        </FormItem>
-                                    )}
-                                />
-
-                                {/* Teléfonos */}
-                                <div className="grid gap-4 md:grid-cols-2">
-                                    <FormField
-                                        control={form.control}
-                                        name="phoneNumber"
-                                        render={({ field }) => (
-                                            <FormItem className="space-y-1">
-                                                <div className="flex items-center gap-2">
-                                                    <Label htmlFor="phoneNumber" className="text-sm">
-                                                        Teléfono fijo
-                                                    </Label>
-                                                    <Phone className="w-4 h-4 text-slate-400" />
-                                                </div>
-                                                <FormControl>
-                                                    <Input
-                                                        id="phoneNumber"
-                                                        placeholder="Número de teléfono"
-                                                        className="bg-slate-950 border-slate-700 text-slate-100"
-                                                        {...field}
-                                                        value={field.value ?? ""}
-                                                    />
-                                                </FormControl>
-                                                <FormMessage className="text-xs text-red-400" />
-                                            </FormItem>
-                                        )}
-                                    />
-
-                                    <FormField
-                                        control={form.control}
-                                        name="movilNumber"
-                                        render={({ field }) => (
-                                            <FormItem className="space-y-1">
-                                                <div className="flex items-center gap-2">
-                                                    <Label htmlFor="movilNumber" className="text-sm">
-                                                        Teléfono móvil
-                                                    </Label>
-                                                    <Image
-                                                        src="/whatsapp.svg"
-                                                        alt="WhatsApp"
-                                                        width={20}
-                                                        height={20}
-                                                        className="opacity-80"
-                                                    />
-                                                </div>
-                                                <FormControl>
-                                                    <Input
-                                                        id="movilNumber"
-                                                        placeholder="Número de celular"
-                                                        className="bg-slate-950 border-slate-700 text-slate-100"
-                                                        {...field}
-                                                        value={field.value ?? ""}
-                                                    />
-                                                </FormControl>
-                                                <FormMessage className="text-xs text-red-400" />
-                                            </FormItem>
-                                        )}
-                                    />
-                                </div>
-
-                                {/* Fecha de nacimiento (ISO string en schema) */}
-                                <FormField
-                                    control={form.control}
-                                    name="birthday"
-                                    render={({ field }) => {
-                                        const max = new Date().toISOString().slice(0, 10);
-                                        const dateValue = field.value ? String(field.value).slice(0, 10) : "";
-
-                                        return (
-                                            <FormItem className="flex flex-col gap-1">
-                                                <FormLabel className="text-sm">Fecha de nacimiento</FormLabel>
-
-                                                <FormControl>
-                                                    <div className="relative w-full sm:w-[260px]">
-                                                        {dateValue === "" && (
-                                                            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">
-                                                                Seleccioná una fecha
-                                                            </span>
-                                                        )}
-
-                                                        <input
-                                                            type="date"
-                                                            value={dateValue}
-                                                            min="1900-01-01"
-                                                            max={max}
-                                                            onChange={(e) => {
-                                                                const v = e.target.value;
-                                                                if (!v) return field.onChange(null);
-                                                                field.onChange(
-                                                                    new Date(v + "T00:00:00.000Z").toISOString()
-                                                                );
-                                                            }}
-                                                            className={cn(
-                                                                "w-full h-9 rounded-md border bg-slate-950 border-slate-700 px-3 pr-9 text-sm",
-                                                                "text-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-700",
-                                                                dateValue === "" && "text-transparent"
-                                                            )}
-                                                        />
-
-                                                        <CalendarIcon className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 opacity-70 text-slate-300" />
-                                                    </div>
-                                                </FormControl>
-
-                                                <FormDescription className="text-xs text-slate-400">
-                                                    Sólo se muestra de forma aproximada (edad).
-                                                </FormDescription>
-                                                <FormMessage className="text-xs text-red-400" />
-                                            </FormItem>
-                                        );
-                                    }}
-                                />
-
-                                <hr className="border-slate-800/70" />
-
-
-                            </div>
-                        </div>
-                    )}
-
-                    {/* ================== PESTAÑA UBICACIÓN ================== */}
-                    {page === "location" && (
-                        <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4 md:p-6 space-y-4">
-                            <p className="text-xs text-slate-400 mb-2">
-                                Estos datos se usan para mostrar aproximadamente tu ubicación
-                                (nunca se muestra tu dirección exacta).
-                            </p>
-
-                            {/* País (countryId) */}
-                            <FormField
-                                control={form.control}
-                                name="countryId"
-                                render={({ field }) => (
-                                    <FormItem className="space-y-1">
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <Earth className="w-4 h-4 text-slate-400" />
-                                            <FormLabel className="text-sm">País</FormLabel>
+                                                    className={cn(
+                                                        "inline-flex items-center justify-center",
+                                                        "h-9 px-3 rounded-md",
+                                                        "border border-slate-700",
+                                                        "bg-slate-900/40 hover:bg-slate-900/70",
+                                                        "text-xs font-medium text-slate-200"
+                                                    )}
+                                                >
+                                                    <X size={14} className="mr-2" />
+                                                    Deshacer
+                                                </button>
+                                            ) : null}
                                         </div>
-                                        <FormControl>
-                                            <Select
-                                                value={field.value != null ? String(field.value) : ""}
-                                                onValueChange={(v) => field.onChange(v ? Number(v) : null)}
-                                            >
-                                                <SelectTrigger className="w-full sm:w-[260px] bg-slate-950 border-slate-700 text-slate-100 h-9">
-                                                    <SelectValue
-                                                        placeholder={geoLoading.countries ? "Cargando..." : "Seleccioná un país"}
-                                                    />
-                                                </SelectTrigger>
-                                                <SelectContent className="bg-slate-900 border-slate-700 text-slate-100 max-h-64">
-                                                    {countries.map((c) => (
-                                                        <SelectItem key={c.id} value={String(c.id)}>
-                                                            {c.name}
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
-                                        </FormControl>
-                                        <FormMessage className="text-xs text-red-400" />
-                                    </FormItem>
-                                )}
-                            />
+                                    </div>
+                                </SectionCard>
 
-                            {/* Provincia/Estado (provinceId) */}
-                            <FormField
-                                control={form.control}
-                                name="provinceId"
-                                render={({ field }) => (
-                                    <FormItem className="space-y-1">
-                                        <Label className="text-sm">Provincia / Estado</Label>
-                                        <FormControl>
-                                            <Select
-                                                disabled={!countryId}
-                                                value={field.value != null ? String(field.value) : ""}
-                                                onValueChange={(v) => field.onChange(v ? Number(v) : null)}
-                                            >
-                                                <SelectTrigger className="w-full sm:w-[260px] bg-slate-950 border-slate-700 text-slate-100 h-9">
-                                                    <SelectValue
-                                                        placeholder={
-                                                            !countryId
-                                                                ? "Elegí país primero"
-                                                                : field.value
-                                                                    ? states.find(s => s.id === field.value)?.name ?? "Seleccioná una provincia / estado"
-                                                                    : "Seleccioná una provincia / estado"
-                                                        }
-
-                                                    />
-                                                </SelectTrigger>
-                                                <SelectContent className="bg-slate-900 border-slate-700 text-slate-100 max-h-64">
-                                                    {states.map((s) => (
-                                                        <SelectItem key={s.id} value={String(s.id)}>
-                                                            {s.name}
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
-                                        </FormControl>
-                                        <FormMessage className="text-xs text-red-400" />
-                                    </FormItem>
-                                )}
-                            />
-
-                            {/* Ciudad (cityId) */}
-                            <FormField
-                                control={form.control}
-                                name="cityId"
-                                render={({ field }) => (
-                                    <FormItem className="space-y-1">
-                                        <Label className="text-sm">Ciudad</Label>
-                                        <FormControl>
-                                            <Select
-                                                disabled={effectiveProvinceId === null}
-                                                value={field.value != null ? String(field.value) : ""}
-                                                onValueChange={(v) => field.onChange(v ? Number(v) : null)}
-                                            >
-
-
-
-                                                <SelectTrigger className="w-full sm:w-[260px] bg-slate-950 border-slate-700 text-slate-100 h-9">
-                                                    <SelectValue
-                                                        placeholder={
-                                                            !effectiveProvinceId
-                                                                ? "Elegí provincia primero"
-                                                                : field.value
-                                                                    ? cities.find(ci => ci.id === field.value)?.name ?? "Seleccioná una ciudad"
-                                                                    : defaultValues.city ?? "Seleccioná una ciudad"
-                                                        }
-
-                                                    />
-
-                                                </SelectTrigger>
-                                                <SelectContent className="bg-slate-900 border-slate-700 text-slate-100 max-h-64">
-                                                    {cities.map((ci) => (
-                                                        <SelectItem key={ci.id} value={String(ci.id)}>
-                                                            {ci.name}
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
-                                        </FormControl>
-                                        <FormMessage className="text-xs text-red-400" />
-                                    </FormItem>
-                                )}
-                            />
-
-                            <div className="grid gap-4 md:grid-cols-2">
-                                <FormField
-                                    control={form.control}
-                                    name="street"
-                                    render={({ field }) => (
-                                        <FormItem className="space-y-1">
-                                            <Label htmlFor="street" className="text-sm">
-                                                Calle
-                                            </Label>
-                                            <FormControl>
-                                                <Input
-                                                    id="street"
-                                                    placeholder="Calle"
-                                                    className="bg-slate-950 border-slate-700 text-slate-100"
-                                                    {...field}
-                                                    value={field.value ?? ""}
-                                                />
-                                            </FormControl>
-                                            <FormMessage className="text-xs text-red-400" />
-                                        </FormItem>
-                                    )}
-                                />
-
-                                <FormField
-                                    control={form.control}
-                                    name="number"
-                                    render={({ field }) => (
-                                        <FormItem className="space-y-1">
-                                            <Label htmlFor="number" className="text-sm">
-                                                Número
-                                            </Label>
-                                            <FormControl>
-                                                <Input
-                                                    id="number"
-                                                    placeholder="Número"
-                                                    className="bg-slate-950 border-slate-700 text-slate-100"
-                                                    {...field}
-                                                    value={field.value ?? ""}
-                                                />
-                                            </FormControl>
-                                            <FormMessage className="text-xs text-red-400" />
-                                        </FormItem>
-                                    )}
-                                />
-                            </div>
-
-                            <FormField
-                                control={form.control}
-                                name="department"
-                                render={({ field }) => (
-                                    <FormItem className="space-y-1">
-                                        <Label htmlFor="department" className="text-sm">
-                                            Departamento / Piso
-                                        </Label>
-                                        <FormControl>
-                                            <Input
-                                                id="department"
-                                                placeholder="Ej: 2° B"
-                                                className="bg-slate-950 border-slate-700 text-slate-100"
-                                                {...field}
-                                                value={field.value ?? ""}
-                                            />
-                                        </FormControl>
-                                        <FormMessage className="text-xs text-red-400" />
-                                    </FormItem>
-                                )}
-                            />
-
-                            <FormField
-                                control={form.control}
-                                name="mail_code"
-                                render={({ field }) => (
-                                    <FormItem className="space-y-1">
-                                        <Label htmlFor="mail_code" className="text-sm">
-                                            Código postal
-                                        </Label>
-                                        <FormControl>
-                                            <Input
-                                                id="mail_code"
-                                                placeholder="Tu código postal"
-                                                className="bg-slate-950 border-slate-700 text-slate-100 max-w-xs"
-                                                {...field}
-                                                value={field.value ?? ""}
-                                            />
-                                        </FormControl>
-                                        <FormMessage className="text-xs text-red-400" />
-                                    </FormItem>
-                                )}
-                            />
-                        </div>
-                    )}
-                    {/* ================== PESTAÑA UBICACIÓN ================== */}
-                    {page === "socialnets" && (
-                        <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4 md:p-6 space-y-4">
-                            <p className="text-xs text-slate-400 mb-2">
-                                Estos datos se usan para mostrar aproximadamente tu ubicación
-                                (nunca se muestra tu dirección exacta).
-                            </p>
-                            {/* Redes sociales */}
-                            <div className="space-y-4">
-                                {[
-                                    { name: "twitterHandle" as const, icon: "/x.svg", label: "Twitter" },
-                                    { name: "facebookHandle" as const, icon: "/facebook.svg", label: "Facebook" },
-                                    { name: "instagramHandle" as const, icon: "/instagram.svg", label: "Instagram" },
-                                    { name: "linkedinHandle" as const, icon: "/linkedin.svg", label: "LinkedIn" },
-                                    { name: "githubHandle" as const, icon: "/github.svg", label: "GitHub" },
-                                ].map((f) => (
-                                    <FormField
-                                        key={f.name}
+                                <SectionCard title="Datos" icon={<User size={16} />}>
+                                    <FormTextInput
                                         control={form.control}
-                                        name={f.name}
-                                        render={({ field }) => (
-                                            <FormItem className="space-y-1">
-                                                <div className="flex items-center gap-2">
-                                                    <Image className="invert brightness-0 opacity-90" src={f.icon} alt={f.label} width={20} height={20} />
-                                                    <Label className="w-20 text-sm">{f.label}</Label>
-                                                    <FormControl>
-                                                        <Input
-                                                            placeholder={`Enlace de ${f.label}`}
-                                                            className="bg-slate-950 border-slate-700 text-slate-100"
-                                                            {...field}
-                                                            value={field.value ?? ""}
-                                                        />
-                                                    </FormControl>
-                                                </div>
-                                                <FormMessage className="text-xs text-red-400" />
-                                            </FormItem>
-                                        )}
+                                        name="nick"
+                                        label="Pseudónimo"
+                                        placeholder="Ingresá tu nick"
+                                        height="36px"
+                                        width="100%"
                                     />
-                                ))}
+
+                                    <FormTextareaInput
+                                        control={form.control}
+                                        name="bio"
+                                        label="Texto de presentación"
+                                        placeholder="Contanos algo sobre vos..."
+                                        height="96px"
+                                        width="100%"
+                                    />
+
+                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                                        <FormTextInput
+                                            control={form.control}
+                                            name="occupation"
+                                            label="Ocupación"
+                                            placeholder="¿Cuál es tu ocupación?"
+                                            height="36px"
+                                            width="100%"
+                                        />
+                                        <FormTextInput
+                                            control={form.control}
+                                            name="company"
+                                            label="Compañía"
+                                            placeholder="¿En qué compañía trabajás?"
+                                            height="36px"
+                                            width="100%"
+                                        />
+                                    </div>
+
+                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                                        <FormInput
+                                            control={form.control}
+                                            name="phoneNumber"
+                                            type="tel"
+                                            label="Teléfono fijo"
+                                            placeholder="Número de teléfono"
+                                            height="36px"
+                                            width="100%"
+                                        />
+                                        <FormInput
+                                            control={form.control}
+                                            name="movilNumber"
+                                            type="tel"
+                                            label="Teléfono móvil"
+                                            placeholder="Número de celular"
+                                            height="36px"
+                                            width="100%"
+                                            leftSlot={
+                                                <Image
+                                                    src="/whatsapp.svg"
+                                                    alt="WhatsApp"
+                                                    width={16}
+                                                    height={16}
+                                                    className="opacity-80"
+                                                />
+                                            }
+                                        />
+                                    </div>
+
+                                    {/* Birthday (guardamos ISO) */}
+                                    <div className="space-y-1.5">
+                                        <Label className="text-sm text-slate-200">Fecha de nacimiento</Label>
+
+                                        <div className="relative w-full lg:max-w-[280px]">
+                                            <input
+                                                type="date"
+                                                value={
+                                                    form.getValues("birthday")
+                                                        ? String(form.getValues("birthday")).slice(0, 10)
+                                                        : ""
+                                                }
+                                                min="1900-01-01"
+                                                max={dateMax}
+                                                onChange={(e) => {
+                                                    const v = e.target.value;
+                                                    if (!v) {
+                                                        form.setValue("birthday", null as any, {
+                                                            shouldDirty: true,
+                                                            shouldValidate: true,
+                                                        });
+                                                        return;
+                                                    }
+                                                    const iso = new Date(v + "T00:00:00.000Z").toISOString();
+                                                    form.setValue("birthday", iso as any, {
+                                                        shouldDirty: true,
+                                                        shouldValidate: true,
+                                                    });
+                                                }}
+                                                className={cn(
+                                                    "w-full h-9 rounded-md border px-3 pr-9 text-sm",
+                                                    "bg-slate-950 border-slate-700 text-slate-100",
+                                                    "focus:outline-none focus:ring-2 focus:ring-slate-700"
+                                                )}
+                                            />
+                                            <CalendarIcon className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 opacity-70 text-slate-300" />
+                                        </div>
+
+                                        <p className="text-xs text-slate-400">
+                                            Sólo se muestra de forma aproximada (edad).
+                                        </p>
+                                    </div>
+                                </SectionCard>
                             </div>
-                        </div>
-                    )}
+                        )}
 
-                    {/* ================== PESTAÑAS PENDIENTES ================== */}
+                        {/* ================== LOCATION ================== */}
+                        {page === "location" && (
+                            <div className="space-y-4">
+                                <SectionCard title="Ubicación" icon={<MapPin size={16} />}>
+                                    <p className="text-xs text-slate-400">
+                                        Se usa para mostrar tu ubicación de forma aproximada (nunca tu dirección exacta).
+                                    </p>
 
+                                    <FormSelectNumberField
+                                        control={form.control}
+                                        name="countryId"
+                                        label="País"
+                                        options={geoCountryOptions}
+                                        placeholder={geoLoading.countries ? "Cargando..." : "Seleccioná un país"}
+                                    />
 
-                    {/* Feedback de guardado */}
-                    {saveError && (
-                        <div className="rounded-lg border border-red-500/50 bg-red-950/40 px-3 py-2 text-sm text-red-200">
-                            {saveError}
-                        </div>
-                    )}
-                    {saveOk && (
-                        <div className="rounded-lg border border-emerald-500/40 bg-emerald-950/30 px-3 py-2 text-sm text-emerald-200">
-                            {saveOk}
-                        </div>
-                    )}
+                                    <FormSelectNumberField
+                                        control={form.control}
+                                        name="provinceId"
+                                        label="Provincia / Estado"
+                                        options={geoStateOptions}
+                                        placeholder={
+                                            !effectiveCountryId ? "Elegí país primero" : "Seleccioná una provincia / estado"
+                                        }
+                                        // @ts-expect-error passthrough
+                                        disabled={!effectiveCountryId}
+                                    />
 
-                    {/* Mensaje */}
+                                    <FormSelectNumberField
+                                        control={form.control}
+                                        name="cityId"
+                                        label="Ciudad"
+                                        options={geoCityOptions}
+                                        placeholder={!effectiveProvinceId ? "Elegí provincia primero" : "Seleccioná una ciudad"}
+                                        // @ts-expect-error passthrough
+                                        disabled={!effectiveProvinceId}
+                                    />
 
-                    {uploadingProfile && (
-                        <p className="text-xs text-slate-400">
-                            Subiendo imagen de perfil...
-                        </p>
-                    )}
-                    {uploadingWall && (
-                        <p className="text-xs text-slate-400">
-                            Subiendo imagen del muro...
-                        </p>
-                    )}
+                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                                        <FormTextInput
+                                            control={form.control}
+                                            name="street"
+                                            label="Calle"
+                                            placeholder="Calle"
+                                            height="36px"
+                                            width="100%"
+                                        />
+                                        <FormTextInput
+                                            control={form.control}
+                                            name="number"
+                                            label="Número"
+                                            placeholder="Número"
+                                            height="36px"
+                                            width="100%"
+                                        />
+                                    </div>
 
-                    {/* Botones */}
-                    <div className="flex flex-col sm:flex-row gap-3 sm:gap-6 pt-2">
-                        <Button
-                            type="submit"
-                            disabled={saving || uploadingProfile || uploadingWall}
-                            className="flex-1 sm:flex-none sm:w-60 h-10 rounded-md bg-emerald-600 hover:bg-emerald-500 text-sm font-medium"
+                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                                        <FormTextInput
+                                            control={form.control}
+                                            name="department"
+                                            label="Departamento / Piso"
+                                            placeholder="Ej: 2° B"
+                                            height="36px"
+                                            width="100%"
+                                        />
+                                        <FormTextInput
+                                            control={form.control}
+                                            name="mail_code"
+                                            label="Código postal"
+                                            placeholder="Tu código postal"
+                                            height="36px"
+                                            width="100%"
+                                        />
+                                    </div>
+                                </SectionCard>
+                            </div>
+                        )}
+
+                        {/* ================== SOCIALNETS ================== */}
+                        {page === "socialnets" && (
+                            <div className="space-y-4">
+                                <SectionCard title="Redes sociales" icon={<Share2 size={16} />}>
+                                    <p className="text-xs text-slate-400">
+                                        Agregá links para que la gente te encuentre fuera de la app.
+                                    </p>
+
+                                    <div className="grid grid-cols-1 gap-3">
+                                        <FormInput
+                                            control={form.control}
+                                            name="website"
+                                            type="url"
+                                            label="Sitio web"
+                                            placeholder="https://..."
+                                            height="36px"
+                                            width="100%"
+                                            leftSlot={<Globe size={16} />}
+                                        />
+
+                                        {[
+                                            { name: "twitterHandle" as const, icon: "/x.svg", label: "Twitter" },
+                                            { name: "facebookHandle" as const, icon: "/facebook.svg", label: "Facebook" },
+                                            { name: "instagramHandle" as const, icon: "/instagram.svg", label: "Instagram" },
+                                            { name: "linkedinHandle" as const, icon: "/linkedin.svg", label: "LinkedIn" },
+                                            { name: "githubHandle" as const, icon: "/github.svg", label: "GitHub" },
+                                        ].map((f) => (
+                                            <FormInput
+                                                key={f.name}
+                                                control={form.control}
+                                                name={f.name}
+                                                type="text"
+                                                label={f.label}
+                                                placeholder={`Enlace de ${f.label}`}
+                                                height="36px"
+                                                width="100%"
+                                                leftSlot={
+                                                    <Image
+                                                        className="invert brightness-0 opacity-90"
+                                                        src={f.icon}
+                                                        alt={f.label}
+                                                        width={16}
+                                                        height={16}
+                                                    />
+                                                }
+                                            />
+                                        ))}
+                                    </div>
+                                </SectionCard>
+                            </div>
+                        )}
+
+                        {/* Sticky footer actions */}
+                        <div
+                            className={cn(
+                                "sticky bottom-2 z-10",
+                                "rounded-xl border border-slate-800 bg-slate-950/70 backdrop-blur",
+                                "p-3 lg:p-4 mt-2"
+                            )}
                         >
-                            {saving ? "Guardando..." : "Guardar cambios y salir"}
+                            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+                                <div className="text-xs text-slate-400">
+                                    {isDirty ? (
+                                        <span className="inline-flex items-center gap-2">
+                                            <span className="h-2 w-2 rounded-full bg-amber-400/90" />
+                                            Tenés cambios sin guardar
+                                        </span>
+                                    ) : (
+                                        <span className="inline-flex items-center gap-2">
+                                            <span className="h-2 w-2 rounded-full bg-emerald-400/70" />
+                                            Todo guardado
+                                        </span>
+                                    )}
+                                </div>
 
+                                <div className="flex flex-col sm:flex-row gap-2 sm:justify-end">
+                                    <Button
+                                        type="submit"
+                                        disabled={saving || uploadingProfile || uploadingWall}
+                                        className="h-10 bg-emerald-600 hover:bg-emerald-500"
+                                    >
+                                        {saving ? "Guardando..." : "Guardar cambios"}
+                                    </Button>
 
-
-
-                        </Button>
-
-                        <Button
-                            type="button"
-                            onClick={toggleDiscardAsk}
-                            variant="outline"
-                            className="flex-1 sm:flex-none sm:w-60 h-10 rounded-md border-amber-500/60 text-amber-100 bg-amber-900/40 hover:bg-amber-800/70 hover:text-amber-50 text-sm font-medium"
-                        >
-                            Descartar cambios y salir
-                        </Button>
-                    </div>
-
-                    {/* Confirm discard */}
-                    {discardAsk && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
-                            <div className="w-full max-w-sm rounded-xl bg-slate-900 border border-slate-700 p-4 space-y-3 text-sm text-slate-100">
-                                <p className="font-semibold">¿Descartar cambios?</p>
-                                <p className="text-xs text-slate-300">
-                                    Si salís sin guardar, se perderán los cambios.
-                                </p>
-                                <div className="flex justify-end gap-2 pt-2">
                                     <Button
                                         type="button"
+                                        onClick={() => {
+                                            if (!isDirty) {
+                                                window.location.href = "/";
+                                                return;
+                                            }
+                                            setPendingExit(true);
+                                            setPendingPage(null);
+                                            setDiscardAsk(true);
+                                        }}
                                         variant="outline"
-                                        onClick={toggleDiscardAsk}
-                                        className="h-8 px-3 text-xs border-slate-600 bg-slate-800/60 hover:bg-slate-700"
+                                        className={cn(
+                                            "h-10",
+                                            "border-slate-700 bg-slate-900/30 text-slate-200",
+                                            "hover:bg-slate-900/60 hover:text-slate-50"
+                                        )}
                                     >
-                                        Volver
+                                        {isDirty ? "Salir sin guardar" : "Salir"}
                                     </Button>
-                                    <Link
-                                        href="/"
-                                        className="inline-flex items-center justify-center h-8 px-3 rounded-md bg-red-600 hover:bg-red-500 text-xs font-medium text-slate-50"
-                                    >
-                                        Descartar y salir
-                                    </Link>
                                 </div>
                             </div>
                         </div>
-                    )}
-                </form>
-            </Form>
-        </div>
+
+                        {/* Confirm discard */}
+                        {discardAsk && (
+                            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-3">
+                                <div className="w-full max-w-sm rounded-2xl bg-slate-950 border border-slate-800 p-4 space-y-3 text-sm text-slate-100 shadow-xl">
+                                    <p className="font-semibold">¿Descartar cambios?</p>
+                                    <p className="text-xs text-slate-300 leading-snug">
+                                        Si continuás sin guardar, se perderán los cambios.
+                                    </p>
+                                    <div className="flex justify-end gap-2 pt-2">
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            onClick={() => {
+                                                setDiscardAsk(false);
+                                                setPendingPage(null);
+                                                setPendingExit(false);
+                                            }}
+                                            className="h-9 px-3 text-xs border-slate-700 bg-slate-900/50 hover:bg-slate-900"
+                                        >
+                                            Volver
+                                        </Button>
+
+                                        <button
+                                            type="button"
+                                            onClick={handleConfirmDiscard}
+                                            className="inline-flex items-center justify-center h-9 px-3 rounded-md bg-red-600 hover:bg-red-500 text-xs font-medium text-slate-50"
+                                        >
+                                            Descartar y continuar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </form>
+                </Form>
+            </div>
+
+            <div className="mt-1 text-xs text-slate-500">
+                ¿Querés volver sin guardar? Usá <span className="text-slate-300">“Salir sin guardar”</span>.
+            </div>
+        </PageShell>
     );
 }
-
-
-
-
 

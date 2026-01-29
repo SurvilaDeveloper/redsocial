@@ -16,7 +16,7 @@ export function MainMenuDesktop(session: any) {
 
 
     return (
-        <nav className="hidden md:flex md:flex-col gap-1 w-full text-sm">
+        <nav className="hidden lg:flex lg:flex-col gap-1 w-full text-sm">
             <h2 className="text-xs uppercase tracking-wide text-slate-400 mb-1 px-2">
                 Menú
             </h2>

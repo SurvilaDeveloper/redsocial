@@ -1,5 +1,4 @@
 // src/components/custom/PostImageCard.tsx
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -22,8 +21,16 @@ interface PostImageProps {
     };
     sessionUserId: number | null;
     isFirst: boolean;
+
     /** 🆕 Callback opcional para abrir detalle de imagen */
     onOpenImageDetail?: (imageId: number, postId: number) => void;
+
+    /**
+     * 🆕 Variante de layout:
+     * - "grid" (default): mantiene tu comportamiento actual (aspect-square, etc.)
+     * - "swiper": ocupa todo el alto disponible (h-full) y deja la barra de reacciones visible
+     */
+    variant?: "grid" | "swiper";
 }
 
 export default function PostImageCard({
@@ -31,16 +38,11 @@ export default function PostImageCard({
     sessionUserId,
     isFirst,
     onOpenImageDetail,
+    variant = "grid",
 }: PostImageProps) {
-    const [reaction, setReaction] = useState<ImageReaction>(
-        image.userReaction ?? null
-    );
-    const [likesCount, setLikesCount] = useState<number>(
-        image.likesCount ?? 0
-    );
-    const [unlikesCount, setUnlikesCount] = useState<number>(
-        image.unlikesCount ?? 0
-    );
+    const [reaction, setReaction] = useState<ImageReaction>(image.userReaction ?? null);
+    const [likesCount, setLikesCount] = useState<number>(image.likesCount ?? 0);
+    const [unlikesCount, setUnlikesCount] = useState<number>(image.unlikesCount ?? 0);
     const [loading, setLoading] = useState(false);
 
     // 👇 estado de carga de la imagen
@@ -51,20 +53,11 @@ export default function PostImageCard({
         setLikesCount(image.likesCount ?? 0);
         setUnlikesCount(image.unlikesCount ?? 0);
         setIsImageLoaded(false); // reset loader cuando cambia la imagen
-    }, [
-        image.id,
-        image.userReaction,
-        image.likesCount,
-        image.unlikesCount,
-        image.imageUrl,
-    ]);
+    }, [image.id, image.userReaction, image.likesCount, image.unlikesCount, image.imageUrl]);
 
     const canReact = Boolean(sessionUserId) && !loading;
 
-    const updateCountsOptimistic = (
-        prev: ImageReaction,
-        next: ImageReaction
-    ) => {
+    const updateCountsOptimistic = (prev: ImageReaction, next: ImageReaction) => {
         setLikesCount((prevLikes) => {
             let v = prevLikes;
             if (prev === "LIKE") v -= 1;
@@ -131,20 +124,25 @@ export default function PostImageCard({
         sendReaction(next);
     };
 
-    return (
-        <div
-            className={
-                isFirst
-                    ? "flex flex-col gap-1 bg-black relative w-full aspect-square overflow-hidden border border-black rounded-[8px]"
-                    : "flex flex-col gap-1 bg-black relative w-[48%] aspect-square overflow-hidden border border-black rounded-[8px]"
-            }
-        >
-            <div
+    const rootClass =
+        variant === "swiper"
+            ? // ✅ Swiper: ocupa el alto disponible, sin aspect-square
+            "flex flex-col gap-1 bg-black relative w-full h-full overflow-hidden border border-black rounded-[8px]"
+            : // ✅ Grid: tu layout original
+            isFirst
+                ? "flex flex-col gap-1 bg-black relative w-full aspect-square overflow-hidden border border-black rounded-[8px]"
+                : "flex flex-col gap-1 bg-black relative w-[48%] aspect-square overflow-hidden border border-black rounded-[8px]";
 
-                onDoubleClick={() =>
-                    onOpenImageDetail?.(image.id, image.post_id)
+    return (
+        <div className={rootClass}>
+            {/* ✅ En swiper: la imagen debe ser flex-1 para dejar visible la barra de reacciones */}
+            <div
+                onDoubleClick={() => onOpenImageDetail?.(image.id, image.post_id)}
+                className={
+                    variant === "swiper"
+                        ? "relative w-full flex-1 min-h-0 cursor-zoom-in select-none"
+                        : "relative w-full h-full cursor-zoom-in select-none"
                 }
-                className="relative w-full h-full cursor-zoom-in select-none"
             >
                 {/* Overlay de carga */}
                 {!isImageLoaded && (
@@ -174,9 +172,7 @@ export default function PostImageCard({
                     className={`flex flex-row items-center gap-1 text-[10px] px-2 py-1 rounded border ${reaction === "LIKE"
                         ? "bg-green-700 border-green-400 text-white"
                         : "bg-transparent border-gray-500 text-gray-300"
-                        } ${!canReact
-                            ? "opacity-50 cursor-not-allowed"
-                            : "cursor-pointer"
+                        } ${!canReact ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
                         }`}
                 >
                     <ThumbsUp className="w-3 h-3" />
@@ -190,9 +186,7 @@ export default function PostImageCard({
                     className={`flex flex-row items-center gap-1 text-[10px] px-2 py-1 rounded border ${reaction === "UNLIKE"
                         ? "bg-red-700 border-red-400 text-white"
                         : "bg-transparent border-gray-500 text-gray-300"
-                        } ${!canReact
-                            ? "opacity-50 cursor-not-allowed"
-                            : "cursor-pointer"
+                        } ${!canReact ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
                         }`}
                 >
                     <ThumbsDown className="w-3 h-3" />
@@ -202,6 +196,7 @@ export default function PostImageCard({
         </div>
     );
 }
+
 /*
 ---
 

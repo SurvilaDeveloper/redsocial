@@ -6,6 +6,7 @@ import Navbar from "@/components/custom/navbar";
 import Main from "../components/custom/main";
 import ClientSessionProvider from "./sessionprovider";
 import { GlobalProvider } from "@/context/globalcontext";
+import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
   title: "Red Social",
@@ -26,7 +27,7 @@ export default function RootLayout({
       <body
         className="
           h-full 
-          bg-slate-950 
+          bg-black 
           text-slate-100 
           antialiased 
           selection:bg-blue-500/40 
@@ -41,6 +42,7 @@ export default function RootLayout({
               {/* Main se encarga del layout interno de cada página */}
               <Main>
                 {children}
+                <Toaster />
               </Main>
             </div>
           </ClientSessionProvider>

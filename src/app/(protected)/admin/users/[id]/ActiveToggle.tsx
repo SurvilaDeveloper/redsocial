@@ -41,15 +41,15 @@ export default function ActiveToggle({
 
     const statusPillClass = useMemo(() => {
         return `rounded-full border px-2 py-0.5 text-xs ${active
-                ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-200"
-                : "border-red-500/40 bg-red-500/10 text-red-200"
+            ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-200"
+            : "border-red-500/40 bg-red-500/10 text-red-200"
             }`;
     }, [active]);
 
     const buttonClass = useMemo(() => {
         return `rounded-md px-4 py-2 text-sm font-medium disabled:pointer-events-none disabled:opacity-40 ${active
-                ? "border border-red-500/40 bg-red-500/10 text-red-200 hover:bg-red-500/20"
-                : "border border-emerald-500/40 bg-emerald-500/10 text-emerald-200 hover:bg-emerald-500/20"
+            ? "border border-red-500/40 bg-red-500/10 text-red-200 hover:bg-red-500/20"
+            : "border border-emerald-500/40 bg-emerald-500/10 text-emerald-200 hover:bg-emerald-500/20"
             }`;
     }, [active]);
 
@@ -91,7 +91,7 @@ export default function ActiveToggle({
                     evitar errores, no se permite cambiar su estado.
                 </p>
             ) : (
-                <div className="mt-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div className="mt-3 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                     <div className="text-sm text-slate-300">
                         {active
                             ? "Si lo desactivás, no debería poder iniciar sesión ni usar funcionalidades privadas."

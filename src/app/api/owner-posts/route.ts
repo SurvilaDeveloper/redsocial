@@ -36,8 +36,8 @@ export async function GET(req: NextRequest) {
 
     const posts = await prisma.post.findMany({
         where: {
-            user_id: userId,
-            deletedAt: null,
+            authorId: userId,
+            //deletedAt: null,
         },
         orderBy: { createdAt: "desc" },
         skip: (page - 1) * pageSize,
@@ -46,7 +46,7 @@ export async function GET(req: NextRequest) {
             images: {
                 orderBy: { index: "asc" },
             },
-            user: {
+            author: {
                 select: {
                     id: true,
                     name: true,

@@ -1,3 +1,4 @@
+// src/lib/configuration/getUserConfiguration.ts
 import { prisma } from "@/lib/prisma";
 import type { Configuration } from "@/types/configuration";
 
@@ -37,7 +38,16 @@ export async function getUserConfiguration(
 
             // ---- Interacciones ----
             likesVisibility: true,
-            privateMessagesVisibility: true,
+
+            // ---- Compartir ----
+            postsWhoCanShare: true,
+
+            // ---- Comentarios y respuestas
+            postCommentsWhoCanWrite: true,
+            postRepliesWhoCanWrite: true,
+            mediaCommentsWhoCanWrite: true,
+            mediaRepliesWhoCanWrite: true,
+
         },
     });
 }

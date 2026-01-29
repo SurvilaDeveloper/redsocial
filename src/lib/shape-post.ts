@@ -1,24 +1,28 @@
 // src/lib/shape-post.ts
-
 import { buildPostRelations } from "./post-relations";
 import { buildReaction } from "./reactions";
 
-export function shapePost(
-    post: any,
-    relations: SocialRelations
-): Post {
+function toIso(v: any): string {
+    // Prisma suele devolver Date; si ya es string lo dejo
+    if (!v) return new Date(0).toISOString();
+    return typeof v === "string" ? v : (v as Date).toISOString();
+}
+
+export function shapePost(post: any, relations: SocialRelations): Post {
     return {
         id: post.id,
-        user_id: post.user_id,
-        title: post.title,
-        description: post.description,
-        imagenumber: post.imagenumber,
-        createdAt: post.createdAt,
+
+        authorId: post.authorId,
+        author: post.author ?? null,
+
+        title: post.title ?? null,
+        description: post.description ?? null,
+        imagenumber: post.imagenumber ?? null,
+        createdAt: toIso(post.createdAt),
+
         active: post.active ?? 1,
         visibility: (post.visibility ?? 1) as PostVisibility,
-        deletedAt: post.deletedAt ?? null,
-
-        user: post.user,
+        deletedAt: post.deletedAt ? toIso(post.deletedAt) : null,
 
         images: (post.images ?? []).map((img: any) => ({
             id: img.id,

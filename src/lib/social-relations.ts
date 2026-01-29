@@ -8,13 +8,19 @@ export async function getSocialRelations(
     viewerId: number | null,
     ownerId: number,
 ): Promise<SocialRelations> {
-    if (!viewerId || viewerId === ownerId) {
+    if (!viewerId) {
         return {
             following: false,
             isFollower: false,
             relState: RelationshipState.NONE,
         };
     }
-
+    if (viewerId === ownerId) {
+        return {
+            following: true,
+            isFollower: true,
+            relState: RelationshipState.FRIENDS,
+        }
+    }
     return getUserRelations(viewerId, ownerId, prisma);
 }

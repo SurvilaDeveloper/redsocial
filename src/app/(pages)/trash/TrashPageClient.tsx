@@ -148,7 +148,7 @@ export default function TrashPageClient() {
                                 <p className="text-xs text-slate-300 mt-1 line-clamp-2">
                                     {shortDesc}
                                 </p>
-                                <div className="mt-1 flex flex-col md:flex-row md:items-center md:gap-3 text-[10px] text-slate-400">
+                                <div className="mt-1 flex flex-col lg:flex-row lg:items-center lg:gap-3 text-[10px] text-slate-400">
                                     <span>
                                         Creado:{" "}
                                         <span className="text-slate-200">

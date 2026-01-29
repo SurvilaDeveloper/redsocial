@@ -128,7 +128,7 @@ export function PostEdit({ postId, session }: PostEditProps) {
     }
 
     return (
-        <div className="w-full rounded-2xl bg-slate-950/60 border border-slate-800 px-4 py-4 md:px-5 md:py-5">
+        <div className="w-full rounded-2xl bg-slate-950/60 border border-slate-800 px-4 py-4 lg:px-5 lg:py-5">
             <EditPostForm
                 title={post.title}
                 images={post.images && post.images.length > 0 ? post.images : null}

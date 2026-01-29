@@ -1,5 +1,4 @@
-//src/actions/post-action.ts
-
+// src/actions/post-action.ts
 "use server";
 
 import { prisma } from "@/lib/prisma";
@@ -7,56 +6,90 @@ import { auth } from "@/auth";
 import { postSchema } from "@/lib/zod";
 import { z } from "zod";
 
-// src/actions/post-action.ts
+import { getSocialRelations } from "@/lib/social-relations";
+import { RelationshipState } from "@/lib/relationship-state";
+
+type ImagePayload = { url: string; publicId: string } | null;
+
+async function canPublishOnWall(opts: {
+    actorUserId: number;
+    wallUserId: number;
+}): Promise<boolean> {
+    const { actorUserId, wallUserId } = opts;
+
+    if (actorUserId === wallUserId) return true;
+
+    const social = await getSocialRelations(actorUserId, wallUserId);
+    return social?.relState === RelationshipState.FRIENDS;
+}
 
 export const createPost = async (
     values: z.infer<typeof postSchema>,
-    mainImage: {
-        url: string;
-        publicId: string;
-    } | null,
-    imagesAdded?: ({
-        url: string;
-        publicId: string;
-    } | null)[]
+    mainImage: { url: string; publicId: string } | null,
+    imagesAdded?: ({ url: string; publicId: string } | null)[],
+    wallUserId?: number
 ) => {
-
     const session = await auth();
 
-    if (!session) {
-        return {
-            error: "No logged user.",
-        };
+    if (!session?.user?.id) {
+        return { error: "No logged user." };
+    }
+
+    const parsed = postSchema.safeParse(values);
+    if (!parsed.success) {
+        return { error: "Invalid data." };
+    }
+
+    const actorUserId = Number(session.user.id);
+
+    const targetWallUserId = Number.isFinite(Number(wallUserId))
+        ? Number(wallUserId)
+        : actorUserId;
+
+    // ✅ permiso: dueño del muro o amigo del dueño del muro
+    const social = await getSocialRelations(actorUserId, targetWallUserId);
+    const canPublish =
+        actorUserId === targetWallUserId || social.relState === RelationshipState.FRIENDS;
+
+    if (!canPublish) {
+        return { error: "No tienes permiso para publicar en este muro." };
     }
 
     try {
-        const parsed = postSchema.safeParse(values);
-        if (!parsed.success) {
-            return {
-                error: "Invalid data.",
-            };
-        }
-
         const data = parsed.data;
-        const userId = parseInt(String(session.user.id), 10);
 
         const accessoryImages = imagesAdded ?? [];
         const accessoryCount = accessoryImages.filter(Boolean).length;
         const mainCount = mainImage ? 1 : 0;
         const totalImages = mainCount + accessoryCount;
 
-        // 👉 Crear el post primero
+        // 1) crear post
         const post = await prisma.post.create({
             data: {
                 title: data.title,
                 description: data.description,
-                imagenumber: totalImages, // si querés mantener 0, podés poner 0 aquí
-                user_id: userId,
+                imagenumber: totalImages,
+                authorId: actorUserId,
             },
         });
 
-        // 👉 Guardar imagen principal (index 0)
+        // ✅ regla: solo sale al feed global si es post en muro propio
+        const isOwnWall = actorUserId === targetWallUserId;
+
+        // 2) crear WallEntry (PUBLISHED) para que aparezca en el muro correcto
+        await prisma.wallEntry.create({
+            data: {
+                wallUserId: targetWallUserId,
+                actorUserId: actorUserId,
+                type: "PUBLISHED",
+                postId: post.id,
+                showInFeed: isOwnWall, // ✅ NUEVO
+            },
+        });
+
+        // 3) guardar imágenes
         let nextIndex = 0;
+
         if (mainImage) {
             await prisma.image.create({
                 data: {
@@ -69,7 +102,6 @@ export const createPost = async (
             nextIndex = 1;
         }
 
-        // 👉 Guardar imágenes accesorias (index 1, 2, 3, ...)
         if (accessoryImages.length > 0) {
             for (let i = 0; i < accessoryImages.length; i++) {
                 const img = accessoryImages[i];
@@ -83,6 +115,7 @@ export const createPost = async (
                         post_id: post.id,
                     },
                 });
+
                 nextIndex++;
             }
         }
@@ -95,152 +128,132 @@ export const createPost = async (
 };
 
 
+
 export const updatePost = async (
     values: z.infer<typeof postSchema>,
-    image: {
-        url: string,
-        publicId: string
-    } | null,
-    imagesAdded: ({
-        url: string,
-        publicId: string
-    } | null)[],
-    imagesToDelete: ({
-        url: string,
-        publicId: string
-    } | null)[],
+    image: ImagePayload,
+    imagesAdded: ImagePayload[],
+    imagesToDelete: ImagePayload[],
     postId: number
 ) => {
-    const session = await auth()
-    if (!session) {
-        return {
-            error: "No logged user."
-        }
-    }
+    const session = await auth();
+    if (!session?.user?.id) return { error: "No logged user." };
+
+    const parsed = postSchema.safeParse(values);
+    if (!parsed.success) return { error: "Invalid data." };
+
+    const actorUserId = Number(session.user.id);
+
     try {
-        const { data, success } = postSchema.safeParse(values)
-        if (!success) {
-            return {
-                error: "Invalid data.",
+        await prisma.$transaction(async (tx) => {
+            // Solo el autor puede editar
+            const post = await tx.post.findUnique({
+                where: { id: postId },
+                select: { id: true, authorId: true },
+            });
+
+            if (!post || post.authorId !== actorUserId) {
+                throw new Error("Forbidden");
             }
-        }
-        // Obtener el ID del usuario autenticado
-        const userId = session.user.id;
-        // verificar la cantidad de imagenes del usuario en la tabla image
 
-        try {
+            // borrar imágenes seleccionadas
+            await Promise.all(
+                (imagesToDelete ?? []).map(async (img) => {
+                    if (!img) return;
 
-
-            await Promise.all(imagesToDelete.map(async (image) => {
-                if (image) {
-                    const img = await prisma.image.findFirst({
+                    const found = await tx.image.findFirst({
                         where: {
                             post_id: postId,
-                            imageUrl: image.url,
-                            imagePublicId: image.publicId
-                        }
+                            imageUrl: img.url,
+                            imagePublicId: img.publicId,
+                        },
+                        select: { id: true },
                     });
-                    if (img?.id) {
-                        await prisma.image.delete({ where: { id: img.id } });
+
+                    if (found?.id) {
+                        await tx.image.delete({ where: { id: found.id } });
                     }
+                })
+            );
+
+            // actualizar post
+            await tx.post.update({
+                where: { id: postId },
+                data: {
+                    title: parsed.data.title,
+                    description: parsed.data.description,
+                    // imagenumber lo podrías recalcular si querés; por ahora lo dejo igual que tu lógica previa:
+                    // imagenumber: 0,
+                },
+            });
+
+            // imagen principal index 0
+            const existingMain = await tx.image.findFirst({
+                where: { post_id: postId, index: 0 },
+                select: { id: true },
+            });
+
+            if (image) {
+                if (existingMain?.id) {
+                    await tx.image.update({
+                        where: { id: existingMain.id },
+                        data: {
+                            imageUrl: image.url,
+                            imagePublicId: image.publicId,
+                            active: 1,
+                        },
+                    });
+                } else {
+                    await tx.image.create({
+                        data: {
+                            imageUrl: image.url,
+                            imagePublicId: image.publicId,
+                            index: 0,
+                            post_id: postId,
+                        },
+                    });
                 }
-            }));
+            }
 
-        } catch (error) {
-            console.error("Error al eliminar registros de la db", error)
-        }
+            // accesorias index 1..n
+            if (imagesAdded && imagesAdded.length > 0) {
+                for (let i = 0; i < imagesAdded.length; i++) {
+                    const img = imagesAdded[i];
+                    if (!img) continue;
 
-        const post = await prisma.post.update({
-            where: { id: postId },
-            data: {
-                title: data.title,
-                description: data.description,
-                imagenumber: 0,
-                user_id: parseInt(userId),
+                    await tx.image.upsert({
+                        where: {
+                            post_id_index: { post_id: postId, index: i + 1 },
+                        },
+                        update: {
+                            imageUrl: img.url,
+                            imagePublicId: img.publicId,
+                            active: 1,
+                        },
+                        create: {
+                            imageUrl: img.url,
+                            imagePublicId: img.publicId,
+                            index: i + 1,
+                            post_id: postId,
+                        },
+                    });
+                }
             }
         });
 
-        // guardar la imagen
-        if (post && post.id) {
-
-            const existingImage = await prisma.image.findFirst(
-                {
-                    where: {
-                        post_id: post.id,
-                        index: 0
-                    }
-                }
-            )
-
-            if (image) {
-
-                if (existingImage) {
-                    //update
-                    await prisma.image.update(
-                        {
-                            where: {
-                                id: existingImage.id
-                            },
-                            data: {
-                                imageUrl: image.url,
-                                imagePublicId: image.publicId,
-                                active: 1
-                            }
-                        }
-                    )
-                } else {
-                    await prisma.image.create(
-                        {
-                            data: {
-                                imageUrl: image.url,
-                                imagePublicId: image.publicId,
-                                index: 0,
-                                post_id: post.id,/* provide the post ID here */
-
-                            }
-                        })
-                }
-            }
-            if (imagesAdded && imagesAdded.length > 0) {
-
-                for (let i = 0; i < imagesAdded.length; i++) {
-                    if (imagesAdded[i]) {
-                        await prisma.image.upsert({
-                            where: {
-                                post_id_index: {
-                                    post_id: post.id,
-                                    index: i + 1
-                                }
-                            },
-                            update: {
-                                imageUrl: imagesAdded[i]!.url,
-                                imagePublicId: imagesAdded[i]!.publicId,
-                                active: 1
-                            },
-                            create: {
-                                imageUrl: imagesAdded[i]!.url,
-                                imagePublicId: imagesAdded[i]!.publicId,
-                                index: i + 1,
-                                post_id: post.id
-                            }
-                        });
-                    }
-                }
-
-
-            }
-        }
-        return { success: true }
+        return { success: true };
     } catch (error) {
-        return { error: "error 500" }
+        if ((error as any)?.message === "Forbidden") return { error: "Forbidden" };
+        console.error("Error en updatePost:", error);
+        return { error: "error 500" };
     }
-}
+};
 
 export const updatePostActive = async (postId: number, value: number) => {
     try {
         await prisma.post.update({
             where: { id: postId },
-            data: { active: value }
+            data: { active: value },
         });
         return { success: true };
     } catch (error) {
@@ -253,21 +266,18 @@ export const updatePostVisibility = async (postId: number, value: number) => {
     try {
         await prisma.post.update({
             where: { id: postId },
-            data: { visibility: value }
+            data: { visibility: value },
         });
         return { success: true };
     } catch (error) {
         console.error("Error al actualizar (visibility) del post:", error);
         return { error: "Error al actualizar (visibility) del post" };
     }
-}
-
+};
 
 export const softDeletePost = async (postId: number) => {
     const session = await auth();
-    if (!session) {
-        return { error: "No logged user." };
-    }
+    if (!session?.user?.id) return { error: "No logged user." };
 
     try {
         const userId = Number(session.user.id);
@@ -275,11 +285,11 @@ export const softDeletePost = async (postId: number) => {
         await prisma.post.update({
             where: {
                 id: postId,
-                user_id: userId,
+                authorId: userId, // ✅
             },
             data: {
-                deletedAt: new Date(), // 🧺 papelera
-                active: 0,             // opcional: lo marcamos oculto
+                deletedAt: new Date(),
+                active: 0,
             },
         });
 
@@ -292,9 +302,7 @@ export const softDeletePost = async (postId: number) => {
 
 export const restorePost = async (postId: number) => {
     const session = await auth();
-    if (!session) {
-        return { error: "No logged user." };
-    }
+    if (!session?.user?.id) return { error: "No logged user." };
 
     try {
         const userId = Number(session.user.id);
@@ -302,12 +310,10 @@ export const restorePost = async (postId: number) => {
         await prisma.post.update({
             where: {
                 id: postId,
-                user_id: userId,
+                authorId: userId, // ✅
             },
             data: {
-                deletedAt: null, // 🔄 sale de la papelera
-                // podés decidir si vuelve activo o no
-                // active: 1,
+                deletedAt: null,
             },
         });
 
@@ -320,25 +326,15 @@ export const restorePost = async (postId: number) => {
 
 export const hardDeletePost = async (postId: number) => {
     const session = await auth();
-    if (!session) {
-        return { error: "No logged user." };
-    }
+    if (!session?.user?.id) return { error: "No logged user." };
 
     try {
         const userId = Number(session.user.id);
 
-        // 🔹 TODO futuro: acá podrías borrar imágenes de Cloudinary.
-        // Por ahora sólo lo sacamos de la DB.
-
-        // Si tenés FKs sin cascade, quizá tengas que borrar también
-        // comentarios, reacciones, etc. Ejemplo:
-        // await prisma.post_comment.deleteMany({ where: { post_id: postId } });
-        // await prisma.image.deleteMany({ where: { post_id: postId } });
-
         await prisma.post.delete({
             where: {
                 id: postId,
-                user_id: userId,
+                authorId: userId, // ✅
             },
         });
 
@@ -348,4 +344,5 @@ export const hardDeletePost = async (postId: number) => {
         return { error: "Error eliminando definitivamente el post." };
     }
 };
+
 

@@ -135,7 +135,7 @@ export default async function AdminUsersPage({
 
             {/* Filtros */}
             <div className="mb-4 rounded-lg border border-slate-800 bg-slate-900/30 p-4">
-                <form className="flex flex-col gap-3 md:flex-row md:items-end">
+                <form className="flex flex-col gap-3 lg:flex-row lg:items-end">
                     <div className="flex-1">
                         <label className="mb-1 block text-xs text-slate-400">Buscar</label>
                         <input
@@ -146,7 +146,7 @@ export default async function AdminUsersPage({
                         />
                     </div>
 
-                    <div className="w-full md:w-56">
+                    <div className="w-full lg:w-56">
                         <label className="mb-1 block text-xs text-slate-400">Rol</label>
                         <select
                             name="role"
@@ -164,7 +164,7 @@ export default async function AdminUsersPage({
                         </select>
                     </div>
 
-                    <div className="w-full md:w-40">
+                    <div className="w-full lg:w-40">
                         <label className="mb-1 block text-xs text-slate-400">Activo</label>
                         <select
                             name="active"

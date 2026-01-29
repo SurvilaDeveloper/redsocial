@@ -28,7 +28,7 @@ const FollowButton = ({
                     <span
                         className={
                             baseChip +
-                            " border-slate-300 text-slate-100 bg-slate-900/40 hover:bg-slate-800"
+                            " border-slate-800 text-slate-400 bg-black hover:bg-slate-800"
                         }
                     >
                         Seguir
@@ -40,7 +40,7 @@ const FollowButton = ({
                 <span
                     className={
                         baseChip +
-                        " border-emerald-400 text-emerald-200 bg-emerald-900/40"
+                        " border-emerald-800 text-emerald-500 bg-black"
                     }
                 >
                     Le sigues

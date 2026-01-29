@@ -32,14 +32,25 @@
 }
 
 /* Imagen principal del carrusel */
+
+/*.carousel-image {*/
+/*    width: 100%;*/
+/*    height: auto;*/
+/*    max-height: 70vh;*/
+/* ajustá a gusto */
+/*    object-fit: contain;*/
+/*    border-radius: 4px;*/
+/*}*/
+/* Imagen principal del carrusel */
 .carousel-image {
     width: 100%;
     height: auto;
-    max-height: 70vh;
-    /* ajustá a gusto */
+    max-height: calc(100dvh - 340px);
+    /* ✅ reserva espacio para UI inferior */
     object-fit: contain;
     border-radius: 4px;
 }
+
 
 /* ===========================
    Botones de navegación lateral
@@ -80,13 +91,30 @@
    Navegación inferior
    =========================== */
 
+/*.carousel-thumbnails {*/
+/*    display: flex;*/
+/*    gap: 6px;*/
+/*    margin-top: 6px;*/
+/*    overflow-x: hidden;*/
+/*   padding: 0;*/
+/*}*/
+
 .carousel-thumbnails {
     display: flex;
     gap: 6px;
     margin-top: 6px;
-    overflow-x: hidden;
-    padding: 0;
+    overflow-x: auto;
+    /* ✅ */
+    -webkit-overflow-scrolling: touch;
+    padding: 0 2px;
+    max-width: 100%;
 }
+
+/*sumado*/
+.carousel-thumbnails::-webkit-scrollbar {
+    height: 6px;
+}
+
 
 /* Miniaturas de imagen (modo "thumbnails") */
 .thumbnail {
@@ -164,8 +192,12 @@
    =========================== */
 
 @media (max-width: 640px) {
+
+    /*.carousel-image {*/
+    /*    max-height: 50vh;*/
+    /* }*/
     .carousel-image {
-        max-height: 50vh;
+        max-height: calc(100dvh - 320px);
     }
 
     .nav-button {

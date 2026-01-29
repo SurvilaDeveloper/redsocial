@@ -189,7 +189,7 @@ model User {
 
   // Relaciones con otros modelos
   accounts               Account[]
-  posts                  Post[]
+  posts                  Post[]                 @relation("PostAuthor")
   comments               PostComment[]
   imageComments          ImageComment[]
   postCommentsResponses  PostCommentResponse[]
@@ -241,6 +241,8 @@ model User {
   deviceDisableTokens          DeviceDisableToken[]
   curricula                    Curriculum[]
   curriculumMedias             CurriculumMedia[]
+  wallEntriesOwned             WallEntry[]                   @relation("WallOwner")
+  wallEntriesActed             WallEntry[]                   @relation("WallActor")
 
   @@map("user")
 }
@@ -331,8 +333,16 @@ model Configuration {
   followingListVisibility Int @default(1)
 
   // ---- Interacciones ----
-  likesVisibility           Int @default(1)
-  privateMessagesVisibility Int @default(2)
+  likesVisibility Int @default(1)
+
+  // ---- Compartir ----
+  postsWhoCanShare Int @default(2)
+
+  // ---- Comentarios y respuestas
+  postCommentsWhoCanWrite  Int @default(2)
+  postRepliesWhoCanWrite   Int @default(2)
+  mediaCommentsWhoCanWrite Int @default(2)
+  mediaRepliesWhoCanWrite  Int @default(2)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -374,16 +384,47 @@ model Post {
   imagenumber  Int?          @default(1) @db.TinyInt
   createdAt    DateTime?     @default(now())
   deletedAt    DateTime?
-  user_id      Int
+  authorId     Int           @map("user_id")
   active       Int?          @default(1) @db.TinyInt
   visibility   Int?          @default(1) @db.TinyInt
-  user         User          @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  author       User          @relation("PostAuthor", fields: [authorId], references: [id], onDelete: Cascade)
   images       Image[]
   post_comment PostComment[]
   post_like    PostLike[]
   post_unlike  PostUnlike[]
+  wallEntries  WallEntry[]
 
   @@map("post")
+}
+
+enum WallEntryType {
+  PUBLISHED
+  SHARED
+}
+
+model WallEntry {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  active    Int?     @default(1) @db.TinyInt
+
+  wallUserId Int
+  wallUser   User @relation("WallOwner", fields: [wallUserId], references: [id], onDelete: Cascade)
+
+  actorUserId Int
+  actorUser   User @relation("WallActor", fields: [actorUserId], references: [id], onDelete: Cascade)
+
+  type WallEntryType
+
+  postId Int
+  post   Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  // ✅ NUEVO: control de “aparece en feed global”
+  showInFeed Boolean @default(false)
+
+  @@index([wallUserId, createdAt])
+  @@index([postId])
+  @@index([showInFeed, createdAt]) // opcional, ayuda para el feed
+  @@map("wall_entry")
 }
 
 model Follow {
@@ -972,4 +1013,32 @@ model ServiceListingCommentUnlike {
   @@unique([userId, serviceListingCommentId])
   @@index([serviceListingCommentId])
   @@map("service_listing_comment_unlike")
+}
+
+enum ReportReason {
+  spam
+  harassment
+  hate
+  sexual
+  violence
+  illegal
+  privacy
+  impersonation
+  misinformation
+  other
+}
+
+model ContentReport {
+  id         Int          @id @default(autoincrement())
+  reporterId Int
+  targetType String // "COMMENT" | "RESPONSE"
+  targetId   Int
+  reason     ReportReason
+  details    String?      @db.VarChar(500)
+  createdAt  DateTime     @default(now())
+
+  @@unique([reporterId, targetType, targetId])
+  @@index([targetType, targetId])
+  @@index([reporterId])
+  @@index([reason])
 }

@@ -1,10 +1,39 @@
 // src/components/custom/postList.tsx
-
 "use client";
 
-import { useEffect, useRef, useState, useMemo } from "react";
-import { PostCard } from "./postCard";
+import { useEffect, useRef, useState } from "react";
+import { PostCard } from "./postCard/PostCard";
+import { WallEntryCard } from "./WallEntryCard";
 import { FeedMessage } from "./feedMessage";
+import Link from "next/link";
+
+import { Configuration } from "@/types/configuration";
+import { isHeEnableToView, myOwnPermissions } from "@/lib/permissions";
+import WallHeader from "./wallHeader";
+import PostFormWall from "./postFormWall";
+
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+
+const VIEW_MODES = [
+    { value: "owner", label: "Dueño (full)" },
+    { value: "public", label: "Público" },
+    { value: "logged", label: "Logueado" },
+    { value: "followers_friends", label: "Seguidores/Amigos" },
+    { value: "friends", label: "Solo amigos" },
+] as const;
+
+// helper: id “estable” por item del feed (WallEntry primero, fallback a Post)
+function getFeedItemKey(post: any): string {
+    const wallEntryId = post?.wallEntryMeta?.id;
+    if (wallEntryId != null) return `we_${wallEntryId}`;
+    return `p_${post?.id}`;
+}
 
 export default function PostList({
     session,
@@ -12,78 +41,243 @@ export default function PostList({
     viewerType,
     comingFrom,
     enableToView,
+    myConfiguration,
 }: {
     session: any;
-    userId: number;
+    userId: number; // wallUserId
     viewerType: "owner" | "user";
     comingFrom?: "mywall" | "wall" | "home";
     enableToView?: EnableToView | null;
+    myConfiguration?: Configuration | null;
 }) {
     const [posts, setPosts] = useState<Post[]>([]);
     const [page, setPage] = useState(1);
+
     const [loading, setLoading] = useState(false);
     const [hasMore, setHasMore] = useState(true);
 
     const observer = useRef<IntersectionObserver | null>(null);
     const lastPostRef = useRef<HTMLDivElement | null>(null);
 
-    // 🔹 Overlay de detalle (estilo Instagram)
+    // overlay detalle
     const [detailOpen, setDetailOpen] = useState(false);
     const [detailPost, setDetailPost] = useState<Post | null>(null);
     const [detailLoading, setDetailLoading] = useState(false);
     const [detailError, setDetailError] = useState<string | null>(null);
 
-    const enableToViewPosts = viewerType === "owner" ? true : enableToView?.posts
-    // 🔹 Carga de posts del propio usuario
+    // permisos “simulados” (owner) o reales (user)
+    const [enableToViewState, setEnableToViewState] = useState<EnableToView | null>(
+        viewerType === "owner" ? myOwnPermissions : enableToView ?? null
+    );
+
+    const [showOwnerPanel, setShowOwnerPanel] = useState(true);
+    const [selectedViewModeState, setSelectedViewModeState] = useState<number>(0);
+
+    const [canPublishOnWall, setCanPublishOnWall] = useState(false);
+
+    // ✅ endpoint toggle showInFeed
+    const TOGGLE_URL = "/api/wall-entry/toggle-feed";
+
+    // ✅ evitar doble toggle concurrente del mismo entry
+    const [pendingToggleIds, setPendingToggleIds] = useState<Set<number>>(new Set());
+
+    // cuando cambie el muro o el tipo de viewer => reset feed
+    useEffect(() => {
+        setPosts([]);
+        setPage(1);
+        setHasMore(true);
+    }, [userId, viewerType]);
+
+    // para viewerType=user: enableToView viene de props
+    useEffect(() => {
+        if (viewerType === "owner") return;
+        setEnableToViewState(enableToView ?? null);
+    }, [viewerType, enableToView]);
+
+    const canViewPosts = enableToViewState?.posts ?? false;
+
+    const viewMode = (m: string) => {
+        if (!myConfiguration) return;
+
+        let etv: EnableToView | null = null;
+
+        switch (m) {
+            case "owner":
+                etv = myOwnPermissions;
+                setEnableToViewState(etv);
+                setShowOwnerPanel(true);
+                setSelectedViewModeState(0);
+                break;
+
+            case "public":
+                etv = isHeEnableToView(myConfiguration, false, false, false);
+                setEnableToViewState(etv);
+                setShowOwnerPanel(false);
+                setSelectedViewModeState(1);
+                break;
+
+            case "logged":
+                etv = isHeEnableToView(myConfiguration, true, false, false);
+                setEnableToViewState(etv);
+                setShowOwnerPanel(false);
+                setSelectedViewModeState(2);
+                break;
+
+            case "followers_friends":
+                etv = isHeEnableToView(myConfiguration, true, true, true);
+                setEnableToViewState(etv);
+                setShowOwnerPanel(false);
+                setSelectedViewModeState(3);
+                break;
+
+            case "friends":
+                etv = isHeEnableToView(myConfiguration, true, true, false);
+                setEnableToViewState(etv);
+                setShowOwnerPanel(false);
+                setSelectedViewModeState(4);
+                break;
+
+            default:
+                break;
+        }
+    };
+
+    // fetch wall feed
+    const isFetchingRef = useRef(false);
+
     useEffect(() => {
         async function fetchPosts() {
             if (!hasMore) return;
+            if (isFetchingRef.current) return; // ✅ evita requests repetidos en dev/strict
+            isFetchingRef.current = true;
 
             setLoading(true);
             try {
-                let res;
-                if (viewerType === "owner") {
-                    res = await fetch(
-                        `/api/owner-posts?user_id=${userId}&page=${page}`,
-                        { cache: "no-store" }
-                    );
-                } else {
-                    res = await fetch(
-                        `/api/user-posts?user_id=${userId}&page=${page}`,
-                        { cache: "no-store" }
-                    );
+                const url = `/api/wall-posts?wall_user_id=${userId}&page=${page}`;
+                const res = await fetch(url, { cache: "no-store" });
+                const data = await res.json();
+
+                if (typeof data?.canPublishOnWall === "boolean") {
+                    setCanPublishOnWall(data.canPublishOnWall);
                 }
 
-                const data = await res.json();
 
                 const newPosts: Post[] = data?.allPosts ?? [];
 
                 if (!newPosts.length) {
                     setHasMore(false);
-                } else {
-                    setPosts((prev) => {
-                        const existingIds = new Set(prev.map((p) => p.id));
-                        const unique = newPosts.filter(
-                            (p) => !existingIds.has(p.id)
-                        );
-                        return [...prev, ...unique];
-                    });
+                    return;
                 }
+
+                setPosts((prev) => {
+                    const existingKeys = new Set(prev.map((p: any) => getFeedItemKey(p)));
+                    const unique = newPosts.filter((p: any) => !existingKeys.has(getFeedItemKey(p)));
+                    return [...prev, ...unique];
+                });
             } catch (error) {
-                console.error("Error cargando posts del muro:", error);
+                console.error("Error cargando wall feed:", error);
             } finally {
                 setLoading(false);
+                isFetchingRef.current = false;
             }
         }
 
         fetchPosts();
-    }, [page, userId, hasMore]);
+    }, [page, userId, hasMore]); // ✅ NO incluir loading
 
-    // 🔹 Infinite scroll
+    // ✅ toggle showInFeed optimista (solo para dueño del muro)
+    const toggleShowInFeedOptimistic = async (wallEntryId: number) => {
+        if (!Number.isFinite(wallEntryId)) return;
+        if (pendingToggleIds.has(wallEntryId)) return;
+
+        // guardo el valor previo SOLO para este entry (rollback fino)
+        const prevValue =
+            Boolean(
+                (posts as any[]).find((p) => p?.wallEntryMeta?.id === wallEntryId)?.wallEntryMeta?.showInFeed
+            );
+
+        setPendingToggleIds((prev) => new Set(prev).add(wallEntryId));
+
+        // optimistic flip
+        setPosts((curr: any[]) =>
+            curr.map((p) => {
+                const meta = p?.wallEntryMeta;
+                if (!meta || meta.id !== wallEntryId) return p;
+                return {
+                    ...p,
+                    wallEntryMeta: {
+                        ...meta,
+                        showInFeed: !meta.showInFeed,
+                    },
+                };
+            })
+        );
+
+        try {
+            const res = await fetch(TOGGLE_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ wallEntryId }),
+            });
+
+            const data = await res.json().catch(() => null);
+
+            if (!res.ok || !data?.success) {
+                // rollback fino
+                setPosts((curr: any[]) =>
+                    curr.map((p) => {
+                        const meta = p?.wallEntryMeta;
+                        if (!meta || meta.id !== wallEntryId) return p;
+                        return {
+                            ...p,
+                            wallEntryMeta: { ...meta, showInFeed: prevValue },
+                        };
+                    })
+                );
+                return;
+            }
+
+            // sync con valor real del server
+            setPosts((curr: any[]) =>
+                curr.map((p) => {
+                    const meta = p?.wallEntryMeta;
+                    if (!meta || meta.id !== wallEntryId) return p;
+                    return {
+                        ...p,
+                        wallEntryMeta: {
+                            ...meta,
+                            showInFeed: Boolean(data.showInFeed),
+                        },
+                    };
+                })
+            );
+        } catch {
+            // rollback fino
+            setPosts((curr: any[]) =>
+                curr.map((p) => {
+                    const meta = p?.wallEntryMeta;
+                    if (!meta || meta.id !== wallEntryId) return p;
+                    return {
+                        ...p,
+                        wallEntryMeta: { ...meta, showInFeed: prevValue },
+                    };
+                })
+            );
+        } finally {
+            setPendingToggleIds((prev) => {
+                const next = new Set(prev);
+                next.delete(wallEntryId);
+                return next;
+            });
+        }
+    };
+
+    // infinite scroll
     useEffect(() => {
-        if (!hasMore) return;
+        if (!hasMore || loading) return;
 
         observer.current?.disconnect();
+
         observer.current = new IntersectionObserver((entries) => {
             if (entries[0]?.isIntersecting && !loading) {
                 setPage((prev) => prev + 1);
@@ -96,18 +290,7 @@ export default function PostList({
         return () => observer.current?.disconnect();
     }, [posts, hasMore, loading]);
 
-    // 🔹 Como este es "Mi muro", el viewer siempre es el dueño
-    const visiblePosts = useMemo(
-        () =>
-            posts.filter((p) => {
-                // por las dudas, reforzamos que sean tus posts
-                if (p.user_id !== userId) return false;
-                return true;
-            }),
-        [posts, userId]
-    );
-
-    // 🔹 Abrir detalle: acá sí pegamos a /api/posts/:id para traer comentarios, etc.
+    // detalle
     const handleOpenDetail = async (postId: number) => {
         setDetailOpen(true);
         setDetailLoading(true);
@@ -115,19 +298,25 @@ export default function PostList({
         setDetailPost(null);
 
         try {
-            const res = await fetch(`/api/posts/${postId}`, {
-                cache: "no-store",
-            });
+            const res = await fetch(`/api/posts/${postId}`, { cache: "no-store" });
             const data = await res.json().catch(() => null);
 
-            if (!res.ok || !data?.data) {
-                throw new Error(data?.error || "No se pudo cargar el post");
+            if (!res.ok) {
+                const msg = data?.error
+                    ? "Post no encontrado:"
+                    : `No se pudo cargar el post (HTTP ${res.status})`;
+                setDetailError(msg);
+                return;
+            }
+
+            if (!data?.data) {
+                setDetailError("Respuesta inválida del servidor.");
+                return;
             }
 
             setDetailPost(data.data as Post);
-        } catch (err: any) {
-            console.error("Error cargando detalle de post (mywall):", err);
-            setDetailError(err?.message ?? "Error cargando el post");
+        } catch {
+            setDetailError("Error de red cargando el post.");
         } finally {
             setDetailLoading(false);
         }
@@ -140,95 +329,170 @@ export default function PostList({
     };
 
     return (
-        <div
-            id="PostListMyWall"
-            className="relative flex flex-col w-full gap-10 md:px-0"
-        >
-            {enableToViewPosts &&
+        <div id="PostListMyWall" className="relative flex flex-col w-full gap-10 lg:px-0">
+            {comingFrom === "mywall" && viewerType === "owner" && myConfiguration && (
+                <div className="flex flex-row px-2">
+                    <span className="w-full">Ver como</span>
+
+                    <Select
+                        value={VIEW_MODES[selectedViewModeState]?.value ?? "owner"}
+                        onValueChange={(v) => viewMode(v)}
+                    >
+                        <SelectTrigger className="w-full bg-slate-950 border-slate-800 text-slate-100">
+                            <SelectValue placeholder="Modo de visualización" />
+                        </SelectTrigger>
+
+                        <SelectContent className="bg-slate-950 border-slate-800 text-slate-100">
+                            {VIEW_MODES.map((m) => (
+                                <SelectItem key={m.value} value={m.value}>
+                                    {m.label}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+            )}
+
+            {(comingFrom === "mywall" || comingFrom === "wall") && (
                 <>
-                    {/* Feed de tu muro */}
-                    {visiblePosts.map((post, index) => (
+                    <WallHeader userId={userId} enableToView={enableToViewState ?? null} />
+
+                    {canPublishOnWall && (
+                        <PostFormWall wallUserId={userId} canPublish={canPublishOnWall} />
+                    )}
+                </>
+            )}
+
+
+            {canViewPosts ? (
+                <>
+                    {/* Feed del muro (WallEntry feed) */}
+                    {posts.map((post: any, index) => (
                         <div
-                            key={post.id}
+                            key={getFeedItemKey(post)}
                             className="w-full"
-                            ref={index === visiblePosts.length - 1 ? lastPostRef : null}
+                            ref={index === posts.length - 1 ? lastPostRef : null}
                         >
-                            <PostCard
-                                session={session}
-                                post={post}
-                                variant="card"
-                                openCommentsInPage={false}   // 👈 igual que home: no navega
-                                enablePolling={false}        // 👈 nada de polling en el feed
-                                enableOwnerControls={true}   // 👈 acá SÍ ves editar/ocultar/visibilidad
-                                onOpenDetail={handleOpenDetail} // 👈 abre overlay con detalle
-                                comingFrom={comingFrom}
-                            />
+                            {/*
+                              ✅ Condición de UI:
+                              - Solo dueño del muro puede togglear
+                              - Solo si entry fue creado por tercero (actor != wallUser)
+                            */}
+                            {(() => {
+                                const meta = post?.wallEntryMeta;
+                                const wallEntryId = meta?.id;
+                                const sessionUserId = session?.user?.id != null ? Number(session.user.id) : null;
+                                const isWallOwnerViewing =
+                                    sessionUserId != null && meta?.wallUserId != null
+                                        ? sessionUserId === Number(meta.wallUserId)
+                                        : false;
+                                const isThirdPartyEntry =
+                                    meta?.actorUserId != null && meta?.wallUserId != null
+                                        ? Number(meta.actorUserId) !== Number(meta.wallUserId)
+                                        : false;
+
+                                const canToggleShowInFeed = isWallOwnerViewing && isThirdPartyEntry;
+                                const showInFeedLoading =
+                                    typeof wallEntryId === "number" ? pendingToggleIds.has(wallEntryId) : false;
+
+                                return (
+                                    <WallEntryCard
+                                        session={session}
+                                        post={post}
+                                        comingFrom={comingFrom}
+                                        enableToView={enableToViewState}
+                                        showOwnerPanel={showOwnerPanel}
+                                        selectedViewMode={selectedViewModeState}
+                                        canToggleShowInFeed={canToggleShowInFeed}
+                                        onToggleShowInFeed={toggleShowInFeedOptimistic}
+                                        showInFeedLoading={showInFeedLoading}
+                                        onOpenDetail={handleOpenDetail}
+                                    />
+
+                                );
+                            })()}
                         </div>
                     ))}
 
-                    {loading && (
-                        <p className="text-xs text-slate-200 mt-2">Cargando...</p>
-                    )}
+                    {loading && <p className="text-xs text-slate-200 mt-2">Cargando...</p>}
+
                     {!hasMore && (
                         <p className="text-center text-xs opacity-70 text-slate-300 mt-2">
                             No hay más posts
                         </p>
                     )}
 
-                    {/* Overlay tipo Instagram para ver el post completo con comentarios */}
-                    {detailOpen && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80">
-                            <div className="relative w-full max-w-5xl max-h-[90vh] bg-slate-900 rounded-xl overflow-hidden shadow-2xl pt-10">
-                                {/* Botón cerrar, flotando arriba sin tapar la toolbar del post */}
-                                <button
-                                    type="button"
-                                    onClick={handleCloseDetail}
-                                    className="absolute top-2 right-3 md:top-3 md:right-4 z-20 px-3 py-1 text-xs rounded-full bg-black/80 text-slate-100 hover:bg-black"
+                    {/* Overlay detalle */}
+                    {detailOpen && !detailError && (
+                        <div className="fixed inset-0 z-50 bg-black/80">
+                            <div className="h-full w-full overflow-y-auto lg:overflow-hidden">
+                                <div className="mx-auto w-full max-w-full lg:max-w-[92vw] lg:h-[100dvh] lg:py-4 px-0 lg:px-2 min-h-0">
+                                    <div className="relative w-full bg-slate-950 shadow-2xl lg:h-[calc(100dvh-32px)] h-auto overflow-hidden min-h-0 flex flex-col">
+                                        <button
+                                            type="button"
+                                            onClick={handleCloseDetail}
+                                            className="fixed top-3 right-1 z-20 px-3 py-1 text-xs rounded-full bg-black/80 text-slate-100 hover:bg-black"
+                                        >
+                                            ✕ Cerrar
+                                        </button>
+
+                                        {detailLoading && (
+                                            <div className="flex items-center justify-center h-full text-slate-200 text-sm">
+                                                Cargando post...
+                                            </div>
+                                        )}
+
+                                        {detailPost && !detailLoading && !detailError && (
+                                            <div className="flex-1 min-h-0">
+                                                <PostCard
+                                                    session={session}
+                                                    post={detailPost}
+                                                    variant="detail"
+                                                    openCommentsInPage={false}
+                                                    enablePolling={false}
+                                                    enableOwnerControls={true}
+                                                    comingFrom={comingFrom}
+                                                    enableToView={enableToViewState}
+                                                    showOwnerPanel={showOwnerPanel}
+                                                    selectedViewMode={selectedViewModeState}
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {detailError && !detailLoading && (
+                        <div className="fixed inset-0 flex z-50 bg-black/80 items-center justify-center">
+                            <button
+                                type="button"
+                                onClick={handleCloseDetail}
+                                className="fixed top-3 right-1 z-20 px-3 py-1 text-xs rounded-full bg-black/80 text-slate-100 hover:bg-black"
+                            >
+                                ✕ Cerrar
+                            </button>
+
+                            <div className="flex flex-col gap-3 p-4 text-red-400 text-sm lg:w-96 w-[90dvw] border border-red-400 rounded-xl bg-black">
+                                {detailError}: <br />
+                                Posiblemente este post haya sido eliminado y permanece en la
+                                papelera de reciclaje.
+                                <Link
+                                    href={"/trash"}
+                                    className="flex flex-row text-white bg-green-900 rounded-[10px] hover:bg-green-800 justify-center items-center h-10"
                                 >
-                                    ✕ Cerrar
-                                </button>
-
-                                {/* Contenido del detalle */}
-                                {detailLoading && (
-                                    <div className="flex items-center justify-center h-[60vh] text-slate-200 text-sm">
-                                        Cargando post...
-                                    </div>
-                                )}
-
-                                {detailError && !detailLoading && (
-                                    <div className="p-4 text-red-400 text-sm">
-                                        {detailError}
-                                    </div>
-                                )}
-
-                                {detailPost && !detailLoading && !detailError && (
-                                    <div className="h-[90vh] overflow-y-auto">
-                                        <PostCard
-                                            session={session}
-                                            post={detailPost}
-                                            variant="detail"
-                                            openCommentsInPage={false}
-                                            enablePolling={false}
-                                            enableOwnerControls={true}
-                                            comingFrom={comingFrom}
-                                        />
-                                    </div>
-                                )}
+                                    Papelera de reciclaje
+                                </Link>
                             </div>
                         </div>
                     )}
                 </>
-            }
-            {!enableToViewPosts && (
+            ) : (
                 <FeedMessage>No tienes permiso para ver las publicaciones de este usuario/a</FeedMessage>
             )}
-
         </div>
     );
 }
-
-
-
-
 
 

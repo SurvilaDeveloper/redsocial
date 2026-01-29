@@ -35,7 +35,7 @@ export async function PUT(req: Request) {
 
     const userId = Number(session.user.id);
     const body = await req.json();
-
+    console.log(body);
     // whitelist de campos editables
     const allowedFields = {
         profileImageVisibility: body.profileImageVisibility,
@@ -56,7 +56,14 @@ export async function PUT(req: Request) {
         followingListVisibility: body.followingListVisibility,
 
         likesVisibility: body.likesVisibility,
-        privateMessagesVisibility: body.privateMessagesVisibility,
+
+        postsWhoCanShare: body.postsWhoCanShare,
+
+        postCommentsWhoCanWrite: body.postCommentsWhoCanWrite,
+        postRepliesWhoCanWrite: body.postRepliesWhoCanWrite,
+
+        mediaCommentsWhoCanWrite: body.mediaCommentsWhoCanWrite,
+        mediaRepliesWhoCanWrite: body.mediaRepliesWhoCanWrite,
     };
 
     // eliminar undefined (muy importante)

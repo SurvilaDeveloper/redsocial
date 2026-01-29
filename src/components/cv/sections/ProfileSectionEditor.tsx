@@ -222,7 +222,7 @@ export function ProfileSectionEditor({
 
 
             {/* Identidad */}
-            <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4 md:p-6 space-y-4">
+            <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4 lg:p-6 space-y-4">
                 <div className="space-y-1">
                     <h4 className="text-sm font-semibold text-slate-100">Identidad</h4>
                     <p className="text-xs text-slate-400">Esto suele ser lo primero que se lee en el CV.</p>
@@ -289,14 +289,14 @@ export function ProfileSectionEditor({
             </div>
 
             {/* Ubicación */}
-            <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4 md:p-6 space-y-4">
+            <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4 lg:p-6 space-y-4">
                 <div className="space-y-1">
                     <h4 className="text-sm font-semibold text-slate-100">Ubicación</h4>
                     <p className="text-xs text-slate-400">Podés mostrarla u ocultarla desde “Visibilidad”.</p>
                 </div>
 
                 <div className={cvEditorStyles.grid2}>
-                    <div className={cn(cvEditorStyles.block, "md:col-span-2")}>
+                    <div className={cn(cvEditorStyles.block, "lg:col-span-2")}>
                         <Label className={cvEditorStyles.label}>Dirección</Label>
                         <Input
                             className={cn(cvEditorStyles.input, formState.errors.address && inputErrorClass)}
@@ -329,7 +329,7 @@ export function ProfileSectionEditor({
             </div>
 
             {/* Datos personales */}
-            <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4 md:p-6 space-y-4">
+            <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4 lg:p-6 space-y-4">
                 <div className="space-y-1">
                     <h4 className="text-sm font-semibold text-slate-100">Datos personales</h4>
                     <p className="text-xs text-slate-400">
@@ -435,13 +435,13 @@ export function ProfileSectionEditor({
             </div>
 
             {/* Visibilidad */}
-            <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4 md:p-6 space-y-4">
+            <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4 lg:p-6 space-y-4">
                 <div className="space-y-1">
                     <h4 className="text-sm font-semibold text-slate-100">Visibilidad</h4>
                     <p className="text-xs text-slate-400">Elegí qué datos se muestran en el preview / CV público.</p>
                 </div>
 
-                <div className="grid gap-3 md:grid-cols-3">
+                <div className="grid gap-3 lg:grid-cols-3">
                     <div className="flex items-center justify-between rounded-lg border border-slate-800 bg-slate-950/60 px-3 py-2">
                         <div className="text-sm text-slate-200">Mostrar nacimiento</div>
                         <Switch
@@ -490,7 +490,7 @@ export function ProfileSectionEditor({
             </div>
 
             {/* Contacto */}
-            <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4 md:p-6 space-y-4">
+            <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4 lg:p-6 space-y-4">
                 <div className="space-y-1">
                     <h4 className="text-sm font-semibold text-slate-100">Contacto</h4>
                     <p className="text-xs text-slate-400">Incluí sólo lo que querés mostrar públicamente.</p>
@@ -518,7 +518,7 @@ export function ProfileSectionEditor({
                         <ErrorText error={formState.errors.phone as FieldError | undefined} />
                     </div>
 
-                    <div className={cn(cvEditorStyles.block, "md:col-span-2")}>
+                    <div className={cn(cvEditorStyles.block, "lg:col-span-2")}>
                         <Label className={cvEditorStyles.label}>Website</Label>
                         <Input
                             className={cn(cvEditorStyles.input, formState.errors.website && inputErrorClass)}
@@ -531,7 +531,7 @@ export function ProfileSectionEditor({
             </div>
 
             {/* Profesional */}
-            <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4 md:p-6 space-y-4">
+            <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4 lg:p-6 space-y-4">
                 <div className="space-y-1">
                     <h4 className="text-sm font-semibold text-slate-100">Profesional</h4>
                     <p className="text-xs text-slate-400">Links clave que suelen sumar más.</p>
@@ -561,7 +561,7 @@ export function ProfileSectionEditor({
             </div>
 
             {/* Redes */}
-            <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4 md:p-6 space-y-4">
+            <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4 lg:p-6 space-y-4">
                 <div className="space-y-1">
                     <h4 className="text-sm font-semibold text-slate-100">Redes</h4>
                     <p className="text-xs text-slate-400">Opcional. Mostrá solo las que aporten.</p>
@@ -608,7 +608,7 @@ export function ProfileSectionEditor({
                         <ErrorText error={formState.errors.x as FieldError | undefined} />
                     </div>
 
-                    <div className={cn(cvEditorStyles.block, "md:col-span-2")}>
+                    <div className={cn(cvEditorStyles.block, "lg:col-span-2")}>
                         <Label className={cvEditorStyles.label}>Discord</Label>
                         <Input
                             className={cn(cvEditorStyles.input, formState.errors.discord && inputErrorClass)}
@@ -621,7 +621,7 @@ export function ProfileSectionEditor({
             </div>
 
             {/* Contenido técnico */}
-            <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4 md:p-6 space-y-4">
+            <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4 lg:p-6 space-y-4">
                 <div className="space-y-1">
                     <h4 className="text-sm font-semibold text-slate-100">Contenido técnico</h4>
                     <p className="text-xs text-slate-400">Si escribís o publicás, esto suma mucho.</p>

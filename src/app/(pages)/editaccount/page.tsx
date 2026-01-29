@@ -4,6 +4,7 @@ import EditAccount from "@/components/custom/editAccount";
 import AsideLeft from "@/components/custom/asideleft";
 import AsideRight from "@/components/custom/asideright";
 import { getUserConfiguration } from "@/lib/configuration/getUserConfiguration";
+import Link from "next/link";
 
 export default async function EditAccountPage() {
     const session = await auth();
@@ -32,24 +33,17 @@ export default async function EditAccountPage() {
     }
 
     return (
-        <div
-            className="
-                flex flex-col
+        <div className="
+        flex flex-col
+                items-center
                 min-h-[calc(100vh-3.5rem)]
-                md:min-h-[calc(100vh-4rem)]
+                lg:min-h-[calc(100vh-4rem)]
                 text-slate-100
-                w-full
-                max-w-[400px]
-                md:max-w-[33%]
-                md:min-w-[400px]
-                md:w-full
-            "
-        >
-            <header className="w-full py-3 md:py-4 border-b border-slate-800 mb-2">
-                <h1 className="flex flex-col items-center text-lg md:text-2xl font-semibold w-full">
-                    Editar cuenta
-                </h1>
-            </header>
+                w-screen
+                max-w-[600px]
+                lg:w-[600px]
+                bg-black">
+
 
             <AsideLeft session={session} />
 

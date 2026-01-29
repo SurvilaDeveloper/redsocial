@@ -86,39 +86,34 @@ export default async function EditProfilePage() {
     };
 
     return (
-        <div className="flex 
-        flex-col 
-        min-h-[calc(100vh-3.5rem)]  /* aprox alto disponible bajo la navbar en mobile */
-        md:min-h-[calc(100vh-4rem)]
-        text-slate-100
-        w-full
-        max-w-[400px]
-        md:max-w-[33%]
-        md:min-w-[400px]
-        md:w-full">
+        <div className="
+        flex flex-col
+                items-center
+                min-h-[calc(100vh-3.5rem)]
+                lg:min-h-[calc(100vh-4rem)]
+                text-slate-100
+                w-screen
+                max-w-[600px]
+                lg:w-[600px]
+                bg-black">
             {/* Header */}
-            <header className="w-full py-3 md:py-4 border-b border-slate-800 mb-2">
-                <h1 className="flex flex-col items-center text-lg md:text-2xl font-semibold w-full">
+            <header className="w-full py-3 lg:py-4 border-b border-slate-800 mb-2">
+                <h1 className="flex flex-col items-center text-lg lg:text-2xl font-semibold w-full">
                     Editar perfil
                 </h1>
             </header>
             {/* Aside izquierdo */}
-            <aside className="hidden md:block w-[220px] xl:w-[260px] fixed left-0 top-0 h-full pt-12">
+            <aside className="hidden lg:block w-[220px] lg:w-[260px] fixed left-0 top-0 h-full pt-12">
                 <AsideLeft session={session}>
                     {/* Si en algún momento querés agregar algo específico para esta página, lo podés meter acá */}
                 </AsideLeft>
             </aside>
 
             {/* Centro */}
-
-
-
             <EditProfile initialUser={initialUser} />
 
-
-
             {/* Aside derecho */}
-            <aside className="hidden md:block w-[220px] xl:w-[260px] fixed right-4 top-0 h-full pt-12">
+            <aside className="hidden lg:block w-[220px] lg:w-[260px] fixed right-4 top-0 h-full pt-12">
                 <AsideRight session={session}>
                     {/* Lo mismo: espacio para widgets o info extra */}
                 </AsideRight>
