@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
 
     const posts = await prisma.post.findMany({
         where: {
-            user_id: userId,
+            authorId: userId,
             deletedAt: { not: null }, // 🧺 sólo papelera
         },
         orderBy: {

@@ -378,21 +378,24 @@ model Friendship {
 }
 
 model Post {
-  id           Int           @id @default(autoincrement())
-  title        String?       @db.VarChar(100)
-  description  String?       @db.VarChar(1000)
-  imagenumber  Int?          @default(1) @db.TinyInt
-  createdAt    DateTime?     @default(now())
-  deletedAt    DateTime?
-  authorId     Int           @map("user_id")
-  active       Int?          @default(1) @db.TinyInt
-  visibility   Int?          @default(1) @db.TinyInt
-  author       User          @relation("PostAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  id          Int       @id @default(autoincrement())
+  title       String?   @db.VarChar(100)
+  description String?   @db.VarChar(1000)
+  imagenumber Int?      @default(1) @db.TinyInt
+  createdAt   DateTime? @default(now())
+  deletedAt   DateTime?
+  authorId    Int       @map("user_id")
+  active      Int?      @default(1) @db.TinyInt
+  visibility  Int?      @default(1) @db.TinyInt
+
+  author User @relation("PostAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+
   images       Image[]
   post_comment PostComment[]
   post_like    PostLike[]
   post_unlike  PostUnlike[]
-  wallEntries  WallEntry[]
+
+  wallEntries WallEntry[]
 
   @@map("post")
 }
@@ -400,12 +403,19 @@ model Post {
 enum WallEntryType {
   PUBLISHED
   SHARED
+  PINNED
 }
 
 model WallEntry {
-  id        Int      @id @default(autoincrement())
+  id Int @id @default(autoincrement())
+
+  // creación real de la fila (auditoría)
   createdAt DateTime @default(now())
-  active    Int?     @default(1) @db.TinyInt
+
+  // momento del evento (timeline): PUBLISHED / SHARED / PINNED
+  eventAt DateTime @default(now())
+
+  active Int? @default(1) @db.TinyInt
 
   wallUserId Int
   wallUser   User @relation("WallOwner", fields: [wallUserId], references: [id], onDelete: Cascade)
@@ -418,12 +428,19 @@ model WallEntry {
   postId Int
   post   Post @relation(fields: [postId], references: [id], onDelete: Cascade)
 
-  // ✅ NUEVO: control de “aparece en feed global”
   showInFeed Boolean @default(false)
 
+  // visibilidad “en este muro”
+  visibility Int? @default(1) @db.TinyInt
+
+  // 1 sola acción por combinación: (muro, actor, post, tipo)
+  // Para PINNED: te asegura 1 solo pin por post en tu muro (actor=vos).
+  @@unique([wallUserId, actorUserId, postId, type], map: "uq_wall_entry_action")
+  // indices para timeline
+  @@index([wallUserId, eventAt])
   @@index([wallUserId, createdAt])
   @@index([postId])
-  @@index([showInFeed, createdAt]) // opcional, ayuda para el feed
+  @@index([showInFeed, eventAt])
   @@map("wall_entry")
 }
 

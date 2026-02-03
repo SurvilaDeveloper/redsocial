@@ -12,6 +12,35 @@ import { getUserConfiguration } from "@/lib/configuration/getUserConfiguration";
 import { areIEnableToView, myOwnPermissions } from "@/lib/permissions";
 
 import type { Configuration } from "@/types/configuration";
+import { canViewWallEntry, normalizeVisibility } from "@/lib/wall-entry-visibility";
+
+export const runtime = "nodejs";
+
+/* =========================================================
+   Cursor helpers (ahora por eventAt, id)
+========================================================= */
+
+type CursorPayload = { eventAt: string; id: number };
+
+function decodeCursor(raw: string | null): CursorPayload | null {
+    if (!raw) return null;
+    try {
+        const b64 = raw.replace(/-/g, "+").replace(/_/g, "/");
+        const json = Buffer.from(b64, "base64").toString("utf8");
+        const obj = JSON.parse(json);
+        if (!obj?.eventAt || typeof obj?.id !== "number") return null;
+        return { eventAt: String(obj.eventAt), id: Number(obj.id) };
+    } catch {
+        return null;
+    }
+}
+
+function encodeCursor(payload: CursorPayload | null): string | null {
+    if (!payload) return null;
+    const json = JSON.stringify(payload);
+    const b64 = Buffer.from(json, "utf8").toString("base64");
+    return b64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+}
 
 export async function GET(req: NextRequest) {
     const session = await auth();
@@ -22,18 +51,17 @@ export async function GET(req: NextRequest) {
     const wallUserIdStr = searchParams.get("wall_user_id");
     const wallUserId = wallUserIdStr ? Number(wallUserIdStr) : 0;
 
-    const pageStr = searchParams.get("page");
-    const page = pageStr ? Number(pageStr) : 1;
-
-    const pageSize = 4;
-
-    // chunking para llenar pageSize a pesar de filtros de visibilidad
-    const CHUNK_SIZE = 20;
-    const MAX_LOOPS = 5;
-
     if (!wallUserId || Number.isNaN(wallUserId)) {
         return NextResponse.json({ error: "wall_user_id is required" }, { status: 400 });
     }
+
+    const cursor = decodeCursor(searchParams.get("cursor"));
+
+    const pageSize = 4;
+
+    // chunking para llenar pageSize a pesar de filtros (permisos/visibilidad)
+    const CHUNK_SIZE = 20;
+    const MAX_LOOPS = 5;
 
     /* =========================================================
        1) Permisos del muro (corte temprano)
@@ -52,14 +80,8 @@ export async function GET(req: NextRequest) {
     const wallEnableToView =
         isWallOwner
             ? myOwnPermissions
-            : areIEnableToView(
-                wallConfig,
-                viewerId !== null,
-                isFriendOfWallOwner,
-                wallSocial.following
-            );
+            : areIEnableToView(wallConfig, viewerId !== null, isFriendOfWallOwner, wallSocial.following);
 
-    // ✅ para UI: mostrar PostFormWall solo si puede publicar
     const canPublishOnWall = isWallOwner || isFriendOfWallOwner;
 
     if (!wallEnableToView.posts) {
@@ -68,11 +90,12 @@ export async function GET(req: NextRequest) {
             enableToView: wallEnableToView,
             wallConfiguration: wallConfig,
             canPublishOnWall,
+            nextCursor: null,
         });
     }
 
     /* =========================================================
-       2) Caches por request (social/config/enable por AUTOR)
+       2) Caches por request (por AUTOR)
     ========================================================= */
 
     const socialByAuthor = new Map<number, SocialRelations>();
@@ -121,48 +144,44 @@ export async function GET(req: NextRequest) {
     }
 
     /* =========================================================
-       3) Leer WallEntry feed del muro (PUBLISHED + SHARED)
-          y llenar pageSize con chunking
+       3) Leer WallEntry del muro con cursor (eventAt,id) + chunking
+          - Cursor avanza por ENTRIES consumidas
+          - NO filtramos active:1 en DB, porque el dueño del muro puede ver active=0
     ========================================================= */
 
-    // ✅ IMPORTANTE: paginar por WallEntry, no por pageSize
-    let skip = (page - 1) * CHUNK_SIZE;
     const results: Post[] = [];
+    let hitEnd = false;
+
+    let currentCursor: CursorPayload | null = cursor;
 
     for (let loop = 0; loop < MAX_LOOPS && results.length < pageSize; loop++) {
+        const whereCursor =
+            currentCursor == null
+                ? {}
+                : {
+                    OR: [
+                        { eventAt: { lt: new Date(currentCursor.eventAt) } },
+                        {
+                            eventAt: new Date(currentCursor.eventAt),
+                            id: { lt: currentCursor.id },
+                        },
+                    ],
+                };
+
         const entries = await prisma.wallEntry.findMany({
             where: {
                 wallUserId,
-                active: 1,
-                // ✅ filtro temprano por post
-                post: {
-                    // OJO: si querés que el dueño del muro vea borrados,
-                    // este filtro tiene que relajarse. Por ahora lo dejamos “limpio”
-                    // y mantenemos la lógica extra más abajo.
-                    active: 1,
-                },
+                // ✅ NO active: 1 acá
+                ...whereCursor,
             },
-            orderBy: { createdAt: "desc" },
-            skip,
+            orderBy: [{ eventAt: "desc" }, { id: "desc" }],
             take: CHUNK_SIZE,
             include: {
                 wallUser: {
-                    select: {
-                        id: true,
-                        name: true,
-                        imageUrl: true,
-                        imagePublicId: true,
-                        image: true
-                    },
+                    select: { id: true, name: true, imageUrl: true, imagePublicId: true, image: true },
                 },
                 actorUser: {
-                    select: {
-                        id: true,
-                        name: true,
-                        imageUrl: true,
-                        imagePublicId: true,
-                        image: true,
-                    },
+                    select: { id: true, name: true, imageUrl: true, imagePublicId: true, image: true },
                 },
                 post: {
                     include: {
@@ -178,17 +197,9 @@ export async function GET(req: NextRequest) {
                             },
                         },
                         author: {
-                            select: {
-                                id: true,
-                                name: true,
-                                imageUrl: true,
-                                imagePublicId: true,
-                                image: true,
-                            },
+                            select: { id: true, name: true, imageUrl: true, imagePublicId: true, image: true },
                         },
-                        _count: {
-                            select: { post_like: true, post_unlike: true, post_comment: true },
-                        },
+                        _count: { select: { post_like: true, post_unlike: true, post_comment: true } },
                         ...(viewerId && {
                             post_like: { where: { userId: viewerId }, select: { id: true } },
                             post_unlike: { where: { userId: viewerId }, select: { id: true } },
@@ -198,49 +209,91 @@ export async function GET(req: NextRequest) {
             },
         });
 
-        if (entries.length === 0) break;
-        skip += entries.length;
+        if (entries.length === 0) {
+            hitEnd = true;
+            break;
+        }
 
         for (const entry of entries) {
+            // ✅ cursor avanza SIEMPRE por WallEntry consumida
+            const ev = (entry as any)?.eventAt instanceof Date ? (entry as any).eventAt : entry.createdAt; // fallback defensivo
+            currentCursor = { eventAt: ev.toISOString(), id: entry.id };
+
             const post = entry.post;
             if (!post) continue;
 
             const isPostOwner = viewerId === post.authorId;
 
-            // deletedAt: visible solo al autor o dueño del muro
+            // =====================================================
+            // A) Filtro por WallEntry.active
+            // - si está inactive y NO sos dueño del muro => no se ve
+            // =====================================================
+            const entryActive = typeof entry.active === "number" ? entry.active : 1;
+            if (entryActive !== 1 && !isWallOwner) continue;
+
+            // =====================================================
+            // B) Filtro por WallEntry.visibility (viewer ↔ dueño del muro)
+            // =====================================================
+            const entryVisibility = normalizeVisibility((entry as any).visibility ?? 1);
+            const canViewEntry = canViewWallEntry(entryVisibility, {
+                isOwner: isWallOwner,
+                isLogged: viewerId !== null,
+                isFriend: isFriendOfWallOwner,
+                following: wallSocial.following,
+            });
+            if (!canViewEntry) continue;
+
+            // =====================================================
+            // C) Reglas especiales del POST (active/deleted)
+            // - si post inactive => solo autor o dueño del muro
+            // - si deletedAt => solo autor o dueño del muro
+            // =====================================================
+            if ((post.active ?? 1) !== 1 && !(isWallOwner || isPostOwner)) continue;
             if (post.deletedAt && !(isWallOwner || isPostOwner)) continue;
 
-            // visibilidad del post según relación viewer <-> autor del post (no del muro)
+            // =====================================================
+            // D) Post.visibility (viewer ↔ autor)
+            // =====================================================
             const social = await getSocialForAuthor(post.authorId);
 
-            const allowed = canViewPost((post.visibility ?? 1) as PostVisibility, {
+            const allowedPostVisibility = canViewPost((post.visibility ?? 1) as PostVisibility, {
                 isOwner: viewerId === post.authorId,
                 isLogged: viewerId !== null,
                 isFriend: social.relState === RelationshipState.FRIENDS,
                 following: social.following,
             });
-            if (!allowed) continue;
+            if (!allowedPostVisibility) continue;
 
+            // =====================================================
+            // E) Shape + attach meta
+            // =====================================================
             const shaped = shapePost(post, social) as Post;
 
             shaped.enableToView = await getEnableForAuthor(post.authorId);
             shaped.ownerConfiguration = await getConfigForAuthor(post.authorId);
 
-            // metadata del wallEntry para UI: "Compartido por X" / "Publicado por X en el muro"
             (shaped as any).wallEntryMeta = {
                 id: entry.id,
                 type: entry.type,
                 createdAt: entry.createdAt.toISOString(),
+                eventAt: ev.toISOString(), // ✅ NUEVO
                 wallUserId: entry.wallUserId,
                 wallUser: entry.wallUser,
                 actorUserId: entry.actorUserId,
                 actorUser: entry.actorUser,
                 showInFeed: entry.showInFeed,
-            };
 
+                visibility: entryVisibility,
+                active: entryActive,
+            };
 
             results.push(shaped);
             if (results.length >= pageSize) break;
+        }
+
+        if (entries.length < CHUNK_SIZE && results.length < pageSize) {
+            hitEnd = true;
+            break;
         }
     }
 
@@ -249,5 +302,6 @@ export async function GET(req: NextRequest) {
         enableToView: wallEnableToView,
         wallConfiguration: wallConfig,
         canPublishOnWall,
+        nextCursor: hitEnd ? null : encodeCursor(currentCursor),
     });
 }

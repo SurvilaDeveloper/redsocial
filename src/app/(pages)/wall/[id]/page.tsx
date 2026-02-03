@@ -8,8 +8,9 @@ import { myOwnPermissions } from "@/lib/permissions";
 //import Navbar from "@/components/custom/navbar";
 import AsideLeft from "@/components/custom/asideleft";
 import AsideRight from "@/components/custom/asideright";
-import PostList from "@/components/custom/postList";
+//import PostList from "@/components/custom/postList";
 import WallHeader from "@/components/custom/wallHeader";
+import WallPostList from "@/components/custom/WallPostList";
 
 interface WallPageProps {
     params: Promise<{ id: string }>;
@@ -46,7 +47,11 @@ const WallPage = async ({ params }: WallPageProps) => {
                 {/*<WallHeader userId={wallUserId} enableToView={enableToViewObj} />*/}
 
                 {/* Posts */}
-                <PostList session={validated_session.session} userId={wallUserId} viewerType="user" comingFrom="wall" enableToView={enableToViewObj} />
+                <WallPostList
+                    session={validated_session.session}
+                    wallUserId={wallUserId}
+                    enableToView={enableToViewObj ?? null}
+                />
             </div>
 
             {/* Aside derecho */}

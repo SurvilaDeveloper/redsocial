@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import auth from "@/auth";
 
+export const runtime = "nodejs";
+
 export async function POST(req: NextRequest) {
     const session = await auth();
     const viewerId = session?.user?.id != null ? Number(session.user.id) : null;
@@ -22,7 +24,7 @@ export async function POST(req: NextRequest) {
             wallUserId: true,
             actorUserId: true,
             type: true,
-            showInFeed: true, // ✅ boolean
+            showInFeed: true,
             active: true,
         },
     });
@@ -31,12 +33,10 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "WallEntry not found" }, { status: 404 });
     }
 
-    // ✅ solo dueño del muro
     if (entry.wallUserId !== viewerId) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // ✅ solo tiene sentido para posts publicados por terceros
     if (entry.actorUserId === entry.wallUserId) {
         return NextResponse.json({ error: "Nothing to toggle for own entries" }, { status: 400 });
     }
@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
 
     const updated = await prisma.wallEntry.update({
         where: { id: wallEntryId },
-        data: { showInFeed: nextValue }, // ✅ boolean
+        data: { showInFeed: nextValue },
         select: { id: true, showInFeed: true },
     });
 
@@ -55,4 +55,5 @@ export async function POST(req: NextRequest) {
         showInFeed: updated.showInFeed,
     });
 }
+
 

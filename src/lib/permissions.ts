@@ -57,7 +57,6 @@ export function isHeEnableToView(
         followingList: canView({ visibility: myAccountConfiguration.followingListVisibility, ...ctx }),
 
         likes: canView({ visibility: myAccountConfiguration.likesVisibility, ...ctx }),
-        privateMessages: canView({ visibility: myAccountConfiguration.privateMessagesVisibility, ...ctx }),
     };
 }
 
@@ -115,7 +114,6 @@ export function areIEnableToView(
             followingList: false,
 
             likes: false,
-            privateMessages: false,
         }
     }
 
@@ -138,7 +136,6 @@ export function areIEnableToView(
         followingList: canIView({ visibility: accountConfiguration.followingListVisibility, ...ctx }),
 
         likes: canIView({ visibility: accountConfiguration.likesVisibility, ...ctx }),
-        privateMessages: canIView({ visibility: accountConfiguration.privateMessagesVisibility, ...ctx }),
     };
 }
 
@@ -161,5 +158,4 @@ export const myOwnPermissions: EnableToView = {
     followingList: true,
 
     likes: true,
-    privateMessages: true,
 }

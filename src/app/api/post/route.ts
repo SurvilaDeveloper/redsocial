@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
             return NextResponse.json({ error: "Post not found" }, { status: 404 });
         }
 
-        const ownerId = post.user_id;
+        const ownerId = post.authorId;
         const isLogged = viewerId !== null;
         const isOwner = isLogged && viewerId === ownerId;
 
@@ -48,7 +48,7 @@ export async function GET(req: NextRequest) {
                 createdAt: post.createdAt,
                 visibility,
                 active: post.active,
-                user_id: post.user_id,
+                user_id: post.authorId,
                 relations,
                 canView: false,
                 reason: "post_hidden",
@@ -112,7 +112,7 @@ export async function GET(req: NextRequest) {
                 createdAt: post.createdAt,
                 visibility,
                 active: post.active,
-                user_id: post.user_id,
+                user_id: post.authorId,
                 relations,
                 canView: false,
                 reason,

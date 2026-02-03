@@ -17,6 +17,14 @@ import { PostHeader } from "./PostHeader";
 import { PostMedia } from "./PostMedia";
 import { PostReactions } from "./PostReactions";
 import { PostDetailLayout } from "./PostDetailLayout";
+import { ShareWithFriendModal } from "../share/ShareWithFriendModal";
+
+type WallContext = {
+    showToggleShowInFeed?: boolean;
+    showInFeed?: boolean;
+    onToggleShowInFeed?: () => void | Promise<void>;
+    showInFeedLoading?: boolean;
+};
 
 export function PostCard({
     session,
@@ -26,14 +34,12 @@ export function PostCard({
     enablePolling = false,
     enableOwnerControls = false,
     onOpenDetail,
-    comingFrom,
     enableToView,
     showOwnerPanel,
     selectedViewMode,
-    canToggleShowInFeed,
-    onToggleShowInFeed,
-    showInFeedLoading,
+    wallContext,
     embedded,
+    hideFooterActions = false,
 }: {
     session: any;
     post: Post;
@@ -42,14 +48,12 @@ export function PostCard({
     enablePolling?: boolean;
     enableOwnerControls?: boolean;
     onOpenDetail?: (postId: number) => void;
-    comingFrom?: "mywall" | "wall" | "home";
     enableToView?: EnableToView | null;
     showOwnerPanel?: boolean;
     selectedViewMode?: number;
-    canToggleShowInFeed?: boolean;
-    onToggleShowInFeed?: (wallEntryId: number) => void | Promise<void>;
-    showInFeedLoading?: boolean;
+    wallContext?: WallContext;
     embedded?: boolean;
+    hideFooterActions?: boolean;
 }) {
     const [showFullDesc, setShowFullDesc] = useState(false);
     const [expandedCommentId, setExpandedCommentId] = useState<number | null>(null);
@@ -74,8 +78,6 @@ export function PostCard({
 
     const [currentPost, setCurrentPost] = useState<Post>(post);
 
-    console.log('currentPost en PostCard: ', currentPost);
-
     const [visibilityMenu, setVisibilityMenu] = useState(false);
     const [ownerActionsLoading, setOwnerActionsLoading] = useState(false);
 
@@ -86,10 +88,10 @@ export function PostCard({
     const [actionPostId, setActionPostId] = useState<number | null>(null);
 
     const [enableToViewState, setEnableToViewState] = useState<EnableToView | null | undefined>(enableToView);
-    const [showOwnerPanelState, setShowOwnerPanelState] = useState<boolean | undefined>(
-        showOwnerPanel ? showOwnerPanel : true
-    );
+    const [showOwnerPanelState, setShowOwnerPanelState] = useState<boolean | undefined>(showOwnerPanel ? showOwnerPanel : true);
     const [selectedViewModeState, setSelectedViewModeState] = useState<number>(selectedViewMode ? selectedViewMode : 0);
+
+    const [shareOpen, setShareOpen] = useState(false);
 
     const canViewFunction = (selectedViewMode: number, postVisibility: number): boolean => {
         if (selectedViewMode === 0) return true;
@@ -113,9 +115,7 @@ export function PostCard({
         setCurrentPost(post);
     }, [post]);
 
-    const [localComments, setLocalComments] = useState<LocalPostComment[]>(
-        (post.post_comment ?? []) as LocalPostComment[]
-    );
+    const [localComments, setLocalComments] = useState<LocalPostComment[]>((post.post_comment ?? []) as LocalPostComment[]);
 
     useEffect(() => {
         setLocalComments((prev) => {
@@ -152,9 +152,7 @@ export function PostCard({
                 const fresh = json?.data as Post | undefined;
                 if (!fresh) return;
                 if (!cancelled) setCurrentPost(fresh);
-            } catch {
-                // opcional
-            }
+            } catch { }
         };
 
         fetchLatest();
@@ -214,9 +212,7 @@ export function PostCard({
 
             setLocalComments((prev) =>
                 prev.map((c) =>
-                    c.id === tempId
-                        ? { ...c, id: created.id, createdAt: created.createdAt, __optimistic: false, __error: null }
-                        : c
+                    c.id === tempId ? { ...c, id: created.id, createdAt: created.createdAt, __optimistic: false, __error: null } : c
                 )
             );
 
@@ -233,48 +229,20 @@ export function PostCard({
 
     const viewerIdRaw = session?.user?.id;
     const viewerIdParsed = viewerIdRaw != null ? parseInt(String(viewerIdRaw), 10) : null;
-
     const viewerId = viewerIdParsed != null && Number.isFinite(viewerIdParsed) ? viewerIdParsed : null;
 
-    // ✅ nuevo
+    // ✅ FIX: el “owner del post” es el autor, NO el dueño del muro.
     const isOwner = viewerId !== null && viewerId === currentPost.authorId;
 
-    // ✅ wallEntry meta (para toggle showInFeed)
-    const wallEntryMeta = (currentPost as any)?.wallEntryMeta as
-        | {
-            id: number;
-            wallUserId: number;
-            actorUserId: number;
-            showInFeed?: boolean;
-            type?: string;
-        }
-        | undefined;
-
-    const isWallOwnerViewing =
-        sessionUserId != null && wallEntryMeta?.wallUserId != null
-            ? sessionUserId === Number(wallEntryMeta.wallUserId)
-            : false;
-
-    const isThirdPartyEntry =
-        wallEntryMeta?.actorUserId != null && wallEntryMeta?.wallUserId != null
-            ? Number(wallEntryMeta.actorUserId) !== Number(wallEntryMeta.wallUserId)
-            : false;
-
-    const canShowToggleShowInFeed =
-        Boolean(canToggleShowInFeed) &&
-        isWallOwnerViewing &&
-        isThirdPartyEntry &&
-        typeof wallEntryMeta?.id === "number";
-
+    const showToggleShowInFeed = Boolean(wallContext?.showToggleShowInFeed);
+    const showInFeedLoading = Boolean(wallContext?.showInFeedLoading);
     const handleToggleShowInFeed = async () => {
-        if (!canShowToggleShowInFeed) return;
+        if (!showToggleShowInFeed) return;
         if (showInFeedLoading) return;
-        await onToggleShowInFeed?.(wallEntryMeta!.id);
+        await wallContext?.onToggleShowInFeed?.();
     };
 
-    // ✅ autor a renderizar
     const author = currentPost.author ?? null;
-
     const isDeleted = Boolean(currentPost.deletedAt);
 
     const rel = currentPost.relations ?? {
@@ -295,12 +263,7 @@ export function PostCard({
         setPostReaction(r?.userReaction ?? null);
         setLikesCount(r?.likesCount ?? 0);
         setUnlikesCount(r?.unlikesCount ?? 0);
-    }, [
-        currentPost.id,
-        currentPost.relations?.userReaction,
-        currentPost.relations?.likesCount,
-        currentPost.relations?.unlikesCount,
-    ]);
+    }, [currentPost.id, currentPost.relations?.userReaction, currentPost.relations?.likesCount, currentPost.relations?.unlikesCount]);
 
     const [reactionLoading, setReactionLoading] = useState(false);
     const canReact = Boolean(sessionUserId) && !reactionLoading;
@@ -417,7 +380,6 @@ export function PostCard({
 
     const handleChangeVisibilityOwner = async (value: PostVisibility) => {
         if (!enableOwnerControls || !isOwner) return;
-
         setOwnerActionsLoading(true);
         try {
             await updatePostVisibility(currentPost.id, value);
@@ -468,7 +430,6 @@ export function PostCard({
                 const fresh = json?.data as Post | undefined;
                 if (fresh) setCurrentPost(fresh);
             } catch {
-                // opcional
             } finally {
                 setActionPostId(null);
             }
@@ -527,12 +488,11 @@ export function PostCard({
                 ? "w-full rounded-lg bg-black border rounded-xl border-slate-800 shadow-sm px-3 py-2 text-slate-100 pt-10 lg:py-2"
                 : "w-full rounded-lg bg-black border rounded-xl border-red-500 shadow-md px-3 py-2 text-gray-200 pt-10 lg:py-2";
 
-
     return (
         <>
             {((isActive && !isDeleted) || showOwnerPanelState) && canViewState && (
                 <div className={rootClass}>
-                    {!embedded && (
+                    {isOwner && (
                         <OwnerToolbar
                             isOwner={isOwner}
                             isDeleted={isDeleted}
@@ -554,7 +514,7 @@ export function PostCard({
                         />
                     )}
 
-                    {!embedded && (
+                    {isOwner && (
                         <DeleteConfirmModal
                             open={showDeletePopup}
                             onClose={() => setShowDeletePopup(false)}
@@ -562,23 +522,19 @@ export function PostCard({
                             loading={deleteLoading}
                         />
                     )}
-                    {/* HEADER (card) */}
-                    {variant === "card" && author && (
 
+                    {variant === "card" && author && (
                         <PostHeader
                             session={session}
-                            user={author} // 👈 PostHeader todavía espera prop "user"
+                            user={author}
                             createdAt={currentPost.createdAt}
                             title={currentPost.title}
                             relations={currentPost.relations}
                             postId={currentPost.id}
                             onOpenDetail={onOpenDetail}
                         />
-
-
                     )}
 
-                    {/* DETAIL */}
                     {variant === "detail" ? (
                         <PostDetailLayout
                             session={session}
@@ -617,7 +573,6 @@ export function PostCard({
                         />
                     ) : (
                         <>
-                            {/* CARD media */}
                             <PostMedia
                                 enableMedia={Boolean(enableToViewState?.media)}
                                 selectedViewModeState={selectedViewModeState}
@@ -646,6 +601,17 @@ export function PostCard({
                                     />
                                 )}
 
+                                {!hideFooterActions && sessionUserId != null && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setShareOpen(true)}
+                                        className="mt-0 text-[11px] px-2 h-7 rounded-md border border-slate-700 text-slate-200 hover:bg-slate-900 select-none w-fit"
+                                        title="Compartir este post en el muro de un amigo"
+                                    >
+                                        Compartir con un amigo
+                                    </button>
+                                )}
+
                                 {enableToViewState?.postComments && (
                                     <button
                                         type="button"
@@ -667,61 +633,27 @@ export function PostCard({
                                         )}
                                     </button>
                                 )}
-                                {/* ✅ Toggle showInFeed (solo dueño del muro, solo posts de terceros) */}
-                                {!embedded && canShowToggleShowInFeed && (
+
+                                {!hideFooterActions && showToggleShowInFeed && (
                                     <button
                                         type="button"
                                         onClick={handleToggleShowInFeed}
-                                        disabled={Boolean(showInFeedLoading)}
-                                        className="
-                                            mt-0 text-[11px]
-                                            px-2 h-7
-                                            rounded-md border border-slate-700
-                                            text-slate-200 hover:bg-slate-900
-                                            select-none w-fit
-                                        "
-                                        title={
-                                            wallEntryMeta?.showInFeed
-                                                ? "Ocultar este post del inicio"
-                                                : "Mostrar este post en el inicio"
-                                        }
+                                        disabled={showInFeedLoading}
+                                        className="mt-0 text-[11px] px-2 h-7 rounded-md border border-slate-700 text-slate-200 hover:bg-slate-900 select-none w-fit"
+                                        title={wallContext?.showInFeed ? "Ocultar este post del inicio" : "Mostrar este post en el inicio"}
                                     >
-                                        {showInFeedLoading
-                                            ? "Guardando…"
-                                            : wallEntryMeta?.showInFeed
-                                                ? "Ocultar del inicio"
-                                                : "Mostrar en inicio"}
+                                        {showInFeedLoading ? "Guardando…" : wallContext?.showInFeed ? "Ocultar del inicio" : "Mostrar en inicio"}
                                     </button>
                                 )}
                             </div>
-
-                            {/* comments inline en card (si aplica) */}
-                            {/*commentsExpanded && (
-                                <div className="mt-3 border-t border-neutral-800 pt-3 pb-2">
-                                    <PostCardCommentsContainer
-                                        session={session}
-                                        sessionUserId={sessionUserId}
-                                        postOwnerId={currentPost.authorId}
-                                        localComments={localComments}
-                                        setLocalComments={setLocalComments}
-                                        expandedCommentId={expandedCommentId}
-                                        onToggleComment={toggleComment}
-                                        commentRefs={commentRefs}
-                                        newComment={newComment}
-                                        setNewComment={setNewComment}
-                                        canCreatePostComment={canCreatePostComment}
-                                        commentLoading={commentLoading}
-                                        commentMsg={commentMsg}
-                                        submitPostComment={submitPostComment}
-                                        PostCardCommentsResponsesContainer={PostCardCommentsResponsesContainer}
-                                    />
-                                </div>
-                            )*/}
                         </>
                     )}
                 </div>
             )}
+
+            <ShareWithFriendModal open={shareOpen} onClose={() => setShareOpen(false)} postId={currentPost.id} />
         </>
     );
 }
+
 

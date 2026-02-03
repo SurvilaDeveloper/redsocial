@@ -7,21 +7,7 @@ export { };
 
 declare global {
 
-    /*const RelationshipStateVal: {
-        readonly NONE: 0;
-        readonly NO_RELATION: 1;
-        readonly A_REQUESTED: 2;
-        readonly B_REQUESTED: 3;
-        readonly B_ACCEPTED_A_PENDING: 4;
-        readonly A_ACCEPTED_B_PENDING: 5;
-        readonly A_ACCEPTED: 6;
-        readonly B_ACCEPTED: 7;
-        readonly FRIENDS: 8;
-    };*/
-
-    type RelationshipState = RelationshipStateEnum;
-
-    //import("@/lib/relationship-state").RelationshipState;
+    type RelationshipState = RelationshipStateEnum;;
 
     type PostVisibility = 1 | 2 | 3 | 4;
 
@@ -111,7 +97,9 @@ declare global {
         }[];
 
         commentsCount?: number;
+        shareCount?: number;
         post_comment?: PostComment[];
+
 
         enableToView?: EnableToView | null;
         ownerConfiguration?: Configuration | null;
@@ -119,9 +107,27 @@ declare global {
 
     }
 
+    type WallEntryType = "PUBLISHED" | "SHARED" | "PINNED";
 
+    type WallEntryMeta = {
+        id: number;
+        type: WallEntryType;
+        createdAt: string;
 
-    type WallEntryType = "PUBLISHED" | "SHARED";
+        wallUserId: number;
+        actorUserId: number;
+
+        wallUser?: MiniUser | null;
+        actorUser?: MiniUser | null;
+
+        showInFeed?: boolean;
+
+        // ✅ lo que ya estás usando en WallEntryCard
+        visibility?: 1 | 2 | 3 | 4;
+        active?: number | null;
+        eventAt?: string | null;
+    };
+
 
     interface WallEntry {
         id: number;
@@ -161,16 +167,6 @@ declare global {
 
         likes: boolean;
     };
-
-    type WallEntryMeta = {
-        id: number;
-        type: WallEntryType;
-        createdAt: string;
-        wallUserId: number;
-        actorUserId: number;
-        actorUser?: MiniUser | null;
-    };
-
 }
 
 

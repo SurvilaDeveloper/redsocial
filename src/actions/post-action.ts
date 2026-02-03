@@ -76,6 +76,8 @@ export const createPost = async (
         // ✅ regla: solo sale al feed global si es post en muro propio
         const isOwnWall = actorUserId === targetWallUserId;
 
+        const now = new Date();
+
         // 2) crear WallEntry (PUBLISHED) para que aparezca en el muro correcto
         await prisma.wallEntry.create({
             data: {
@@ -83,7 +85,10 @@ export const createPost = async (
                 actorUserId: actorUserId,
                 type: "PUBLISHED",
                 postId: post.id,
-                showInFeed: isOwnWall, // ✅ NUEVO
+                showInFeed: isOwnWall,
+                active: 1,
+                visibility: 1,
+                eventAt: now, // ✅ NUEVO: timeline por eventAt
             },
         });
 
@@ -126,8 +131,6 @@ export const createPost = async (
         return { error: "error 500" };
     }
 };
-
-
 
 export const updatePost = async (
     values: z.infer<typeof postSchema>,
@@ -182,8 +185,6 @@ export const updatePost = async (
                 data: {
                     title: parsed.data.title,
                     description: parsed.data.description,
-                    // imagenumber lo podrías recalcular si querés; por ahora lo dejo igual que tu lógica previa:
-                    // imagenumber: 0,
                 },
             });
 
@@ -285,7 +286,7 @@ export const softDeletePost = async (postId: number) => {
         await prisma.post.update({
             where: {
                 id: postId,
-                authorId: userId, // ✅
+                authorId: userId,
             },
             data: {
                 deletedAt: new Date(),
@@ -310,7 +311,7 @@ export const restorePost = async (postId: number) => {
         await prisma.post.update({
             where: {
                 id: postId,
-                authorId: userId, // ✅
+                authorId: userId,
             },
             data: {
                 deletedAt: null,
@@ -334,7 +335,7 @@ export const hardDeletePost = async (postId: number) => {
         await prisma.post.delete({
             where: {
                 id: postId,
-                authorId: userId, // ✅
+                authorId: userId,
             },
         });
 
@@ -344,5 +345,3 @@ export const hardDeletePost = async (postId: number) => {
         return { error: "Error eliminando definitivamente el post." };
     }
 };
-
-

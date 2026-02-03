@@ -2,7 +2,8 @@
 
 import AsideLeft from "@/components/custom/asideleft";
 import AsideRight from "@/components/custom/asideright";
-import PostList from "@/components/custom/postList";
+//import PostList from "@/components/custom/postList";
+import MyWallPostList from "@/components/custom/MyWallPostList";
 //import { getActiveSession } from "@/lib/auth/getActiveSession";
 import { getValidatedSession } from "@/lib/auth/getValidatedSession";
 import { getUserConfiguration } from "@/lib/configuration/getUserConfiguration";
@@ -37,11 +38,9 @@ const MyWallPage = async () => {
 
             {/* Columna central */}
             <div className="w-full max-w-[720px] py-0 space-y-4 px-2 lg:px-0">
-                <PostList
+                <MyWallPostList
                     session={validated_session.session}
                     userId={userId}
-                    viewerType="owner"
-                    comingFrom="mywall"
                     myConfiguration={configuration}
                 />
             </div>

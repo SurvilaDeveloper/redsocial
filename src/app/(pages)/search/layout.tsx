@@ -14,7 +14,7 @@ export default async function SearchLayout({
         redirect("/");
     }
 
-    return <div className="">
+    return <div>
         <Navbar />
         {children}
     </div>;
