@@ -24,6 +24,24 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         maxAge: cfg.SESSION_EXPIRE_1_DAY, // 30 dias
     },
 
+    events: {
+        async createUser({ user }) {
+            if (!user.id) return;
+
+            const userId = Number(user.id);
+            if (Number.isNaN(userId)) {
+                throw new Error("Invalid user id in createUser event");
+            }
+
+            await prisma.configuration.upsert({
+                where: { userId },
+                update: {},
+                create: { userId },
+            });
+        },
+    },
+
+
     callbacks: {
         async signIn({ user, account }) {
             if (!user?.id) return false;
@@ -101,6 +119,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
 
             const userId = dbUser.id;
+
+            await prisma.configuration.upsert({
+                where: { userId },
+                update: {},
+                create: { userId },
+            });
+
 
 
             const revokedDevice = await prisma.trustedDevice.findFirst({

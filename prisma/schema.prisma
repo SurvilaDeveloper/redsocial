@@ -239,10 +239,16 @@ model User {
   securityLogs                 SecurityLog[]
   trustedDevices               TrustedDevice[]
   deviceDisableTokens          DeviceDisableToken[]
-  curricula                    Curriculum[]
+  curriculum                   Curriculum?
   curriculumMedias             CurriculumMedia[]
   wallEntriesOwned             WallEntry[]                   @relation("WallOwner")
   wallEntriesActed             WallEntry[]                   @relation("WallActor")
+  userContentEvents            UserContentEvent[]
+  userInterestProfile          UserInterestProfile?
+  userProductiveEvents         UserProductiveEvent[]
+  userProductiveKeywords       UserProductiveKeywords[]
+  userProductiveProfile        UserProductiveProfile?
+  businesses                   Business[]
 
   @@map("user")
 }
@@ -348,6 +354,119 @@ model Configuration {
   updatedAt DateTime @updatedAt
 }
 
+// prisma/schema.prisma
+
+enum ContentEventType {
+  view
+  like
+  own_post
+}
+
+// 1) Eventos: señales crudas (fuente de verdad)
+model UserContentEvent {
+  id        Int              @id @default(autoincrement())
+  userId    Int
+  postId    Int
+  type      ContentEventType
+  weight    Int              @default(1)
+  dwellMs   Int? // opcional: para views "con tiempo"
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([postId])
+  @@index([userId, type, createdAt])
+}
+
+// 2) Keywords precomputadas por post
+model PostKeywords {
+  postId    Int      @id
+  keywords  Json // ejemplo: ["webgl","threejs","shaders"]
+  version   Int      @default(1) // por si luego cambiás el algoritmo
+  updatedAt DateTime @default(now()) @updatedAt
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([updatedAt])
+}
+
+// 3) Perfil agregado del usuario (keywords -> score)
+model UserInterestProfile {
+  userId      Int      @id
+  keywords    Json // ejemplo: { "webgl": 12, "threejs": 7 }
+  totalWeight Int      @default(0) // útil si luego hacés promedios/decay
+  version     Int      @default(1)
+  updatedAt   DateTime @default(now()) @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([updatedAt])
+}
+
+// Productivo
+
+enum ProductiveEventType {
+  cv_save
+  occupation_update
+  education_update
+  course_add
+  service_listing_create
+  product_listing_create
+  product_listing_view
+  product_listing_like
+  purchase_intent // opcional
+}
+
+model UserProductiveEvent {
+  id        Int                 @id @default(autoincrement())
+  userId    Int
+  type      ProductiveEventType
+  weight    Int                 @default(1)
+  meta      Json?
+  createdAt DateTime            @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([userId, type, createdAt])
+}
+
+enum ProductiveKeywordSource {
+  cv
+  profile
+  commerce
+  education
+}
+
+model UserProductiveKeywords {
+  userId    Int
+  source    ProductiveKeywordSource
+  keywords  Json // ["react","nextjs","ecommerce","mysql"]
+  version   Int                     @default(1)
+  updatedAt DateTime                @default(now()) @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, source])
+  @@index([updatedAt])
+  @@index([userId, updatedAt])
+}
+
+model UserProductiveProfile {
+  userId      Int      @id
+  keywords    Json // { "react": 10, "ecommerce": 7 }
+  totalWeight Int      @default(0)
+  version     Int      @default(1)
+  updatedAt   DateTime @default(now()) @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([updatedAt])
+  @@index([userId, updatedAt])
+}
+
 model CloudinaryImage {
   id Int @id @default(autoincrement())
 
@@ -355,8 +474,10 @@ model CloudinaryImage {
   url      String
   publicId String @unique
 
-  createdAt DateTime  @default(now())
-  deletedAt DateTime?
+  createdAt          DateTime   @default(now())
+  deletedAt          DateTime?
+  // ✅ back relation (no obligatorio, pero prolijo)
+  businessesHeaderBg Business[] @relation("BusinessHeaderBgImage")
 
   @@index([userId])
 }
@@ -395,7 +516,9 @@ model Post {
   post_like    PostLike[]
   post_unlike  PostUnlike[]
 
-  wallEntries WallEntry[]
+  wallEntries       WallEntry[]
+  userContentEvents UserContentEvent[]
+  postKeywords      PostKeywords?
 
   @@map("post")
 }
@@ -713,16 +836,200 @@ model PostCommentResponseUnlike {
   @@map("post_comment_responses_unlike")
 }
 
+// Business
+
+// ──────────────────────────────────────
+// 🏪 Business micro-site (MVP)
+// ──────────────────────────────────────
+
+enum BusinessStatus {
+  draft
+  active
+  suspended
+}
+
+enum HeaderBgSize {
+  cover
+  contain
+}
+
+enum HeaderBgPosition {
+  left
+  center
+  right
+}
+
+enum BusinessWidth {
+  full //100%
+  xl // 83%
+  lg // 75%
+  md // 66%
+  sm // 50%
+}
+
+enum BusinessHeaderHeight {
+  full //320px
+  xl // 270px
+  lg // 220px
+  md // 170px
+  sm // 120px
+}
+
+enum BusinessAlignText {
+  start
+  center
+  end
+}
+
+model Business {
+  id       Int     @id @default(autoincrement())
+  ownerId  Int
+  slug     String  @unique @db.VarChar(80)
+  name     String  @db.VarChar(100)
+  headline String? @db.VarChar(140)
+  category String? @db.VarChar(80)
+
+  status    BusinessStatus @default(active)
+  active    Int?           @default(1) @db.TinyInt
+  deletedAt DateTime?
+
+  //Estilos
+
+  bgColor String        @default("#000000") @db.VarChar(20)
+  width   BusinessWidth @default(xl)
+
+  headerHeight  BusinessHeaderHeight @default(md)
+  headerBgColor String               @default("#222222") @db.VarChar(20)
+
+  titleColor      String            @default("#cccccc") @db.VarChar(20)
+  titleTypography String            @default("system") @db.VarChar(100)
+  titleTextSize   Int               @default(24) @db.TinyInt
+  titleAlignText  BusinessAlignText @default(center)
+
+  headlineColor      String            @default("#cccccc") @db.VarChar(20)
+  headlineTypography String            @default("system") @db.VarChar(100)
+  headlineTextSize   Int               @default(20) @db.TinyInt
+  headlineAlignText  BusinessAlignText @default(center)
+
+  categoryColor      String            @default("#cccccc") @db.VarChar(20)
+  categoryTypography String            @default("system") @db.VarChar(100)
+  categoryTextSize   Int               @default(20) @db.TinyInt
+  categoryAlignText  BusinessAlignText @default(center)
+
+  // ✅ NUEVO: imagen de fondo del header (si existe, pisa el color)
+  headerBgImageId  Int?
+  headerBgSize     HeaderBgSize     @default(cover)
+  headerBgPosition HeaderBgPosition @default(left)
+
+  // ✅ relación opcional (recomendada)
+  headerBgImage CloudinaryImage? @relation("BusinessHeaderBgImage", fields: [headerBgImageId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  owner User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  site  BusinessSite?
+  pages BusinessPage[]
+
+  // ✅ many-to-many explícito (listings en varios negocios)
+  businessProductListings BusinessProductListing[]
+  businessServiceListings BusinessServiceListing[]
+
+  @@index([ownerId])
+  @@index([headerBgImageId])
+  @@index([slug])
+  @@map("business")
+}
+
+model BusinessSite {
+  id         Int @id @default(autoincrement())
+  businessId Int @unique
+
+  // branding / theme (guardalo como quieras)
+  themeConfig Json?
+
+  // navegación (tabs). ej: [{kind:"home",title:"Inicio",order:0,visible:true}, ...]
+  nav Json?
+
+  // contenido de home (sections)
+  homeContent Json?
+
+  // Contacto (form público)
+  contactEmail    String? @db.VarChar(255)
+  showContactForm Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@map("business_site")
+}
+
+model BusinessPage {
+  id         Int @id @default(autoincrement())
+  businessId Int
+
+  slug    String @db.VarChar(80) // about, faq, etc.
+  title   String @db.VarChar(100)
+  content Json
+
+  active    Int?      @default(1) @db.TinyInt
+  deletedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@unique([businessId, slug])
+  @@index([businessId])
+  @@index([slug])
+  @@map("business_page")
+}
+
+// ──────────────────────────────────────
+// ✅ Join tables: Business ⇄ Listings (many-to-many)
+// ──────────────────────────────────────
+
+model BusinessProductListing {
+  businessId       Int
+  productListingId Int
+  createdAt        DateTime @default(now())
+
+  // Si se borra el Business: se borra la relación (join row), NO el listing
+  business       Business       @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  productListing ProductListing @relation(fields: [productListingId], references: [id], onDelete: Cascade)
+
+  @@id([businessId, productListingId])
+  @@index([productListingId])
+  @@map("business_product_listing")
+}
+
+model BusinessServiceListing {
+  businessId       Int
+  serviceListingId Int
+  createdAt        DateTime @default(now())
+
+  business       Business       @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  serviceListing ServiceListing @relation(fields: [serviceListingId], references: [id], onDelete: Cascade)
+
+  @@id([businessId, serviceListingId])
+  @@index([serviceListingId])
+  @@map("business_service_listing")
+}
+
 model ProductListing {
   id          Int     @id @default(autoincrement())
   title       String? @db.VarChar(100)
-  description String? @db.VarChar(500)
+  description String? @db.VarChar(2000)
 
   price          Decimal? @db.Decimal(10, 2)
   currency       String?  @db.VarChar(3)
   clarifications String?  @db.VarChar(500)
 
-  medianumber Int?      @default(1) @db.TinyInt
+  medianumber Int?      @default(0) @db.TinyInt
   createdAt   DateTime  @default(now())
   deletedAt   DateTime?
   user_id     Int
@@ -735,6 +1042,9 @@ model ProductListing {
   comments ProductListingComment[]
   likes    ProductListingLike[]
   unlikes  ProductListingUnlike[]
+
+  // ✅ many-to-many con negocios
+  businessLinks BusinessProductListing[]
 
   @@index([user_id])
   @@map("product_listing")
@@ -756,7 +1066,7 @@ model ProductListingMedia {
   createdAt          DateTime @default(now())
   product_listing_id Int
   active             Int?     @default(1) @db.TinyInt
-  index              Int      @default(1) @db.TinyInt
+  index              Int?     @db.TinyInt
 
   listing ProductListing              @relation(fields: [product_listing_id], references: [id], onDelete: Cascade)
   likes   ProductListingMediaLike[]
@@ -872,7 +1182,7 @@ model ProductListingCommentUnlike {
 model ServiceListing {
   id          Int     @id @default(autoincrement())
   title       String? @db.VarChar(100)
-  description String? @db.VarChar(500)
+  description String? @db.VarChar(2000)
 
   // precio del servicio (por hora, por trabajo, etc.)
   price    Decimal? @db.Decimal(10, 2)
@@ -885,7 +1195,7 @@ model ServiceListing {
   modality        String? @db.VarChar(50) // "online", "presencial", "híbrido"
   location        String? @db.VarChar(255) // zona/barrio/ciudad
 
-  medianumber Int?      @default(1) @db.TinyInt
+  medianumber Int?      @default(0) @db.TinyInt
   createdAt   DateTime  @default(now())
   deletedAt   DateTime?
   user_id     Int
@@ -898,6 +1208,9 @@ model ServiceListing {
   comments ServiceListingComment[]
   likes    ServiceListingLike[]
   unlikes  ServiceListingUnlike[]
+
+  // ✅ many-to-many con negocios
+  businessLinks BusinessServiceListing[]
 
   @@index([user_id])
   @@map("service_listing")
@@ -919,7 +1232,7 @@ model ServiceListingMedia {
   createdAt          DateTime @default(now())
   service_listing_id Int
   active             Int?     @default(1) @db.TinyInt
-  index              Int      @default(1) @db.TinyInt
+  index              Int?     @db.TinyInt
 
   listing ServiceListing              @relation(fields: [service_listing_id], references: [id], onDelete: Cascade)
   likes   ServiceListingMediaLike[]

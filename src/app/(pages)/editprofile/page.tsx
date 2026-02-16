@@ -85,6 +85,8 @@ export default async function EditProfilePage() {
         birthday: user.birthday ? user.birthday.toISOString() : null,
     };
 
+    //console.log('initialUser en EditProfilePage: ', initialUser);
+
     return (
         <div className="
         flex flex-col

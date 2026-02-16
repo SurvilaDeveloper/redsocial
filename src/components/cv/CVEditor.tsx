@@ -34,6 +34,7 @@ import { LanguagesSectionEditor } from "./sections/LanguagesSectionEditor";
 import { ProjectsSectionEditor } from "./sections/ProjectsSectionEditor";
 import { ProfileSectionEditor } from "./sections/ProfileSectionEditor";
 import { CustomSectionEditor } from "./sections/CustomSectionEditor";
+import { TagsEditor } from "./TagsEditor";
 
 import { CVPreviewModal } from "./CVPreviewModal";
 import { CVPreviewSheet } from "./CVPreviewSheet";
@@ -80,6 +81,8 @@ import { CVThemeSelect } from "./styles/CVThemeSelect";
 import { coerceThemeColor } from "@/types/cv"; // ahora está en cv.ts
 import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
+
+import type { InitialUserCV } from "@/types/initialUserCV";
 
 /* ===========================
    Style defaults / normalize
@@ -202,7 +205,9 @@ function getHeaderImageMeta(cv: Curriculum): HeaderImageMeta {
    CVEditor
 =========================== */
 
-export function CVEditor({ cvId }: { cvId: number | null }) {
+const TAGS_SECTION_ID = "tags";
+
+export function CVEditor({ cvId, initialUser }: { cvId: number | null; initialUser?: InitialUserCV | null }) {
     const router = useRouter();
 
     // useCV debe retornar Curriculum (si todavía no, por ahora tipamos acá)
@@ -266,6 +271,7 @@ export function CVEditor({ cvId }: { cvId: number | null }) {
         setOpenById((prev) => {
             const next = { ...prev };
             for (const s of cv?.content?.sections ?? []) next[s.id] = true;
+            next[TAGS_SECTION_ID] = true;
             return next;
         });
     }, [cv]);
@@ -274,6 +280,7 @@ export function CVEditor({ cvId }: { cvId: number | null }) {
         setOpenById((prev) => {
             const next = { ...prev };
             for (const s of cv?.content?.sections ?? []) next[s.id] = false;
+            next[TAGS_SECTION_ID] = false;
             return next;
         });
     }, [cv]);
@@ -293,6 +300,92 @@ export function CVEditor({ cvId }: { cvId: number | null }) {
         setStyleConfig(normalizeStyleConfig(cv.styleConfig));
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [cv?.id]);
+
+    // ✅ Autocomplete del CV nuevo (una sola vez)
+    const [didApplyInitialUser, setDidApplyInitialUser] = useState(false);
+
+    useEffect(() => {
+        if (didApplyInitialUser) return;
+        if (!initialUser) return;
+        if (!cv) return;
+        if (cvId !== null) return; // solo CV nuevo
+
+        // Debe existir profile
+        const profile = cv.content?.sections?.find((s) => s.type === "profile");
+        if (!profile) return;
+
+        const headlineParts = [initialUser.occupation, initialUser.company].filter(Boolean);
+        const headline = headlineParts.length ? headlineParts.join(" • ") : undefined;
+
+        const addressParts = [
+            initialUser.street ? `${initialUser.street}${initialUser.number ? " " + initialUser.number : ""}` : null,
+            initialUser.department ? `Depto/Piso ${initialUser.department}` : null,
+        ].filter(Boolean);
+
+        const cityLineParts = [initialUser.city, initialUser.province, initialUser.country].filter(Boolean);
+
+        // YYYY-MM-DD (si tu CV usa string date)
+        const birthDate = initialUser.birthday ? initialUser.birthday.slice(0, 10) : null;
+
+        setCV((prev) => {
+            if (!prev) return prev;
+
+            const sections = prev.content?.sections ?? [];
+
+            const nextSections = sections.map((s) => {
+                if (!isProfileSection(s)) return s;
+
+                // ✅ ahora TS sabe que s.data es ProfileData
+                const d = s.data;
+
+                // helpers: solo setear si está vacío/undefined/null
+                const pick = <T,>(current: T, next: T) =>
+                    current === undefined || current === null || (typeof current === "string" && current.trim() === "")
+                        ? next
+                        : current;
+
+                const nextData = {
+                    ...d,
+
+                    fullName: pick(d.fullName, initialUser.name ?? ""),
+                    headline: pick(d.headline, headline),
+
+                    address: pick(d.address, addressParts.length ? addressParts.join(", ") : undefined),
+                    postalCode: pick(d.postalCode, initialUser.mail_code ?? undefined),
+                    city: pick(d.city, cityLineParts.length ? cityLineParts.join(", ") : undefined),
+
+                    email: pick(d.email, initialUser.email ?? undefined),
+                    phone: pick(d.phone, (initialUser.movilNumber ?? initialUser.phoneNumber) ?? undefined),
+                    website: pick(d.website, initialUser.website ?? undefined),
+
+                    linkedin: pick(d.linkedin, initialUser.linkedinHandle ?? undefined),
+                    github: pick(d.github, initialUser.githubHandle ?? undefined),
+                    facebook: pick(d.facebook, initialUser.facebookHandle ?? undefined),
+                    instagram: pick(d.instagram, initialUser.instagramHandle ?? undefined),
+                    x: pick(d.x, initialUser.twitterHandle ?? undefined),
+                };
+
+                return { ...s, data: nextData };
+            });
+
+            // root: no pisar si ya tiene
+            const nextBirthDate = prev.birthDate ?? birthDate ?? null;
+            const nextSummary = prev.summary && prev.summary.trim().length ? prev.summary : initialUser.bio ?? "";
+
+            return {
+                ...prev,
+                birthDate: nextBirthDate,
+                summary: nextSummary,
+                content: {
+                    ...(prev.content ?? { sections: [] }),
+                    sections: nextSections,
+                },
+            };
+        });
+
+        // ✅ marcamos aplicado (y NO ensuciamos)
+        setDidApplyInitialUser(true);
+    }, [cv, cvId, didApplyInitialUser, initialUser, setCV]);
 
     // ✅ cv efectivo SIEMPRE incluye styleConfig actual
     const effectiveCv = useMemo(() => {
@@ -324,9 +417,7 @@ export function CVEditor({ cvId }: { cvId: number | null }) {
 
                 if (patch.headerImage) {
                     const nextPartial =
-                        typeof patch.headerImage === "function"
-                            ? patch.headerImage(prevHeader)
-                            : patch.headerImage;
+                        typeof patch.headerImage === "function" ? patch.headerImage(prevHeader) : patch.headerImage;
 
                     nextHeader = {
                         url: nextPartial.url !== undefined ? (nextPartial.url ?? null) : prevHeader.url,
@@ -392,7 +483,6 @@ export function CVEditor({ cvId }: { cvId: number | null }) {
         );
     }, [isDirty, isSaving]);
 
-
     const openCloseFlow = useCallback(() => {
         if (isSaving) return;
         if (!isDirty) {
@@ -422,7 +512,6 @@ export function CVEditor({ cvId }: { cvId: number | null }) {
             setIsTogglingPublic(false);
         }
     }, [effectiveCv, save, setCV]);
-
 
     const handleSave = useCallback(async () => {
         if (!effectiveCv) return;
@@ -565,7 +654,7 @@ export function CVEditor({ cvId }: { cvId: number | null }) {
     return (
         <div className="">
             {/* ---------- Top bar fixed ---------- */}
-            <div className="fixed lg:top-12 top-10 left-0 right-0 z-0 border-b border-slate-800 bg-slate-950/80 backdrop-blur h-12">
+            <div className="fixed lg:top-12 top-10 left-0 right-0 z-50 border-b border-slate-800 bg-slate-950/80 backdrop-blur h-12">
                 <div className="mx-auto px-3 py-1">
                     <div className="flex flex-row items-center justify-between gap-3">
                         {/* Left */}
@@ -607,35 +696,36 @@ export function CVEditor({ cvId }: { cvId: number | null }) {
 
                         {/* Right */}
                         <div className="relative flex flex-row items-center justify-end gap-0 w-full top-0 px-2">
-                            <Button
-                                onClick={() => setPreviewOpen(true)}
-                                disabled={isSaving}
-                                className="w-4 lg:hidden">
+                            <Button onClick={() => setPreviewOpen(true)} disabled={isSaving} className="w-4 lg:hidden">
                                 <div className="flex flex-row items-center justify-center">
                                     <Eye />
                                 </div>
-
                             </Button>
+
                             <Button
                                 className="w-4 lg:w-auto"
                                 variant={cv.isPublic ? "secondary" : "default"}
                                 onClick={handleTogglePublic}
                                 disabled={isSaving || isDeleting || isTogglingPublic || !cv.id}
-                                title={!cv.id ? "Primero guardá el CV" : cv.isPublic ? "Dejar de hacerlo público" : "Hacer público este CV"}
+                                title={
+                                    !cv.id
+                                        ? "Primero guardá el CV"
+                                        : cv.isPublic
+                                            ? "Dejar de hacerlo público"
+                                            : "Hacer público este CV"
+                                }
                             >
-                                {cv.isPublic ?
+                                {cv.isPublic ? (
                                     <>
                                         <GlobeLock />
                                         <span className="hidden lg:block">Dejar de hacer público</span>
                                     </>
-
-
-                                    :
+                                ) : (
                                     <>
                                         <Globe />
                                         <span className="hidden lg:block">Hacer público</span>
                                     </>
-                                }
+                                )}
                             </Button>
 
                             <Button
@@ -647,7 +737,6 @@ export function CVEditor({ cvId }: { cvId: number | null }) {
                             >
                                 <CircleX />
                                 <span className="hidden lg:block">Eliminar</span>
-
                             </Button>
 
                             <Button
@@ -715,7 +804,8 @@ export function CVEditor({ cvId }: { cvId: number | null }) {
                     <AlertDialogHeader>
                         <AlertDialogTitle>¿Cerrar el editor?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Tenés cambios sin guardar. Podés guardar y cerrar, cerrar sin guardar o cancelar para seguir editando.
+                            Tenés cambios sin guardar. Podés guardar y cerrar, cerrar sin guardar o cancelar para seguir
+                            editando.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
 
@@ -745,13 +835,25 @@ export function CVEditor({ cvId }: { cvId: number | null }) {
                     <div className="">
                         {/* ✅ Título + Expand/Collapse pegados */}
                         <div className="flex flex-col items-center justify-center w-full gap-0">
-                            <div className="fixed top-[88px] lg:top-24 left-0 flex flex-row items-center justify-start gap-0 bg-slate-950/80 z-0 w-full h-6 lg:w-auto border-b border-b-slate-800">
-                                <Button type="button" variant="secondary" size="sm" className="h-6 text-[12px] w-auto" onClick={expandAll}>
+                            <div className="fixed top-[88px] lg:top-24 left-0 flex flex-row items-center justify-start gap-0 bg-slate-950/80 z-40 w-full h-6 lg:w-auto border-b border-b-slate-800">
+                                <Button
+                                    type="button"
+                                    variant="secondary"
+                                    size="sm"
+                                    className="h-6 text-[12px] w-auto"
+                                    onClick={expandAll}
+                                >
                                     Expandir todo
                                     <ChevronDown />
-
                                 </Button>
-                                <Button type="button" variant="secondary" size="sm" className="h-6 text-[12px] w-auto" onClick={collapseAll}>
+
+                                <Button
+                                    type="button"
+                                    variant="secondary"
+                                    size="sm"
+                                    className="h-6 text-[12px] w-auto"
+                                    onClick={collapseAll}
+                                >
                                     Colapsar todo
                                     <ChevronUp />
                                 </Button>
@@ -779,7 +881,8 @@ export function CVEditor({ cvId }: { cvId: number | null }) {
                                 .map((section) => (
                                     <SortableSectionCard
                                         key={section.id}
-                                        section={section}
+                                        sectionId={section.id}
+                                        sectionType={section.type}
                                         title={section.type}
                                         collapsible={{
                                             open: isOpen(section.id, true),
@@ -818,7 +921,8 @@ export function CVEditor({ cvId }: { cvId: number | null }) {
                                             .map((section) => (
                                                 <SortableSectionCard
                                                     key={section.id}
-                                                    section={section}
+                                                    sectionId={section.id}
+                                                    sectionType={section.type}
                                                     title={section.type}
                                                     onRemove={() => removeSection(section.id)}
                                                     collapsible={{
@@ -858,6 +962,24 @@ export function CVEditor({ cvId }: { cvId: number | null }) {
                                     </div>
                                 </SortableContext>
                             </DndContext>
+
+                            {/* ✅ Tags (colapsable, no ensucia CV) — al final */}
+                            <hr className="border-border/40 my-3" />
+
+                            <SortableSectionCard
+                                sectionId={TAGS_SECTION_ID}
+                                sectionType="tags"
+                                title="tags"
+                                disableSort
+                                collapsible={{
+                                    open: isOpen(TAGS_SECTION_ID, false),
+                                    onOpenChange: (open) => setOpen(TAGS_SECTION_ID, open),
+                                }}
+                            >
+                                <div className="rounded-xl border border-slate-800 bg-slate-950/40 p-3">
+                                    <TagsEditor content={cv.content} />
+                                </div>
+                            </SortableSectionCard>
                         </div>
 
                         <div className="flex flex-wrap gap-2">
@@ -888,9 +1010,10 @@ export function CVEditor({ cvId }: { cvId: number | null }) {
                     </div>
 
                     {/* ================= RIGHT: Desktop Preview ================= */}
-                    <div className="hidden lg:block">
-                        <div className="sticky top-[106px] h-[calc(100vh-72px)]">
-                            <div className="h-full border-l border-slate-800 bg-slate-950/60 overflow-hidden flex flex-col">
+                    <div className="hidden lg:block lg:top-[100px] lg:relative">
+
+                        <div className="fixed top-[106px] h-[calc(100vh-72px)] z-0 w-[48vw]">
+                            <div className="h-full border-l border-slate-800 bg-slate-950/60 overflow-hidden flex flex-col z-0">
                                 <div className="flex items-center justify-between px-3 py-2 border-b border-slate-800/70 bg-slate-950/40">
                                     <div className="text-xs font-medium text-slate-300">Preview</div>
 
@@ -1009,26 +1132,30 @@ function createSection(type: CVSection["type"]): CVSection {
 }
 
 function SortableSectionCard({
-    section,
+    sectionId,
+    sectionType,
     children,
     onRemove,
     title,
     collapsible,
+    disableSort,
 }: {
-    section: CVSection;
+    sectionId: string;
+    sectionType?: string;
     title: string;
     children: React.ReactNode;
     onRemove?: () => void;
+    disableSort?: boolean;
     collapsible?: {
         open: boolean;
         onOpenChange: (open: boolean) => void;
     };
 }) {
-    const isProfile = section.type === "profile";
+    const isProfile = sectionType === "profile";
 
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-        id: section.id,
-        disabled: isProfile,
+        id: sectionId,
+        disabled: isProfile || Boolean(disableSort),
     });
 
     const style: React.CSSProperties = {
@@ -1045,7 +1172,7 @@ function SortableSectionCard({
                 <Collapsible open={open} onOpenChange={(v) => collapsible?.onOpenChange?.(v)} className="rounded-xl">
                     <CardHeader className="flex flex-row items-center justify-between py-0 w-full p-0">
                         <div className="flex items-center gap-2 min-w-0">
-                            {!isProfile && (
+                            {!isProfile && !disableSort && (
                                 <button
                                     type="button"
                                     className="cursor-grab active:cursor-grabbing px-2 py-1 rounded border text-sm text-muted-foreground hover:bg-accent"
@@ -1071,7 +1198,12 @@ function SortableSectionCard({
                                     title={open ? "Colapsar" : "Expandir"}
                                 >
                                     {open ? "Ocultar" : "Mostrar"}
-                                    <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", open ? "rotate-180" : "rotate-0")} />
+                                    <ChevronDown
+                                        className={cn(
+                                            "h-3.5 w-3.5 transition-transform",
+                                            open ? "rotate-180" : "rotate-0"
+                                        )}
+                                    />
                                 </button>
                             ) : null}
                         </div>
@@ -1099,3 +1231,4 @@ function SortableSectionCard({
         </div>
     );
 }
+

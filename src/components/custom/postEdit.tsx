@@ -50,7 +50,7 @@ export function PostEdit({ postId, session }: PostEditProps) {
                     setIsOwner(
                         viewerId != null &&
                         Number.isFinite(viewerId) &&
-                        viewerId === data.user_id
+                        viewerId === data.authorId
                     );
                 }
             } catch (err) {

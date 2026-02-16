@@ -71,7 +71,7 @@ export async function GET() {
 
         prisma.image.findMany({
             // Image pertenece a Post, y Post tiene user_id
-            where: { post: { user_id: userId } },
+            where: { post: { authorId: userId } },
             select: {
 
                 imageUrl: true,

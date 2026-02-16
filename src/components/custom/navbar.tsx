@@ -8,7 +8,6 @@ import LanguageSwitcher from "./languageswitcher";
 import { Plus, BrickWall, House, Search } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { cfg } from "@/config";
-import ChangeAccount from "../dev/changeAccount";
 import { useRouter, usePathname } from "next/navigation";
 import MainMenuMobileMenu from "./MainMenuMobileMenu";
 

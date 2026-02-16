@@ -29,6 +29,7 @@ type WallHeaderUser = {
 
     imageUrl?: string | null;
     imageWallUrl?: string | null;
+    image?: string | null;
 
     wallHeaderBackgroundType?: "image" | "color" | null;
     wallHeaderBackgroundColor?: string | null;
@@ -191,6 +192,7 @@ export default function WallHeaderShell({
     const enableToViewCoverImage = enableToView?.coverImage ?? true;
     const enableToViewFullProfile = enableToView?.fullProfile ?? true;
 
+    const profileImage = displayUser.imageUrl ?? displayUser.image ?? null;
 
     const bgMode = displayUser?.wallHeaderBackgroundType ?? null;
 
@@ -276,9 +278,9 @@ export default function WallHeaderShell({
                     <div className="relative h-full flex flex-col items-center justify-center text-center px-4">
                         {/* avatar */}
                         <div className="relative">
-                            {displayUser.imageUrl && enableToViewProfileImage && (
+                            {profileImage && enableToViewProfileImage && (
                                 <img
-                                    src={displayUser.imageUrl}
+                                    src={profileImage}
                                     alt={displayUser.name ?? "Usuario"}
                                     className={cn(
                                         "w-24 h-24 lg:w-28 lg:h-28 rounded-full object-cover",

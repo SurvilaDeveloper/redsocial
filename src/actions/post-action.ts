@@ -9,6 +9,8 @@ import { z } from "zod";
 import { getSocialRelations } from "@/lib/social-relations";
 import { RelationshipState } from "@/lib/relationship-state";
 
+import { upsertPostKeywords } from "@/lib/interests/postKeywords";
+
 type ImagePayload = { url: string; publicId: string } | null;
 
 async function canPublishOnWall(opts: {
@@ -123,6 +125,19 @@ export const createPost = async (
 
                 nextIndex++;
             }
+        }
+
+        // 4) ✅ precompute keywords (best-effort, no rompe el post)
+        try {
+            await upsertPostKeywords(post.id, {
+                titleWeight: 3,
+                descriptionWeight: 1,
+                maxKeywords: 30,
+                language: "es",
+                version: 1,
+            });
+        } catch (e) {
+            console.warn("upsertPostKeywords failed (createPost)", e);
         }
 
         return { success: true };
@@ -241,6 +256,19 @@ export const updatePost = async (
                 }
             }
         });
+
+        // ✅ precompute keywords (best-effort) después de la tx
+        try {
+            await upsertPostKeywords(postId, {
+                titleWeight: 3,
+                descriptionWeight: 1,
+                maxKeywords: 30,
+                language: "es",
+                version: 1,
+            });
+        } catch (e) {
+            console.warn("upsertPostKeywords failed (updatePost)", e);
+        }
 
         return { success: true };
     } catch (error) {

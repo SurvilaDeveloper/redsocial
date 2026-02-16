@@ -28,6 +28,8 @@ const WallHeader = ({ userId, enableToView }: WallHeaderProps) => {
             if (!res.ok) throw new Error(`Error ${res.status}`);
             const data = await res.json();
 
+            //console.log('data en wallHeader: ', data);
+
             const normalizedUser: WallUserFull = {
                 ...data.user,
                 meta: {
@@ -41,15 +43,19 @@ const WallHeader = ({ userId, enableToView }: WallHeaderProps) => {
 
             setFullUser(normalizedUser);
 
+            //console.log('normalizedUser en wallHeader: ', normalizedUser);
+
             setBasicUser({
                 id: normalizedUser.id,
                 name: normalizedUser.name,
                 nick: normalizedUser.nick,
                 imageUrl: normalizedUser.imageUrl,
                 imageWallUrl: normalizedUser.imageWallUrl,
+                image: normalizedUser.image,
                 wallHeaderBackgroundColor: normalizedUser.wallHeaderBackgroundColor,
                 wallHeaderBackgroundType: normalizedUser.wallHeaderBackgroundType,
             });
+            //console.log('basicUser en wallHeader:', basicUser);
         } catch (err: any) {
             setError(err?.message || "Error al cargar la información");
         } finally {

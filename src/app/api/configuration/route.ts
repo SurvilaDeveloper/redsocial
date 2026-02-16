@@ -35,7 +35,7 @@ export async function PUT(req: Request) {
 
     const userId = Number(session.user.id);
     const body = await req.json();
-    console.log(body);
+    //console.log(body);
     // whitelist de campos editables
     const allowedFields = {
         profileImageVisibility: body.profileImageVisibility,

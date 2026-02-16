@@ -54,6 +54,7 @@ export async function GET(
                 bio: true,
                 imageUrl: true,
                 imageWallUrl: true,
+                image: true,
                 wallHeaderBackgroundColor: true,
                 wallHeaderBackgroundType: true,
                 occupation: true,

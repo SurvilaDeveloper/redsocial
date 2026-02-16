@@ -103,7 +103,7 @@ export function useInfiniteCursorFeed<T>(opts: Options<T>) {
                 const cursor = cursorRef.current; // ✅ siempre el último
                 const url = buildUrl(cursor);
 
-                console.log('url:', url);
+                //console.log('url:', url);
 
                 const res = await fetch(url, { cache: "no-store" });
                 const data = await res.json().catch(() => null);

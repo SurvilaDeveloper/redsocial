@@ -64,14 +64,6 @@ export function PostCard({
     const [commentMsg, setCommentMsg] = useState<string | null>(null);
     const [commentsExpanded, setCommentsExpanded] = useState(false);
 
-    const handleCommentsClick = () => {
-        if (onOpenDetail) {
-            onOpenDetail(currentPost.id);
-            return;
-        }
-        setCommentsExpanded((v) => !v);
-    };
-
     const commentRefs = useRef<Record<number, HTMLDivElement | null>>({});
 
     type LocalPostComment = PostComment & { __optimistic?: boolean; __error?: string | null };
@@ -92,6 +84,27 @@ export function PostCard({
     const [selectedViewModeState, setSelectedViewModeState] = useState<number>(selectedViewMode ? selectedViewMode : 0);
 
     const [shareOpen, setShareOpen] = useState(false);
+
+    /* ===========================
+     *  Interests tracking (MVP)
+     * =========================== */
+
+    const trackInterestEvent = async (payload: { postId: number; type: "view" | "like" | "own_post"; dwellMs?: number }) => {
+        try {
+            await fetch("/api/interests/event", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+                keepalive: true,
+            });
+        } catch {
+            // noop
+        }
+    };
+
+
+    // Dedupe: no spamear "view" si re-renderiza el detail
+    const viewedRef = useRef<Record<number, boolean>>({});
 
     const canViewFunction = (selectedViewMode: number, postVisibility: number): boolean => {
         if (selectedViewMode === 0) return true;
@@ -166,6 +179,25 @@ export function PostCard({
     const sessionUserId = session?.user?.id ? Number(session.user.id) : null;
     const sessionUserName = session?.user?.name ?? "Tú";
     const sessionUserImageUrl = session?.user?.imageUrl ?? null;
+
+    // ✅ Track "view" cuando se abre el modal/detail
+    useEffect(() => {
+        if (variant !== "detail") return;
+        if (!currentPost?.id) return;
+        if (!sessionUserId) return;
+
+        const postId = currentPost.id;
+        const t0 = performance.now();
+
+        // si querés: opcional “ping” inmediato (sin dwell) NO lo recomiendo si ya mandás al cerrar
+        // void trackInterestEvent({ postId, type: "view" });
+
+        return () => {
+            const dwellMs = Math.max(0, Math.round(performance.now() - t0));
+            void trackInterestEvent({ postId, type: "view", dwellMs });
+        };
+    }, [variant, currentPost?.id, sessionUserId]);
+
 
     const canCreatePostComment = Boolean(session?.user?.id) && newComment.trim().length > 0 && !commentLoading;
 
@@ -315,6 +347,11 @@ export function PostCard({
             }
             if (typeof data?.userReaction !== "undefined") {
                 setPostReaction(data.userReaction as Reaction);
+
+                // ✅ Track interest: solo cuando efectivamente quedó LIKE
+                if (sessionUserId && data.userReaction === "LIKE" && prev !== "LIKE") {
+                    void trackInterestEvent({ postId: currentPost.id, type: "like" });
+                }
             }
         } catch (err) {
             updateCountsOptimistic(next, prev);
@@ -479,6 +516,14 @@ export function PostCard({
             </div>
         );
     }
+
+    const handleCommentsClick = () => {
+        if (onOpenDetail) {
+            onOpenDetail(currentPost.id);
+            return;
+        }
+        setCommentsExpanded((v) => !v);
+    };
 
     const rootClass = embedded
         ? "w-full bg-transparent px-0 py-0 text-slate-100"
@@ -655,5 +700,3 @@ export function PostCard({
         </>
     );
 }
-
-

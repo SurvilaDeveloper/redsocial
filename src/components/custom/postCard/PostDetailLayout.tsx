@@ -1,6 +1,7 @@
 // src/app/components/custom/postCard/postDetailLayout.tsx
 "use client";
 
+import { useEffect } from "react";
 import { PostHeader } from "./PostHeader";
 import { PostReactions } from "./PostReactions";
 import PostImageCard from "../PostImageCard";
@@ -97,6 +98,15 @@ export function PostDetailLayout({
     PostCardCommentsResponsesContainer,
 }: Props) {
     const hasImages = sortedImages.length > 0;
+    /*
+        useEffect(() => {
+            //console.log("[DETAIL] MOUNT", currentPost?.id);
+    
+            return () => {
+                //console.log("[DETAIL] UNMOUNT", currentPost?.id);
+            };
+        }, []);
+    */
 
     // DETAIL sin imágenes
     if (!hasImages) {

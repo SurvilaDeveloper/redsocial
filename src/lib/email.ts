@@ -236,3 +236,67 @@ export async function sendDisableDeviceEmail({
         return { error: true };
     }
 }
+
+/* ──────────────────────────────────────
+ * 🏪 Contacto a negocio (form público)
+ * ────────────────────────────────────── */
+
+const EMAIL_PROVISORIO_ENABLED = true; // si querés, atalo a NODE_ENV luego
+
+function getEmailTo(toOwnerEmail: string) {
+    // Mantiene tu forma de testear sin mandar emails reales.
+    if (EMAIL_PROVISORIO_ENABLED && EMAIL_PROVISORIO) return EMAIL_PROVISORIO;
+    return toOwnerEmail;
+}
+
+export async function sendBusinessContactEmail({
+    businessName,
+    toOwnerEmail,
+    fromEmail,
+    fromName,
+    subject,
+    message,
+}: {
+    businessName: string;
+    toOwnerEmail: string;
+    fromEmail: string;
+    fromName?: string;
+    subject?: string;
+    message: string;
+}) {
+    try {
+        await resend.emails.send({
+            from: FROM,
+            to: getEmailTo(toOwnerEmail),
+            subject: subject?.trim()
+                ? `[Contacto] ${businessName} — ${subject.trim()}`
+                : `[Contacto] ${businessName}`,
+            // 👇 clave: el dueño responde y va directo al visitante
+            replyTo: fromEmail,
+            html: `
+                <h2>Nuevo contacto desde el sitio</h2>
+                <p><strong>Negocio:</strong> ${escapeHtml(businessName)}</p>
+                <p><strong>Nombre:</strong> ${escapeHtml(fromName ?? "-")}</p>
+                <p><strong>Email:</strong> ${escapeHtml(fromEmail)}</p>
+                <p><strong>Asunto:</strong> ${escapeHtml(subject ?? "-")}</p>
+                <hr />
+                <p style="white-space:pre-wrap">${escapeHtml(message)}</p>
+            `,
+        });
+
+        return { success: true };
+    } catch (error) {
+        console.error("sendBusinessContactEmail error:", error);
+        return { error: true };
+    }
+}
+
+// mini-escape para evitar HTML injection en el body
+function escapeHtml(s: string) {
+    return String(s)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}

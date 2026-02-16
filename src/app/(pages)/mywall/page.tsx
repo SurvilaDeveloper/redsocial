@@ -26,7 +26,7 @@ const MyWallPage = async () => {
 
     const configuration = await getUserConfiguration(userId)
 
-    console.log("configuration en MyWallPage:", configuration);
+    //console.log("configuration en MyWallPage:", configuration);
 
     return (
         <div id="my-wall-page">

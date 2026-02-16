@@ -16,6 +16,7 @@ const sp = {
     search: "Buscar",
     tokenExpired: "El token enviado al email ha expirado",
     expiredSession: "La sesión ha expirado",
+    goBusinessStudio: "Negocio-Studio",
 }
 
 const en = {
@@ -36,6 +37,7 @@ const en = {
     search: "Search",
     tokenExpired: "The token sent to the email has expired",
     expiredSession: "The session has expired",
+    goBusinessStudio: "Business Studio",
 }
 
 const texts = (language: string) => {

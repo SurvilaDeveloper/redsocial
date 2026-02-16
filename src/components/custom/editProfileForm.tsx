@@ -229,7 +229,7 @@ export default function ProfileForm({ user }: { user: ProfileMe }) {
             bio: user.bio ?? null,
             phoneNumber: user.phoneNumber ?? null,
             movilNumber: user.movilNumber ?? null,
-            birthday: user.birthday ?? null,
+            birthday: user.birthday ?? null, // ✅ el form mantiene ISO (lo que valida el schema)
 
             visibility: user.visibility ?? 1,
             darkModeEnabled: user.darkModeEnabled ?? false,
@@ -267,6 +267,12 @@ export default function ProfileForm({ user }: { user: ProfileMe }) {
         resolver: zodResolver(profileSchema),
         defaultValues,
         mode: "onChange",
+    });
+
+    // UI-friendly date draft (YYYY-MM-DD) para no romper el typing del <input type="date">
+    const [birthdayDraft, setBirthdayDraft] = useState<string>(() => {
+        const b = defaultValues.birthday as any;
+        return b ? String(b).slice(0, 10) : "";
     });
 
     const countryId = form.watch("countryId");
@@ -485,6 +491,7 @@ export default function ProfileForm({ user }: { user: ProfileMe }) {
         setSaving(true);
 
         try {
+
             // 1) Resolver nombres de país / provincia / ciudad
             const countryName = values.countryId
                 ? (countriesData as any as GeoOption[]).find((c) => c.id === values.countryId)?.name ?? null
@@ -530,6 +537,7 @@ export default function ProfileForm({ user }: { user: ProfileMe }) {
             // 3) Payload final
             const valuesToSend = {
                 ...values,
+                // birthday ya viene ISO desde el form
                 imageUrl: uploadedProfileImageUrl,
                 imagePublicId: uploadedProfileImagePublicId,
                 imageWallUrl: uploadedWallImageUrl,
@@ -947,30 +955,22 @@ export default function ProfileForm({ user }: { user: ProfileMe }) {
                                         />
                                     </div>
 
-                                    {/* Birthday (guardamos ISO) */}
+                                    {/* Birthday (UI usa YYYY-MM-DD, form guarda ISO para que pase el schema) */}
                                     <div className="space-y-1.5">
                                         <Label className="text-sm text-slate-200">Fecha de nacimiento</Label>
 
                                         <div className="relative w-full lg:max-w-[280px]">
                                             <input
                                                 type="date"
-                                                value={
-                                                    form.getValues("birthday")
-                                                        ? String(form.getValues("birthday")).slice(0, 10)
-                                                        : ""
-                                                }
+                                                value={birthdayDraft}
                                                 min="1900-01-01"
                                                 max={dateMax}
                                                 onChange={(e) => {
-                                                    const v = e.target.value;
-                                                    if (!v) {
-                                                        form.setValue("birthday", null as any, {
-                                                            shouldDirty: true,
-                                                            shouldValidate: true,
-                                                        });
-                                                        return;
-                                                    }
-                                                    const iso = new Date(v + "T00:00:00.000Z").toISOString();
+                                                    const v = e.target.value; // "YYYY-MM-DD" | ""
+                                                    setBirthdayDraft(v);
+
+                                                    // Guardar ISO en el form (lo que tu schema probablemente valida)
+                                                    const iso = v ? new Date(v + "T00:00:00.000Z").toISOString() : null;
                                                     form.setValue("birthday", iso as any, {
                                                         shouldDirty: true,
                                                         shouldValidate: true,
@@ -985,10 +985,9 @@ export default function ProfileForm({ user }: { user: ProfileMe }) {
                                             <CalendarIcon className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 opacity-70 text-slate-300" />
                                         </div>
 
-                                        <p className="text-xs text-slate-400">
-                                            Sólo se muestra de forma aproximada (edad).
-                                        </p>
+                                        <p className="text-xs text-slate-400">Sólo se muestra de forma aproximada (edad).</p>
                                     </div>
+
                                 </SectionCard>
                             </div>
                         )}
@@ -1223,4 +1222,3 @@ export default function ProfileForm({ user }: { user: ProfileMe }) {
         </PageShell>
     );
 }
-

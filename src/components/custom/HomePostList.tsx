@@ -8,6 +8,7 @@ import Link from "next/link";
 import { WallEntryCard } from "./WallEntryCard";
 import { FeedMessage } from "./feedMessage";
 import { PostCard } from "./postCard/PostCard";
+import PostFormWall from "./postFormWall";
 
 import { useInfiniteCursorFeed } from "@/hooks/useInfiniteCursorFeed";
 
@@ -89,10 +90,11 @@ export default function HomePostList({ session }: { session: Session | null }) {
     };
 
     const canLoadMore = useMemo(() => feed.canLoadMore, [feed.canLoadMore]);
-    console.log('detailPost en HomePostList: ', String(detailPost));
+    //console.log('detailPost en HomePostList: ', String(detailPost));
 
     return (
         <div id="HomePostList" className="relative flex flex-col w-full gap-10 lg:px-0">
+            {sessionUserId && <PostFormWall wallUserId={sessionUserId} canPublish={true} />}
             {posts.map((post: any, index) => {
                 const isPostOwner = sessionUserId != null && post?.authorId != null ? Number(post.authorId) === sessionUserId : false;
 
