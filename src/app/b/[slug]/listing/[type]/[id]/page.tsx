@@ -12,33 +12,14 @@ import { cn } from "@/lib/utils";
 
 import BackToStudioBusiness from "@/components/custom/BackToStudioBusiness";
 
+import { safeParseJson, safeStr } from "@/lib/business/public-helpers";
+import { PUBLIC_BUSINESS_CHROME_SELECT } from "@/lib/business/public-selects";
+
 type Params = {
     slug: string;
     type: "product" | "service";
     id: string;
 };
-/*
-function safeBack(from: unknown, fallback: string) {
-    const s = typeof from === "string" ? from.trim() : "";
-    if (!s) return fallback;
-    if (s.startsWith("/")) return s; // solo rutas internas
-    return fallback;
-}
-*/
-function safeStr(v: unknown, max = 200) {
-    const s = typeof v === "string" ? v.trim() : "";
-    return s.length ? s.slice(0, max) : "";
-}
-
-function safeJson<T>(v: any, fallback: T): T {
-    try {
-        if (v == null) return fallback;
-        if (typeof v === "string") return JSON.parse(v) as T;
-        return v as T;
-    } catch {
-        return fallback;
-    }
-}
 
 async function fetchDetail(type: string, id: number) {
     const base = process.env.NEXTAUTH_URL ?? "";
@@ -52,10 +33,12 @@ type Chrome = {
     businessId: number;
     businessSlug: string;
     businessName: string;
-    businessHeadline: string; // ✅ normalizado (nunca null)
-    businessCategory: string; // ✅ normalizado (nunca null)
-    nav: any[]; // si querés, tipalo luego con tu BusinessNavItem
+    businessHeadline: string;
+    businessCategory: string;
+
+    nav: any[];
     pages: { id: number; slug: string; title: string }[];
+
     headerBgImageUrl: string | null;
 
     businessSurfaceBgColor: string;
@@ -66,8 +49,8 @@ type Chrome = {
     businessHeaderHeight: string;
     businessHeaderBgColor: string;
 
-    businessHeaderBgSize: string,
-    businessHeaderBgPosition: string,
+    businessHeaderBgSize: string;
+    businessHeaderBgPosition: string;
 
     businessTitleColor: string;
     businessTitleTypography: string;
@@ -88,64 +71,20 @@ type Chrome = {
 async function fetchBusinessChrome(slug: string): Promise<Chrome | null> {
     const business = await prisma.business.findFirst({
         where: { slug, deletedAt: null, active: 1 },
-        select: {
-            id: true,
-            slug: true,
-            name: true,
-            headline: true,
-            category: true,
-
-            surfaceBgColor: true,
-
-            bgColor: true,
-            width: true,
-
-            headerHeight: true,
-            headerBgColor: true,
-
-            headerBgSize: true,
-            headerBgPosition: true,
-
-            titleColor: true,
-            titleTypography: true,
-            titleTextSize: true,
-            titleAlignText: true,
-
-            headlineColor: true,
-            headlineTypography: true,
-            headlineTextSize: true,
-            headlineAlignText: true,
-
-            categoryColor: true,
-            categoryTypography: true,
-            categoryTextSize: true,
-            categoryAlignText: true,
-
-            // ✅ NUEVO
-            headerBgImage: { select: { url: true } },
-            site: {
-                select: {
-                    nav: true, // ✅ nav vive en BusinessSite
-                },
-            },
-            pages: {
-                where: { deletedAt: null, active: 1 },
-                select: { id: true, slug: true, title: true },
-                orderBy: { createdAt: "asc" },
-            },
-        },
+        select: PUBLIC_BUSINESS_CHROME_SELECT,
     });
 
     if (!business) return null;
 
-    const nav = safeJson<any[]>(business.site?.nav, []);
+    // ⚠️ lógica igual que antes: nav parseado con fallback []
+    const nav = safeParseJson<any[]>(business.site?.nav, []);
 
     return {
         businessId: business.id,
         businessSlug: business.slug,
         businessName: safeStr(business.name, 120) || business.slug,
-        businessHeadline: safeStr(business.headline, 140), // ✅ null => ""
-        businessCategory: safeStr(business.category, 80), // ✅ null => ""
+        businessHeadline: safeStr(business.headline, 140),
+        businessCategory: safeStr(business.category, 80),
 
         businessSurfaceBgColor: business.surfaceBgColor,
 
@@ -186,7 +125,6 @@ export default async function ListingDetailPage({
     params: Promise<Params>;
     searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-    // (hoy no lo usás dentro, pero lo dejo por si después metés permisos extra en chrome)
     const session = await auth();
     const viewerId = session?.user?.id != null ? Number(session.user.id) : null;
     void viewerId;
@@ -198,24 +136,17 @@ export default async function ListingDetailPage({
     const listingId = Number(id);
     if (!Number.isFinite(listingId) || listingId <= 0) notFound();
 
-    const sp = await searchParams;
-    //const backHref = safeBack(sp?.from, `/b/${slug}`);
+    await searchParams; // (lo dejás por si después volvés a usarlo)
 
-    // ✅ Chrome del negocio (tabs + páginas)
     const chrome = await fetchBusinessChrome(slug);
     if (!chrome) notFound();
 
-    // ✅ Detalle listing (con permisos)
     const detail = await fetchDetail(type, listingId);
-    if (!detail.ok) {
-        // 404/403/400 => notFound para no filtrar existencia
-        notFound();
-    }
+    if (!detail.ok) notFound();
 
     const listing = detail.data?.listing;
     if (!listing) notFound();
 
-    // ✅ mediaMap para ImagesSwiperSites: Record<number,{id,url,publicId}>
     const mediaMap: Record<number, { id: number; url: string; publicId: string }> = {};
     for (const m of (listing.media ?? []) as any[]) {
         const url = (m.url as string | null) ?? null;
@@ -234,13 +165,19 @@ export default async function ListingDetailPage({
     }
 
     const title = safeStr(listing.title, 140) || (type === "product" ? "Producto" : "Servicio");
-    const widthPCent = chrome.businessWidth === "full" ? "w-full" :
-        chrome.businessWidth === "xl" ? "lg:w-[83%] w-full" :
-            chrome.businessWidth === "lg" ? "lg:w-[75%] w-full" :
-                chrome.businessWidth === "md" ? "lg:w-[66%] w-full" :
-                    chrome.businessWidth === "sm" ? "lg:w-[50%] w-full" : "lg:w-[83%] w-full";
 
-    console.log("chrome en /src/app/b/[slug]/listing/[type]/[id]/page.tsx: ", chrome);
+    const widthPCent =
+        chrome.businessWidth === "full"
+            ? "w-full"
+            : chrome.businessWidth === "xl"
+                ? "lg:w-[83%] w-full"
+                : chrome.businessWidth === "lg"
+                    ? "lg:w-[75%] w-full"
+                    : chrome.businessWidth === "md"
+                        ? "lg:w-[66%] w-full"
+                        : chrome.businessWidth === "sm"
+                            ? "lg:w-[50%] w-full"
+                            : "lg:w-[83%] w-full";
 
     return (
         <div
@@ -249,19 +186,14 @@ export default async function ListingDetailPage({
         >
             <main
                 className={cn(widthPCent, "min-h-dvh text-slate-100 relative pb-6")}
-
-
-                style={{
-                    backgroundColor: chrome.businessBgColor,
-                }}
+                style={{ backgroundColor: chrome.businessBgColor }}
             >
-                {/* ✅ BusinessTabs (barra superior del negocio) */}
                 <div className="bg-black sticky top-0 z-50 w-full">
                     <BusinessTabs
                         slug={chrome.businessSlug}
                         nav={chrome.nav}
                         pages={chrome.pages}
-                        activeTab="__listing__" // ✅ a propósito: no matchea nada
+                        activeTab="__listing__"
                     />
                 </div>
 
@@ -271,23 +203,18 @@ export default async function ListingDetailPage({
                         headline={chrome.businessHeadline}
                         category={chrome.businessCategory}
                         bgImageUrl={chrome.headerBgImageUrl}
-
                         headerHeight={chrome.businessHeaderHeight}
                         headerBgColor={chrome.businessHeaderBgColor}
-
                         headerBgSize={chrome.businessHeaderBgSize}
                         headerBgPosition={chrome.businessHeaderBgPosition}
-
                         titleColor={chrome.businessTitleColor}
                         titleTypography={chrome.businessTitleTypography}
                         titleTextSize={chrome.businessTitleTextSize}
                         titleAlignText={chrome.businessTitleAlignText}
-
                         headlineColor={chrome.businessHeadlineColor}
                         headlineTypography={chrome.businessHeadlineTypography}
                         headlineTextSize={chrome.businessHeadlineTextSize}
                         headlineAlignText={chrome.businessHeadlineAlignText}
-
                         categoryColor={chrome.businessCategoryColor}
                         categoryTypography={chrome.businessCategoryTypography}
                         categoryTextSize={chrome.businessCategoryTextSize}
@@ -298,14 +225,12 @@ export default async function ListingDetailPage({
                 <div className="relative mx-auto max-w-5xl px-4 py-6 flex flex-col">
                     <div className="flex items-center justify-between gap-3">
                         <BackToStudioBusiness label="Volver" />
-
                         <div className="text-[11px] text-slate-500">
                             {type} · #{listingId}
                         </div>
                     </div>
 
                     <div className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
-                        {/* Gallery */}
                         <div className="flex flex-row items-center justify-center rounded-2xl border border-slate-800 bg-slate-950 p-3">
                             {Object.keys(mediaMap).length > 0 ? (
                                 <div className="max-w-[320px] w-full h-auto">
@@ -318,7 +243,6 @@ export default async function ListingDetailPage({
                             )}
                         </div>
 
-                        {/* Info */}
                         <div className="rounded-2xl border border-slate-800 bg-slate-950 p-5">
                             <div className="text-xl font-semibold">{title}</div>
 
@@ -341,8 +265,6 @@ export default async function ListingDetailPage({
                                     </div>
                                 )}
                             </div>
-
-                            {/* futuras secciones: reviews, variantes, etc */}
                         </div>
                     </div>
 
@@ -357,5 +279,3 @@ export default async function ListingDetailPage({
         </div>
     );
 }
-
-

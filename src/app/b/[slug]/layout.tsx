@@ -10,6 +10,8 @@ import { BusinessPortal } from "@/components/business/BusinessPortal";
 import { parseThemeConfig } from "@/lib/business/parseThemeConfig";
 import { themeToCssVars } from "@/lib/business/theme";
 
+import { PUBLIC_BUSINESS_LAYOUT_SELECT } from "@/lib/business/public-selects";
+
 export default async function PublicBusinessLayout({
     children,
     params,
@@ -24,7 +26,7 @@ export default async function PublicBusinessLayout({
 
     const business = await prisma.business.findUnique({
         where: { slug },
-        include: { site: true },
+        select: PUBLIC_BUSINESS_LAYOUT_SELECT,
     });
 
     if (!business || business.deletedAt != null) notFound();
