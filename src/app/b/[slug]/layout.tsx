@@ -60,24 +60,20 @@ export default async function PublicBusinessLayout({
         );
     }
 
-    // Theme vars disponibles para TODO el árbol /b/[slug]/*
-    const themeConfig = parseThemeConfig(business.site?.themeConfig);
-    const cssVars = themeToCssVars(themeConfig);
+    // ✅ Theme vars para TODO /b/[slug]/*
+    const resolvedTheme = parseThemeConfig(
+        business.site?.themePreset ?? "classic",
+        business.site?.themeConfig
+    );
+    const cssVars = themeToCssVars(resolvedTheme);
 
     return (
         <BusinessPortal>
             <div
                 id="BUSINESS"
                 style={cssVars as React.CSSProperties}
-                className="
-                absolute
-                top-0
-                    min-h-dvh
-                    w-screen
-
-                "
+                className="absolute top-0 min-h-dvh w-screen"
             >
-                {/* Contenido */}
                 <main className="flex flex-row items-center justify-center">{children}</main>
             </div>
         </BusinessPortal>

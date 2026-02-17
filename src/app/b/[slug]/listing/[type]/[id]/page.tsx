@@ -8,20 +8,23 @@ import { prisma } from "@/lib/prisma";
 import { BusinessTabs } from "@/components/business/BusinessTabs";
 import { ImagesSwiperSites } from "@/components/custom/ImagesSwiperSites";
 import { BusinessSiteHeader } from "@/components/business/BusinessSiteHeader";
+import { cn } from "@/lib/utils";
+
+import BackToStudioBusiness from "@/components/custom/BackToStudioBusiness";
 
 type Params = {
     slug: string;
     type: "product" | "service";
     id: string;
 };
-
+/*
 function safeBack(from: unknown, fallback: string) {
     const s = typeof from === "string" ? from.trim() : "";
     if (!s) return fallback;
     if (s.startsWith("/")) return s; // solo rutas internas
     return fallback;
 }
-
+*/
 function safeStr(v: unknown, max = 200) {
     const s = typeof v === "string" ? v.trim() : "";
     return s.length ? s.slice(0, max) : "";
@@ -55,11 +58,16 @@ type Chrome = {
     pages: { id: number; slug: string; title: string }[];
     headerBgImageUrl: string | null;
 
+    businessSurfaceBgColor: string;
+
     businessBgColor: string;
     businessWidth: string;
 
     businessHeaderHeight: string;
     businessHeaderBgColor: string;
+
+    businessHeaderBgSize: string,
+    businessHeaderBgPosition: string,
 
     businessTitleColor: string;
     businessTitleTypography: string;
@@ -75,8 +83,6 @@ type Chrome = {
     businessCategoryTypography: string;
     businessCategoryTextSize: number;
     businessCategoryAlignText: string;
-
-
 };
 
 async function fetchBusinessChrome(slug: string): Promise<Chrome | null> {
@@ -89,11 +95,16 @@ async function fetchBusinessChrome(slug: string): Promise<Chrome | null> {
             headline: true,
             category: true,
 
+            surfaceBgColor: true,
+
             bgColor: true,
             width: true,
 
             headerHeight: true,
             headerBgColor: true,
+
+            headerBgSize: true,
+            headerBgPosition: true,
 
             titleColor: true,
             titleTypography: true,
@@ -136,11 +147,16 @@ async function fetchBusinessChrome(slug: string): Promise<Chrome | null> {
         businessHeadline: safeStr(business.headline, 140), // ✅ null => ""
         businessCategory: safeStr(business.category, 80), // ✅ null => ""
 
+        businessSurfaceBgColor: business.surfaceBgColor,
+
         businessBgColor: business.bgColor,
         businessWidth: business.width,
 
         businessHeaderHeight: business.headerHeight,
         businessHeaderBgColor: business.headerBgColor,
+
+        businessHeaderBgSize: business.headerBgSize,
+        businessHeaderBgPosition: business.headerBgPosition,
 
         businessTitleColor: business.titleColor,
         businessTitleTypography: business.titleTypography,
@@ -183,7 +199,7 @@ export default async function ListingDetailPage({
     if (!Number.isFinite(listingId) || listingId <= 0) notFound();
 
     const sp = await searchParams;
-    const backHref = safeBack(sp?.from, `/b/${slug}`);
+    //const backHref = safeBack(sp?.from, `/b/${slug}`);
 
     // ✅ Chrome del negocio (tabs + páginas)
     const chrome = await fetchBusinessChrome(slug);
@@ -207,7 +223,7 @@ export default async function ListingDetailPage({
         const finalUrl = thumb || url;
         if (!finalUrl) continue;
 
-        const mid = Number(m.index);       ////////////////// REVISANDO QUE EL CAMBIO NO TIRE ERROR//////////////////////////////
+        const mid = Number(m.index);
         if (!Number.isFinite(mid) || mid <= 0) continue;
 
         mediaMap[mid] = {
@@ -218,120 +234,127 @@ export default async function ListingDetailPage({
     }
 
     const title = safeStr(listing.title, 140) || (type === "product" ? "Producto" : "Servicio");
-    const widthPCent = chrome.businessWidth === "full" ? "100%" :
-        chrome.businessWidth === "xl" ? "83%" :
-            chrome.businessWidth === "lg" ? "75%" :
-                chrome.businessWidth === "md" ? "66%" :
-                    chrome.businessWidth === "sm" ? "50%" : "83%";
+    const widthPCent = chrome.businessWidth === "full" ? "w-full" :
+        chrome.businessWidth === "xl" ? "lg:w-[83%] w-full" :
+            chrome.businessWidth === "lg" ? "lg:w-[75%] w-full" :
+                chrome.businessWidth === "md" ? "lg:w-[66%] w-full" :
+                    chrome.businessWidth === "sm" ? "lg:w-[50%] w-full" : "lg:w-[83%] w-full";
+
+    console.log("chrome en /src/app/b/[slug]/listing/[type]/[id]/page.tsx: ", chrome);
 
     return (
-        <main
-            className="min-h-dvh text-slate-100 relative pb-6"
-            style={{
-                backgroundColor: chrome.businessBgColor,
-                width: widthPCent,
-            }}
+        <div
+            className="flex flex-row items-center justify-center w-full"
+            style={{ backgroundColor: chrome.businessSurfaceBgColor }}
         >
-            {/* ✅ BusinessTabs (barra superior del negocio) */}
-            <div className="bg-black sticky top-0 z-50 w-full">
-                <BusinessTabs
-                    slug={chrome.businessSlug}
-                    nav={chrome.nav}
-                    pages={chrome.pages}
-                    activeTab="__listing__" // ✅ a propósito: no matchea nada
-                />
-            </div>
+            <main
+                className={cn(widthPCent, "min-h-dvh text-slate-100 relative pb-6")}
 
-            {(chrome.businessName || chrome.businessHeadline || chrome.businessCategory) && (
-                <BusinessSiteHeader
-                    name={chrome.businessName}
-                    headline={chrome.businessHeadline}
-                    category={chrome.businessCategory}
-                    bgImageUrl={chrome.headerBgImageUrl}
-                    headerHeight={chrome.businessHeaderHeight}
-                    headerBgColor={chrome.businessHeaderBgColor}
 
-                    titleColor={chrome.businessTitleColor}
-                    titleTypography={chrome.businessTitleTypography}
-                    titleTextSize={chrome.businessTitleTextSize}
-                    titleAlignText={chrome.businessTitleAlignText}
-
-                    headlineColor={chrome.businessHeadlineColor}
-                    headlineTypography={chrome.businessHeadlineTypography}
-                    headlineTextSize={chrome.businessHeadlineTextSize}
-                    headlineAlignText={chrome.businessHeadlineAlignText}
-
-                    categoryColor={chrome.businessCategoryColor}
-                    categoryTypography={chrome.businessCategoryTypography}
-                    categoryTextSize={chrome.businessCategoryTextSize}
-                    categoryAlignText={chrome.businessCategoryAlignText}
-                />
-            )}
-
-            <div className="relative mx-auto max-w-5xl px-4 py-6 flex flex-col">
-                <div className="flex items-center justify-between gap-3">
-                    <Link
-                        href={backHref}
-                        className="px-3 py-2 text-sm rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-800"
-                    >
-                        Volver
-                    </Link>
-
-                    <div className="text-[11px] text-slate-500">
-                        {type} · #{listingId}
-                    </div>
+                style={{
+                    backgroundColor: chrome.businessBgColor,
+                }}
+            >
+                {/* ✅ BusinessTabs (barra superior del negocio) */}
+                <div className="bg-black sticky top-0 z-50 w-full">
+                    <BusinessTabs
+                        slug={chrome.businessSlug}
+                        nav={chrome.nav}
+                        pages={chrome.pages}
+                        activeTab="__listing__" // ✅ a propósito: no matchea nada
+                    />
                 </div>
 
-                <div className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    {/* Gallery */}
-                    <div className="flex flex-row items-center justify-center rounded-2xl border border-slate-800 bg-slate-950 p-3">
-                        {Object.keys(mediaMap).length > 0 ? (
-                            <div className="max-w-[320px] w-full h-auto">
-                                <ImagesSwiperSites mediaMap={mediaMap} />
-                            </div>
-                        ) : (
-                            <div className="h-[340px] flex items-center justify-center text-sm text-slate-500">
-                                Sin imágenes
-                            </div>
-                        )}
+                {(chrome.businessName || chrome.businessHeadline || chrome.businessCategory) && (
+                    <BusinessSiteHeader
+                        name={chrome.businessName}
+                        headline={chrome.businessHeadline}
+                        category={chrome.businessCategory}
+                        bgImageUrl={chrome.headerBgImageUrl}
+
+                        headerHeight={chrome.businessHeaderHeight}
+                        headerBgColor={chrome.businessHeaderBgColor}
+
+                        headerBgSize={chrome.businessHeaderBgSize}
+                        headerBgPosition={chrome.businessHeaderBgPosition}
+
+                        titleColor={chrome.businessTitleColor}
+                        titleTypography={chrome.businessTitleTypography}
+                        titleTextSize={chrome.businessTitleTextSize}
+                        titleAlignText={chrome.businessTitleAlignText}
+
+                        headlineColor={chrome.businessHeadlineColor}
+                        headlineTypography={chrome.businessHeadlineTypography}
+                        headlineTextSize={chrome.businessHeadlineTextSize}
+                        headlineAlignText={chrome.businessHeadlineAlignText}
+
+                        categoryColor={chrome.businessCategoryColor}
+                        categoryTypography={chrome.businessCategoryTypography}
+                        categoryTextSize={chrome.businessCategoryTextSize}
+                        categoryAlignText={chrome.businessCategoryAlignText}
+                    />
+                )}
+
+                <div className="relative mx-auto max-w-5xl px-4 py-6 flex flex-col">
+                    <div className="flex items-center justify-between gap-3">
+                        <BackToStudioBusiness label="Volver" />
+
+                        <div className="text-[11px] text-slate-500">
+                            {type} · #{listingId}
+                        </div>
                     </div>
 
-                    {/* Info */}
-                    <div className="rounded-2xl border border-slate-800 bg-slate-950 p-5">
-                        <div className="text-xl font-semibold">{title}</div>
-
-                        <div className="mt-4 grid gap-2 text-sm">
-                            {listing.price != null && (
-                                <div className="flex items-center justify-between">
-                                    <span className="text-slate-400">Precio</span>
-                                    <span className="text-slate-100">
-                                        {String(listing.currency ?? "ARS")} {String(listing.price)}
-                                    </span>
+                    <div className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        {/* Gallery */}
+                        <div className="flex flex-row items-center justify-center rounded-2xl border border-slate-800 bg-slate-950 p-3">
+                            {Object.keys(mediaMap).length > 0 ? (
+                                <div className="max-w-[320px] w-full h-auto">
+                                    <ImagesSwiperSites mediaMap={mediaMap} />
                                 </div>
-                            )}
-
-                            {!!safeStr(listing.clarifications, 5000) && (
-                                <div className="mt-3 rounded-xl border border-slate-800 bg-slate-900 p-3">
-                                    <div className="text-xs text-slate-400">Aclaraciones</div>
-                                    <div className="mt-1 text-sm text-slate-200 whitespace-pre-wrap">
-                                        {String(listing.clarifications)}
-                                    </div>
+                            ) : (
+                                <div className="h-[340px] flex items-center justify-center text-sm text-slate-500">
+                                    Sin imágenes
                                 </div>
                             )}
                         </div>
 
-                        {/* futuras secciones: reviews, variantes, etc */}
-                    </div>
-                </div>
+                        {/* Info */}
+                        <div className="rounded-2xl border border-slate-800 bg-slate-950 p-5">
+                            <div className="text-xl font-semibold">{title}</div>
 
-                {!!safeStr(listing.description, 5000) && (
-                    <div className="mt-3 rounded-xl border border-slate-800 bg-slate-950 p-3 whitespace-pre-wrap flex flex-col gap-4">
-                        <div className="text-slate-400 text-sm">Descripción</div>
-                        {String(listing.description)}
+                            <div className="mt-4 grid gap-2 text-sm">
+                                {listing.price != null && (
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-slate-400">Precio</span>
+                                        <span className="text-slate-100">
+                                            {String(listing.currency ?? "ARS")} {String(listing.price)}
+                                        </span>
+                                    </div>
+                                )}
+
+                                {!!safeStr(listing.clarifications, 5000) && (
+                                    <div className="mt-3 rounded-xl border border-slate-800 bg-slate-900 p-3">
+                                        <div className="text-xs text-slate-400">Aclaraciones</div>
+                                        <div className="mt-1 text-sm text-slate-200 whitespace-pre-wrap">
+                                            {String(listing.clarifications)}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* futuras secciones: reviews, variantes, etc */}
+                        </div>
                     </div>
-                )}
-            </div>
-        </main>
+
+                    {!!safeStr(listing.description, 5000) && (
+                        <div className="mt-3 rounded-xl border border-slate-800 bg-slate-950 p-3 whitespace-pre-wrap flex flex-col gap-4">
+                            <div className="text-slate-400 text-sm">Descripción</div>
+                            {String(listing.description)}
+                        </div>
+                    )}
+                </div>
+            </main>
+        </div>
     );
 }
 

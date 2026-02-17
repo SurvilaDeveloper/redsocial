@@ -10,6 +10,9 @@ export function BusinessSiteHeader({
     headerHeight,
     headerBgColor,
 
+    headerBgSize,
+    headerBgPosition,
+
     titleColor,
     titleTypography,
     titleTextSize,
@@ -32,6 +35,9 @@ export function BusinessSiteHeader({
 
     headerHeight?: string;
     headerBgColor?: string;
+
+    headerBgSize?: string;
+    headerBgPosition?: string;
 
     titleColor?: string;
     titleTypography?: string;
@@ -58,6 +64,9 @@ export function BusinessSiteHeader({
     const headlineSize = String(headlineTextSize) + "px";
     const categorySize = String(categoryTextSize) + "px";
 
+    const headerBgSizeFallback = headerBgSize ? headerBgSize : "contain";
+    const headerBgPositionFallback = headerBgPosition ? headerBgPosition : "left";
+
     return (
         <div id="c" className="mx-auto mb-4 w-full">
             <div id="d" className="flex flex-col">
@@ -68,9 +77,9 @@ export function BusinessSiteHeader({
                         ...(bgImageUrl
                             ? {
                                 backgroundImage: `url(${bgImageUrl})`,
-                                backgroundSize: "contain",
+                                backgroundSize: headerBgSizeFallback,
                                 backgroundRepeat: "no-repeat",
-                                backgroundPosition: "left",
+                                backgroundPosition: headerBgPositionFallback,
                             }
                             : {}),
                         height: headerHeightPx

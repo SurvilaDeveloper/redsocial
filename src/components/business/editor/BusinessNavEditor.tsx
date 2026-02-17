@@ -1,4 +1,3 @@
-// src/components/business/editor/BusinessNavEditor.tsx
 "use client";
 
 import React, { useMemo, useState, useTransition } from "react";
@@ -10,7 +9,10 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 
+import BackToStudioBusiness from "@/components/custom/BackToStudioBusiness";
+
 type PageLite = { id: number; slug: string; title: string };
+type UiNavItem = Omit<BusinessNavItem, "order"> & { order: number; _key: string };
 
 type Props = {
     businessId: number;
@@ -20,53 +22,52 @@ type Props = {
     pages: PageLite[];
 };
 
-const KIND_LABEL: Record<string, string> = {
-    home: "Home",
-    products: "Productos",
-    services: "Servicios",
-    wall: "Novedades",
-    contact: "Contacto",
+const KIND_LABEL: Record<BusinessNavItem["kind"], string> = {
+    home: "Inicio (Home)",
     page: "Página",
+    contact: "Contacto",
 };
 
-function isPageItem(item: BusinessNavItem): item is BusinessNavItem & { kind: "page"; slug?: string } {
-    return (item as any)?.kind === "page";
+function isPageItem(item: BusinessNavItem): item is Extract<BusinessNavItem, { kind: "page" }> {
+    return item.kind === "page";
 }
 
-function defaultTitleForKind(kind: string) {
-    switch (kind) {
-        case "home":
-            return "Inicio";
-        case "products":
+function makeKey() {
+    return typeof crypto !== "undefined" && "randomUUID" in crypto
+        ? crypto.randomUUID()
+        : `k_${Math.random().toString(16).slice(2)}_${Date.now()}`;
+}
+
+// En el editor, el orden ES el índice del array.
+function normalizeForEditor(list: BusinessNavItem[]): UiNavItem[] {
+    const base = Array.isArray(list) ? list : [];
+    return base
+        .slice()
+        .sort((a, b) => (Number(a.order) || 0) - (Number(b.order) || 0))
+        .map((it, idx) => ({
+            ...it,
+            order: idx,
+            _key: makeKey(),
+        }));
+}
+
+function defaultTitleFor(item: Pick<BusinessNavItem, "kind" | "slug">) {
+    if (item.kind === "home") return "Inicio";
+    if (item.kind === "contact") return "Contacto";
+    switch (item.slug) {
+        case "productos":
             return "Productos";
-        case "services":
-            return "Servicios";
-        case "wall":
+        case "novedades":
             return "Novedades";
-        case "contact":
-            return "Contacto";
-        case "page":
+        case "sobre-nosotros":
             return "Sobre nosotros";
         default:
-            return "Pestaña";
+            return "Página";
     }
 }
 
-function clampOrder(items: BusinessNavItem[]) {
-    return items
-        .slice()
-        .sort((a, b) => a.order - b.order)
-        .map((it, idx) => ({ ...it, order: idx }));
-}
-
-export function BusinessNavEditor({
-    businessId,
-    businessSlug,
-    businessName,
-    initialNav,
-    pages,
-}: Props) {
-    const [items, setItems] = useState<BusinessNavItem[]>(() => clampOrder(initialNav ?? []));
+export function BusinessNavEditor({ businessId, businessSlug, businessName, initialNav, pages }: Props) {
+    const [items, setItems] = useState<UiNavItem[]>(() => normalizeForEditor(initialNav ?? []));
     const [isPending, startTransition] = useTransition();
     const [status, setStatus] = useState<null | { ok: boolean; msg: string }>(null);
 
@@ -76,72 +77,100 @@ export function BusinessNavEditor({
         return m;
     }, [pages]);
 
-    const sorted = useMemo(() => items.slice().sort((a, b) => a.order - b.order), [items]);
-
-    const backHref = useMemo(() => `/studio/business/${businessId}`, [businessId]);
+    //const backHref = useMemo(() => `/studio/business/${businessId}`, [businessId]);
     const publicHref = useMemo(() => `/b/${businessSlug}`, [businessSlug]);
 
-    function updateAt(orderIndex: number, patch: Partial<BusinessNavItem>) {
+    function reindex(next: UiNavItem[]) {
+        return next.map((it, idx) => ({ ...it, order: idx }));
+    }
+
+    function updateAt(index: number, patch: Partial<BusinessNavItem>) {
         setItems((prev) => {
-            const next = prev.slice().sort((a, b) => a.order - b.order);
-            const curr = next[orderIndex];
+            const next = prev.slice();
+            const curr = next[index];
             if (!curr) return prev;
-
-            next[orderIndex] = { ...(curr as any), ...(patch as any) };
-            return clampOrder(next);
+            next[index] = { ...curr, ...(patch as any) };
+            return reindex(next);
         });
     }
 
-    function removeAt(orderIndex: number) {
+    function removeAt(index: number) {
+        setItems((prev) => reindex(prev.slice(0, index).concat(prev.slice(index + 1))));
+    }
+
+    function move(index: number, dir: -1 | 1) {
         setItems((prev) => {
-            const next = prev.slice().sort((a, b) => a.order - b.order);
-            next.splice(orderIndex, 1);
-            return clampOrder(next);
+            const j = index + dir;
+            if (j < 0 || j >= prev.length) return prev;
+
+            const next = prev.slice();
+            const tmp = next[index];
+            next[index] = next[j];
+            next[j] = tmp;
+
+            return reindex(next);
         });
     }
 
-    function addItem(kind: string) {
+    function addItem(kind: BusinessNavItem["kind"]) {
         setItems((prev) => {
-            const next = prev.slice().sort((a, b) => a.order - b.order);
+            const next = prev.slice();
             const order = next.length;
 
-            if (kind === "page") {
-                const first = pages[0];
+            if (kind === "home") {
                 next.push({
-                    kind: "page",
-                    title: defaultTitleForKind("page"),
-                    order,
+                    _key: makeKey(),
+                    kind: "home",
+                    slug: "home",
+                    title: "Inicio",
                     visible: true,
-                    ...(first ? { slug: first.slug } : {}),
-                } as any);
-            } else {
-                next.push({
-                    kind: kind as any,
-                    title: defaultTitleForKind(kind),
                     order,
-                    visible: true,
-                } as any);
+                });
+                return reindex(next);
             }
 
-            return clampOrder(next);
-        });
-    }
+            if (kind === "contact") {
+                next.push({
+                    _key: makeKey(),
+                    kind: "contact",
+                    slug: "contacto",
+                    title: "Contacto",
+                    visible: true,
+                    order,
+                });
+                return reindex(next);
+            }
 
-    function move(orderIndex: number, dir: -1 | 1) {
-        setItems((prev) => {
-            const next = prev.slice().sort((a, b) => a.order - b.order);
-            const j = orderIndex + dir;
-            if (j < 0 || j >= next.length) return prev;
-            const tmp = next[orderIndex];
-            next[orderIndex] = next[j];
-            next[j] = tmp;
-            return clampOrder(next);
+            // page
+            const first = pages[0];
+            if (!first) return prev;
+
+            next.push({
+                _key: makeKey(),
+                kind: "page",
+                slug: first.slug,
+                title: first.title || defaultTitleFor({ kind: "page", slug: first.slug }),
+                visible: true,
+                order,
+            });
+
+            return reindex(next);
         });
     }
 
     async function save() {
         setStatus(null);
-        const payload = clampOrder(items);
+
+        // Payload: orden sale del índice
+        const payload: BusinessNavItem[] = items.map(({ _key, ...it }, idx) => ({
+            ...(it as any),
+            order: idx,
+        }));
+
+        const hasHome = payload.some((x) => x.kind === "home" && x.slug === "home");
+        const hasContact = payload.some((x) => x.kind === "contact" && x.slug === "contacto");
+        if (!hasHome) return setStatus({ ok: false, msg: "Falta la pestaña Inicio (home)." });
+        if (!hasContact) return setStatus({ ok: false, msg: "Falta la pestaña Contacto." });
 
         startTransition(async () => {
             try {
@@ -176,15 +205,11 @@ export function BusinessNavEditor({
                             Negocio: <span className="text-slate-200">{businessName}</span>
                         </div>
 
+
+
                         <div className="mt-3 flex flex-wrap items-center gap-2">
-                            <Link
-                                href={backHref}
-                                className="inline-flex items-center px-3 py-2 text-sm rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-800"
-                                title="Volver al panel del negocio"
-                            >
-                                <ArrowLeft size={16} className="mr-2 opacity-80" />
-                                Volver
-                            </Link>
+                            <BackToStudioBusiness label="Volver" />
+
 
                             <Button
                                 onClick={save}
@@ -227,30 +252,17 @@ export function BusinessNavEditor({
 
             <main className="mx-auto w-full max-w-6xl px-3 py-6">
                 <Card className="bg-slate-950 border-slate-800 p-4 rounded-2xl">
-                    <div className="flex items-center justify-between gap-3 mb-4">
-                        <div>
-                            <div className="font-medium">Pestañas</div>
-                            <div className="text-sm text-slate-400">
-                                El texto de la pestaña se edita en “Título”. Para “Página”, elegís qué page abre,
-                                pero el título puede ser distinto.
-                            </div>
-                        </div>
-                    </div>
-
                     <div className="grid gap-2">
-                        {sorted.map((item, idx) => {
-                            const kind = (item as any).kind as string;
-                            const visible = Boolean((item as any).visible);
-                            const title = String((item as any).title ?? "");
+                        {items.map((item, idx) => {
+                            const kind = item.kind;
+                            const visible = Boolean(item.visible);
+                            const title = String(item.title ?? "");
 
-                            const pageSlug = isPageItem(item) ? (item as any).slug : undefined;
+                            const pageSlug = isPageItem(item as any) ? (item as any).slug : undefined;
                             const page = pageSlug ? pagesBySlug.get(pageSlug) : undefined;
 
                             return (
-                                <div
-                                    key={`${kind}-${item.order}-${idx}`}
-                                    className="rounded-xl border border-slate-800 bg-slate-900/30 p-3"
-                                >
+                                <div key={item._key} className="rounded-xl border border-slate-800 bg-slate-900/30 p-3">
                                     <div className="flex items-start justify-between gap-3">
                                         <div className="min-w-0 flex-1 grid grid-cols-1 md:grid-cols-3 gap-2">
                                             <label className="text-xs text-slate-400">
@@ -259,33 +271,35 @@ export function BusinessNavEditor({
                                                     className="mt-1 w-full rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-100"
                                                     value={kind}
                                                     onChange={(e) => {
-                                                        const nextKind = e.target.value;
+                                                        const nextKind = e.target.value as BusinessNavItem["kind"];
 
-                                                        if (nextKind === "page") {
-                                                            const first = pages[0];
-                                                            updateAt(idx, {
-                                                                kind: "page" as any,
-                                                                title: title?.trim()
-                                                                    ? title
-                                                                    : defaultTitleForKind("page"),
-                                                                ...(first ? ({ slug: first.slug } as any) : {}),
-                                                            } as any);
-                                                        } else {
-                                                            updateAt(idx, {
-                                                                kind: nextKind as any,
-                                                                title: title?.trim()
-                                                                    ? title
-                                                                    : defaultTitleForKind(nextKind),
-                                                            } as any);
+                                                        if (nextKind === "home") {
+                                                            updateAt(idx, { kind: "home", slug: "home", title: title.trim() ? title : "Inicio" } as any);
+                                                            return;
                                                         }
+                                                        if (nextKind === "contact") {
+                                                            updateAt(idx, { kind: "contact", slug: "contacto", title: title.trim() ? title : "Contacto" } as any);
+                                                            return;
+                                                        }
+
+                                                        // page
+                                                        const fallbackSlug = pages[0]?.slug;
+                                                        if (!fallbackSlug) {
+                                                            setStatus({ ok: false, msg: "No hay páginas para asignar. Creá una página primero." });
+                                                            return;
+                                                        }
+
+                                                        const nextPage = pagesBySlug.get(fallbackSlug);
+                                                        updateAt(idx, {
+                                                            kind: "page",
+                                                            slug: fallbackSlug,
+                                                            title: title.trim() ? title : (nextPage?.title || defaultTitleFor({ kind: "page", slug: fallbackSlug })),
+                                                        } as any);
                                                     }}
                                                 >
                                                     <option value="home">{KIND_LABEL.home}</option>
-                                                    <option value="products">{KIND_LABEL.products}</option>
-                                                    <option value="services">{KIND_LABEL.services}</option>
-                                                    <option value="wall">{KIND_LABEL.wall}</option>
-                                                    <option value="contact">{KIND_LABEL.contact}</option>
                                                     <option value="page">{KIND_LABEL.page}</option>
+                                                    <option value="contact">{KIND_LABEL.contact}</option>
                                                 </select>
                                             </label>
 
@@ -295,7 +309,7 @@ export function BusinessNavEditor({
                                                     className="mt-1 w-full rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-100"
                                                     value={title}
                                                     onChange={(e) => updateAt(idx, { title: e.target.value } as any)}
-                                                    placeholder={defaultTitleForKind(kind)}
+                                                    placeholder={defaultTitleFor(item)}
                                                 />
                                             </label>
 
@@ -305,13 +319,9 @@ export function BusinessNavEditor({
                                                     <input
                                                         type="checkbox"
                                                         checked={visible}
-                                                        onChange={(e) =>
-                                                            updateAt(idx, { visible: e.target.checked } as any)
-                                                        }
+                                                        onChange={(e) => updateAt(idx, { visible: e.target.checked } as any)}
                                                     />
-                                                    <span className="text-sm text-slate-200">
-                                                        {visible ? "Sí" : "No"}
-                                                    </span>
+                                                    <span className="text-sm text-slate-200">{visible ? "Sí" : "No"}</span>
                                                 </div>
                                             </label>
 
@@ -323,25 +333,11 @@ export function BusinessNavEditor({
                                                             className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-100"
                                                             value={pageSlug ?? ""}
                                                             onChange={(e) => {
-                                                                const nextSlug = e.target.value || undefined;
-
-                                                                const shouldAuto =
-                                                                    !title.trim() ||
-                                                                    title.trim().toLowerCase() ===
-                                                                    defaultTitleForKind("page").toLowerCase() ||
-                                                                    (page?.title &&
-                                                                        title.trim().toLowerCase() ===
-                                                                        page.title.trim().toLowerCase());
-
-                                                                const nextPage = nextSlug
-                                                                    ? pagesBySlug.get(nextSlug)
-                                                                    : undefined;
-
+                                                                const nextSlug = e.target.value;
+                                                                const nextPage = pagesBySlug.get(nextSlug);
                                                                 updateAt(idx, {
-                                                                    ...(nextSlug ? ({ slug: nextSlug } as any) : {}),
-                                                                    ...(shouldAuto && nextPage?.title
-                                                                        ? ({ title: nextPage.title } as any)
-                                                                        : {}),
+                                                                    slug: nextSlug as any,
+                                                                    ...(nextPage?.title ? ({ title: nextPage.title } as any) : {}),
                                                                 } as any);
                                                             }}
                                                         >
@@ -364,8 +360,7 @@ export function BusinessNavEditor({
                                                                 </span>
                                                             </div>
                                                             <div className="truncate">
-                                                                Título de pestaña:{" "}
-                                                                <span className="text-slate-200">{title || "—"}</span>
+                                                                Título de pestaña: <span className="text-slate-200">{title || "—"}</span>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -411,29 +406,9 @@ export function BusinessNavEditor({
                             onClick={() => addItem("home")}
                             className="px-3 py-2 text-sm rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-800"
                         >
-                            + Home
+                            + Inicio
                         </button>
-                        <button
-                            type="button"
-                            onClick={() => addItem("products")}
-                            className="px-3 py-2 text-sm rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-800"
-                        >
-                            + Productos
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => addItem("services")}
-                            className="px-3 py-2 text-sm rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-800"
-                        >
-                            + Servicios
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => addItem("wall")}
-                            className="px-3 py-2 text-sm rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-800"
-                        >
-                            + Novedades
-                        </button>
+
                         <button
                             type="button"
                             onClick={() => addItem("contact")}
@@ -441,12 +416,12 @@ export function BusinessNavEditor({
                         >
                             + Contacto
                         </button>
+
                         <button
                             type="button"
                             onClick={() => addItem("page")}
                             className="px-3 py-2 text-sm rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-800"
                             disabled={pages.length === 0}
-                            title={pages.length === 0 ? "No hay páginas creadas todavía" : "Agregar pestaña a una página"}
                         >
                             + Página
                         </button>

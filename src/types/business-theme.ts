@@ -1,337 +1,683 @@
 // src/types/business-theme.ts
 
-export type ThemePresetId = "classic" //| "modern" | "bold" | "minimal";
+export const DEFAULT_PRESETS = ["classic", "modern", "bold", "minimal"] as const;
+export type DefaultThemePresetId = (typeof DEFAULT_PRESETS)[number];
+
+// ✅ Incluye userPreset para el selector (activo), aunque no sea hardcodeado
+export type ThemePresetId = DefaultThemePresetId | "userPreset";
 
 export type BusinessThemeConfig = {
     preset: ThemePresetId;
 
-    main: {
-        bg: string;
-        surface: string;
-        width: string;
-    };
     header: {
-        bgcr: string; // header background color
-        tcr: string;   //title color
-        tty: string;   //title typography
-        tse: string;   //title typography
-        tatt: string;  //title align text
-        hcr: string;   //headline color
-        hty: string;   //headline typography
-        htse: string;  //headline text size
-        hatt: string;  //headline align text
-        ccr: string;   //category color
-        cty: string;   //category typography
-        ctse: string;  //category text size
-        catt: string;  //category align text
-        bbg: string;   //button background
-        bbhr: string;  //button background hover
-        bcr: string;   //button color
-        bty: string;   //button typography
-        btse: string;  //button text size
-        bbr: string;   //button border
-        bbcr: string;  //button border color
-        brs: string;   //button radius
-        ban: string;   //button align
-        bgp: string;   //button gap
-        bbae: string;  //button background active
-        bcae: string;  //button color active
-        bbcae: string; //button border color active
+        bbg: string;   // button background
+        bbhr: string;  // button background hover
+        bcr: string;   // button color
+        bty: string;   // button typography
+        btse: string;  // button text size
+        bbr: string;   // button border
+        bbcr: string;  // button border color
+        brs: string;   // button radius
+        ban: string;   // button align
+        bgp: string;   // button gap
+
+        bbae: string;  // button background active
+        bcae: string;  // button color active
+        bbcae: string; // button border color active
     };
+
     components: {
         button: { variant: "solid" | "soft" | "outline" };
         card: { shadow: "none" | "sm" | "md" };
     };
+
     hero: {
-        bgcr: string;  //hero bacground color
-        br: string;    //hero border
-        bcr: string;   //hero border color
-        rs: string;    //hero radius
-        tcr: string;   //hero title color
-        tty: string;   //hero title typography
-        ttse: string;  //hero title text size
-        tatt: string;  //hero title align text
-        scr: string;   //hero subtitle color
-        sty: string;   //hero subtitle typography
-        stse: string;  //hero subtitle text size
-        satt: string;  //hero subtitle align text
+        bgcr: string;
+        br: string;
+        bcr: string;
+        rs: string;
+        tcr: string;
+        tty: string;
+        ttse: string;
+        tatt: string;
+        scr: string;
+        sty: string;
+        stse: string;
+        satt: string;
     };
+
     text: {
-        bgcr: string;  //text background color
-        br: string;    //text border
-        bcr: string;   //text border color
-        rs: string;    //text radius
-        tcr: string;   //text title color
-        tty: string;   //text title typography
-        ttsc: string;  //text title text size
-        tat: string;   //text title align text
-        bycr: string;  //text body color
-        byty: string;  //text body typography
-        bytse: string; //text body text size
-        byatt: string; //text body align text
+        bgcr: string;
+        br: string;
+        bcr: string;
+        rs: string;
+        tcr: string;
+        tty: string;
+        ttsc: string;
+        tat: string;
+        bycr: string;
+        byty: string;
+        bytse: string;
+        byatt: string;
     };
+
     features: {
-        bgcr: string;  //features bacground color
-        br: string;    //features border
-        bcr: string;   //features border color
-        rs: string;    //features radius
-        //col: string;   //features columns
-        tcr: string;   //features title color
-        tty: string;   //features title typography
-        ttse: string;  //features title text size
-        tatt: string;  //features title align text
-        ibgcr: string; //features items background color
-        ibr: string;   //features items border
-        ibcr: string;  //features items border color
-        irs: string;   //features items radius
-        itcr: string;  //features items title color
-        itty: string;  //features items title typography
-        ittse: string; //features items title text size
-        itatt: string; //features items title align text
-        itxcr: string; //features text color
-        itxty: string; //features text typography
-        itxtse: string;//features text text size
-        itxatt: string;//features text align text
+        bgcr: string;
+        br: string;
+        bcr: string;
+        rs: string;
+
+        tcr: string;
+        tty: string;
+        ttse: string;
+        tatt: string;
+
+        ibgcr: string;
+        ibr: string;
+        ibcr: string;
+        irs: string;
+
+        itcr: string;
+        itty: string;
+        ittse: string;
+        itatt: string;
+
+        itxcr: string;
+        itxty: string;
+        itxtse: string;
+        itxatt: string;
     };
+
     gallery: {
-        bgcr: string;  //gallery background color
-        br: string;    //gallery border
-        bcr: string;   //gallery border color
-        rs: string;    //gallery radius
-        tcr: string;   //gallery title color
-        tty: string;   //gallery title typography
-        ttse: string;  //gallery title text size
-        tatt: string;  //gallery title align text
-        cbcr: string;  //gallery card background color
-        crs: string;   //gallery card radius
+        bgcr: string;
+        br: string;
+        bcr: string;
+        rs: string;
+        tcr: string;
+        tty: string;
+        ttse: string;
+        tatt: string;
+        cbcr: string;
+        crs: string;
     };
+
     cta: {
-        bgcr: string; //cta background color
-        br: string; //cta border
-        bcr: string; //cta border color
-        rs: string; //cta radius
-        ticr: string; //cta title color
-        tity: string; //cta title typography
-        titse: string; //cta title text size
-        tiatt: string; // cta title align text
-        tcr: string; //cta text color
-        tty: string; //cta text typography
-        ttse: string; //cta text size
-        tatt: string; //cta align text
+        bgcr: string;
+        br: string;
+        bcr: string;
+        rs: string;
 
-        btbdcr: string; //cta button background color
-        btbdcrhv: string; // cta button background color hover
-        btbr: string; // cta button border
-        btbrcr: string; // cta button border color
-        btrs: string; // cta button radius
+        ticr: string;
+        tity: string;
+        titse: string;
+        tiatt: string;
 
-        btcr: string; //cta button text color
-        btty: string; //cta button text typography
-        bttse: string; //cta button text text size
-        btan: string; // cta button align
+        tcr: string;
+        tty: string;
+        ttse: string;
+        tatt: string;
+
+        btbdcr: string;
+        btbdcrhv: string;
+        btbr: string;
+        btbrcr: string;
+        btrs: string;
+
+        btcr: string;
+        btty: string;
+        bttse: string;
+        btan: string;
     };
-    productive: {
-        bgcr: string; //productive background color
-        br: string; //productive border
-        bcr: string; //productive border color
-        rs: string; //productive radius
-        tcr: string; //productive title color
-        tty: string; //productive title typography
-        yyse: string; //productive title text size
-        tatt: string; //productive title align text
-        itcr: string; //productive item title color
-        itty: string; //productive item title typography
-        itse: string; //productive item title text size
-        itatt: string; //productive item align text
-        itxcr: string; //productive item text color
-        itxty: string; //productive item text typography
-        itxtse: string; //productive item text text size
-        itxatt: string; //productive item text align text
-    }
 
+    productive: {
+        bgcr: string;
+        br: string;
+        bcr: string;
+        rs: string;
+
+        tcr: string;
+        tty: string;
+        yyse: string;
+        tatt: string;
+
+        itcr: string;
+        itty: string;
+        itse: string;
+        itatt: string;
+
+        itxcr: string;
+        itxty: string;
+        itxtse: string;
+        itxatt: string;
+    };
 };
 
-export const THEME_PRESETS: Record<ThemePresetId, BusinessThemeConfig> = {
+export const THEME_PRESETS: Record<DefaultThemePresetId, BusinessThemeConfig> = {
     classic: {
         preset: "classic",
-        main: {
-            bg: "#222222",
-            surface: "#333333",
-            width: "80%",
-        },
         header: {
-            bgcr: "#111111",  // header bachground color
-            tcr: "#dddddd",   //title color
-            tty: "system",   //title typography
-            tse: "24px",   //title text size
-            tatt: "start",  //title align text
-            hcr: "#dddddd",   //headline color
-            hty: "system",   //headline typography
-            htse: "22px",  //headline text size
-            hatt: "start",  //headline align text
-            ccr: "#dddddd",   //category color
-            cty: "system",   //category typography
-            ctse: "20px",  //category text size
-            catt: "start",  //category align text
-            bbg: "#444444",   //button background
-            bbhr: "#555555",  //button background hover
-            bcr: "#dddddd",   //button color
-            bty: "system",   //button typography
-            btse: "20px",  //button text size
-            bbr: "1px",   //button border
-            bbcr: "#dddddd",  //button border color
-            brs: "8px",   //button radius
-            ban: "start",  //button align
-            bgp: "4px",   //button gap
-            bbae: "#444444",  //button background active
-            bcae: "#ffffff",  //button color active
-            bbcae: "#555555", //button border color active
+            bbg: "#444444",
+            bbhr: "#555555",
+            bcr: "#dddddd",
+            bty: "system",
+            btse: "20px",
+            bbr: "1px",
+            bbcr: "#dddddd",
+            brs: "8px",
+            ban: "start",
+            bgp: "4px",
+            bbae: "#444444",
+            bcae: "#ffffff",
+            bbcae: "#555555",
         },
         components: {
             button: { variant: "solid" },
             card: { shadow: "none" },
         },
         hero: {
-            bgcr: "#111111",  //hero bacground color
-            br: "1px",    //hero border
-            bcr: "#dddddd",   //hero border color
-            rs: "8px",    //hero radius
-            tcr: "#dddddd",   //hero title color
-            tty: "system",   //hero title typography
-            ttse: "20px",  //hero title text size
-            tatt: "start",  //hero title align text
-            scr: "#dddddd",   //hero subtitle color
-            sty: "system",   //hero subtitle typography
-            stse: "18px",  //hero subtitle text size
-            satt: "start",  //hero subtitle align text
+            bgcr: "#111111",
+            br: "1px",
+            bcr: "#dddddd",
+            rs: "8px",
+            tcr: "#dddddd",
+            tty: "system",
+            ttse: "20px",
+            tatt: "start",
+            scr: "#dddddd",
+            sty: "system",
+            stse: "18px",
+            satt: "start",
         },
         text: {
-            bgcr: "#111111",  //text background color
-            br: "1px",    //text border
-            bcr: "#dddddd",   //text border color
-            rs: "8px",    //text radius
-            tcr: "#dddddd",   //text title color
-            tty: "system",   //text title typography
-            ttsc: "20px",  //text title text size
-            tat: "start",   //text title align text
-            bycr: "#dddddd",  //text body color
-            byty: "system",  //text body typography
-            bytse: "18px", //text body text size
-            byatt: "start", //text body align text
+            bgcr: "#111111",
+            br: "1px",
+            bcr: "#dddddd",
+            rs: "8px",
+            tcr: "#dddddd",
+            tty: "system",
+            ttsc: "20px",
+            tat: "start",
+            bycr: "#dddddd",
+            byty: "system",
+            bytse: "18px",
+            byatt: "start",
         },
         features: {
-            bgcr: "#111111",  //features bacground color
-            br: "1px",    //features border
-            bcr: "#dddddd",   //features border color
-            rs: "8px",    //features radius
-            //col: "2",   //features columns
-            tcr: "#dddddd",   //features title color
-            tty: "system",   //features title typography
-            ttse: "20px",  //features title text size
-            tatt: "start",  //features title align text
-            ibgcr: "#222222", //features items background color
-            ibr: "1px",   //features items border
-            ibcr: "#dddddd",  //features items border color
-            irs: "6px",   //features items radius
-            itcr: "#dddddd",  //features items title color
-            itty: "system",  //features items title typography
-            ittse: "18px", //features items title text size
-            itatt: "start", //features items title align text
-            itxcr: "#dddddd", //features text color
-            itxty: "system", //features text typography
-            itxtse: "16px", //features text text size
-            itxatt: "start",//features text align text
+            bgcr: "#111111",
+            br: "1px",
+            bcr: "#dddddd",
+            rs: "8px",
+            tcr: "#dddddd",
+            tty: "system",
+            ttse: "20px",
+            tatt: "start",
+            ibgcr: "#222222",
+            ibr: "1px",
+            ibcr: "#dddddd",
+            irs: "6px",
+            itcr: "#dddddd",
+            itty: "system",
+            ittse: "18px",
+            itatt: "start",
+            itxcr: "#dddddd",
+            itxty: "system",
+            itxtse: "16px",
+            itxatt: "start",
         },
         gallery: {
-            bgcr: "#111111",  //gallery background color
-            br: "1px",    //gallery border
-            bcr: "#dddddd",   //gallery border color
-            rs: "8px",    //gallery radius
-            tcr: "#dddddd",   //gallery title color
-            tty: "system",   //gallery title typography
-            ttse: "16px",  //gallery title text size
-            tatt: "start",  //gallery title align text
-            cbcr: "#000000",  //gallery card background color
-            crs: "6px",   //gallery card radius
+            bgcr: "#111111",
+            br: "1px",
+            bcr: "#dddddd",
+            rs: "8px",
+            tcr: "#dddddd",
+            tty: "system",
+            ttse: "16px",
+            tatt: "start",
+            cbcr: "#000000",
+            crs: "6px",
         },
         cta: {
-            bgcr: "#111111", //cta background color
-            br: "1px", //cta border
-            bcr: "#dddddd", //cta border color
-            rs: "8px", //cta radius
-            ticr: "#dddddd", //cta title color
-            tity: "system", //cta title typography
-            titse: "20px", //cta title text size
-            tiatt: "start", // cta title align text
-            tcr: "#dddddd", //cta text color
-            tty: "system", //cta text typography
-            ttse: "16px", //cta text size
-            tatt: "start", //cta align text
-
-            btbdcr: "#22dd22", //cta button background color
-            btbdcrhv: "#22ee22", // cta button background color hover
-            btbr: "1px", // cta button border
-            btbrcr: "#33ff33", // cta button border color
-            btrs: "4px", // cta button radius
-
-            btcr: "#dddddd", //cta button text color
-            btty: "system", //cta button text typography
-            bttse: "18px", //cta button text text size
-            btan: "start", // cta button align
+            bgcr: "#111111",
+            br: "1px",
+            bcr: "#dddddd",
+            rs: "8px",
+            ticr: "#dddddd",
+            tity: "system",
+            titse: "20px",
+            tiatt: "start",
+            tcr: "#dddddd",
+            tty: "system",
+            ttse: "16px",
+            tatt: "start",
+            btbdcr: "#22dd22",
+            btbdcrhv: "#22ee22",
+            btbr: "1px",
+            btbrcr: "#33ff33",
+            btrs: "4px",
+            btcr: "#dddddd",
+            btty: "system",
+            bttse: "18px",
+            btan: "start",
         },
         productive: {
-            bgcr: "#111111", //productive background color
-            br: "1px", //productive border
-            bcr: "#dddddd", //productive border color
-            rs: "8px", //productive radius
-            tcr: "#dddddd", //productive title color
-            tty: "system", //productive title typography
-            yyse: "20px", //productive title text size
-            tatt: "start", //productive title align text
-            itcr: "#dddddd", //productive item title color
-            itty: "system", //productive item title typography
-            itse: "18px", //productive item title text size
-            itatt: "start", //productive item align text
-            itxcr: "#dddddd", //productive item text color
-            itxty: "system", //productive item text typography
-            itxtse: "16px", //productive item text text size
-            itxatt: "start", //productive item text align text
-        }
+            bgcr: "#111111",
+            br: "1px",
+            bcr: "#dddddd",
+            rs: "8px",
+            tcr: "#dddddd",
+            tty: "system",
+            yyse: "20px",
+            tatt: "start",
+            itcr: "#dddddd",
+            itty: "system",
+            itse: "18px",
+            itatt: "start",
+            itxcr: "#dddddd",
+            itxty: "system",
+            itxtse: "16px",
+            itxatt: "start",
+        },
     },
-    /*
-        modern: {
-            Después lo codeo
+
+    // ✅ inventados para pruebas
+    modern: {
+        preset: "modern",
+        header: {
+            bbg: "#0b1220",
+            bbhr: "#101b31",
+            bcr: "#dbeafe",
+            bty: "system",
+            btse: "18px",
+            bbr: "1px",
+            bbcr: "#1e3a8a",
+            brs: "12px",
+            ban: "start",
+            bgp: "6px",
+            bbae: "#1d4ed8",
+            bcae: "#ffffff",
+            bbcae: "#60a5fa",
         },
-    
-        bold: {
-            Después lo codeo
+        components: {
+            button: { variant: "soft" },
+            card: { shadow: "sm" },
         },
-    
-        minimal: {
-            Después lo codeo
-        },*/
+        hero: {
+            bgcr: "#0b1220",
+            br: "1px",
+            bcr: "#1e293b",
+            rs: "16px",
+            tcr: "#e0f2fe",
+            tty: "system",
+            ttse: "26px",
+            tatt: "start",
+            scr: "#93c5fd",
+            sty: "system",
+            stse: "18px",
+            satt: "start",
+        },
+        text: {
+            bgcr: "#0b1220",
+            br: "1px",
+            bcr: "#1e293b",
+            rs: "16px",
+            tcr: "#e0f2fe",
+            tty: "system",
+            ttsc: "22px",
+            tat: "start",
+            bycr: "#cbd5e1",
+            byty: "system",
+            bytse: "18px",
+            byatt: "start",
+        },
+        features: {
+            bgcr: "#0b1220",
+            br: "1px",
+            bcr: "#1e293b",
+            rs: "16px",
+            tcr: "#e0f2fe",
+            tty: "system",
+            ttse: "22px",
+            tatt: "start",
+            ibgcr: "#0f172a",
+            ibr: "1px",
+            ibcr: "#1e293b",
+            irs: "14px",
+            itcr: "#e0f2fe",
+            itty: "system",
+            ittse: "18px",
+            itatt: "start",
+            itxcr: "#cbd5e1",
+            itxty: "system",
+            itxtse: "16px",
+            itxatt: "start",
+        },
+        gallery: {
+            bgcr: "#0b1220",
+            br: "1px",
+            bcr: "#1e293b",
+            rs: "16px",
+            tcr: "#e0f2fe",
+            tty: "system",
+            ttse: "16px",
+            tatt: "start",
+            cbcr: "#0f172a",
+            crs: "12px",
+        },
+        cta: {
+            bgcr: "#0b1220",
+            br: "1px",
+            bcr: "#1e293b",
+            rs: "16px",
+            ticr: "#e0f2fe",
+            tity: "system",
+            titse: "22px",
+            tiatt: "start",
+            tcr: "#cbd5e1",
+            tty: "system",
+            ttse: "16px",
+            tatt: "start",
+            btbdcr: "#2563eb",
+            btbdcrhv: "#1d4ed8",
+            btbr: "1px",
+            btbrcr: "#60a5fa",
+            btrs: "10px",
+            btcr: "#ffffff",
+            btty: "system",
+            bttse: "18px",
+            btan: "start",
+        },
+        productive: {
+            bgcr: "#0b1220",
+            br: "1px",
+            bcr: "#1e293b",
+            rs: "16px",
+            tcr: "#e0f2fe",
+            tty: "system",
+            yyse: "22px",
+            tatt: "start",
+            itcr: "#e0f2fe",
+            itty: "system",
+            itse: "18px",
+            itatt: "start",
+            itxcr: "#cbd5e1",
+            itxty: "system",
+            itxtse: "16px",
+            itxatt: "start",
+        },
+    },
+
+    bold: {
+        preset: "bold",
+        header: {
+            bbg: "#111111",
+            bbhr: "#1f1f1f",
+            bcr: "#ffffff",
+            bty: "system",
+            btse: "20px",
+            bbr: "2px",
+            bbcr: "#ffffff",
+            brs: "2px",
+            ban: "start",
+            bgp: "8px",
+            bbae: "#ffffff",
+            bcae: "#111111",
+            bbcae: "#ffffff",
+        },
+        components: {
+            button: { variant: "outline" },
+            card: { shadow: "md" },
+        },
+        hero: {
+            bgcr: "#111111",
+            br: "2px",
+            bcr: "#ffffff",
+            rs: "4px",
+            tcr: "#ffffff",
+            tty: "system",
+            ttse: "30px",
+            tatt: "start",
+            scr: "#e5e5e5",
+            sty: "system",
+            stse: "20px",
+            satt: "start",
+        },
+        text: {
+            bgcr: "#111111",
+            br: "2px",
+            bcr: "#ffffff",
+            rs: "4px",
+            tcr: "#ffffff",
+            tty: "system",
+            ttsc: "24px",
+            tat: "start",
+            bycr: "#e5e5e5",
+            byty: "system",
+            bytse: "18px",
+            byatt: "start",
+        },
+        features: {
+            bgcr: "#111111",
+            br: "2px",
+            bcr: "#ffffff",
+            rs: "4px",
+            tcr: "#ffffff",
+            tty: "system",
+            ttse: "24px",
+            tatt: "start",
+            ibgcr: "#1f1f1f",
+            ibr: "2px",
+            ibcr: "#ffffff",
+            irs: "4px",
+            itcr: "#ffffff",
+            itty: "system",
+            ittse: "18px",
+            itatt: "start",
+            itxcr: "#e5e5e5",
+            itxty: "system",
+            itxtse: "16px",
+            itxatt: "start",
+        },
+        gallery: {
+            bgcr: "#111111",
+            br: "2px",
+            bcr: "#ffffff",
+            rs: "4px",
+            tcr: "#ffffff",
+            tty: "system",
+            ttse: "16px",
+            tatt: "start",
+            cbcr: "#1f1f1f",
+            crs: "4px",
+        },
+        cta: {
+            bgcr: "#111111",
+            br: "2px",
+            bcr: "#ffffff",
+            rs: "4px",
+            ticr: "#ffffff",
+            tity: "system",
+            titse: "24px",
+            tiatt: "start",
+            tcr: "#e5e5e5",
+            tty: "system",
+            ttse: "16px",
+            tatt: "start",
+            btbdcr: "#ffffff",
+            btbdcrhv: "#e5e5e5",
+            btbr: "2px",
+            btbrcr: "#ffffff",
+            btrs: "4px",
+            btcr: "#111111",
+            btty: "system",
+            bttse: "18px",
+            btan: "start",
+        },
+        productive: {
+            bgcr: "#111111",
+            br: "2px",
+            bcr: "#ffffff",
+            rs: "4px",
+            tcr: "#ffffff",
+            tty: "system",
+            yyse: "24px",
+            tatt: "start",
+            itcr: "#ffffff",
+            itty: "system",
+            itse: "18px",
+            itatt: "start",
+            itxcr: "#e5e5e5",
+            itxty: "system",
+            itxtse: "16px",
+            itxatt: "start",
+        },
+    },
+
+    minimal: {
+        preset: "minimal",
+        header: {
+            bbg: "#0b0b0b",
+            bbhr: "#111111",
+            bcr: "#e5e7eb",
+            bty: "system",
+            btse: "16px",
+            bbr: "0px",
+            bbcr: "#000000",
+            brs: "999px",
+            ban: "start",
+            bgp: "6px",
+            bbae: "#e5e7eb",
+            bcae: "#0b0b0b",
+            bbcae: "#000000",
+        },
+        components: {
+            button: { variant: "solid" },
+            card: { shadow: "none" },
+        },
+        hero: {
+            bgcr: "#0b0b0b",
+            br: "0px",
+            bcr: "#000000",
+            rs: "18px",
+            tcr: "#f9fafb",
+            tty: "system",
+            ttse: "22px",
+            tatt: "start",
+            scr: "#9ca3af",
+            sty: "system",
+            stse: "16px",
+            satt: "start",
+        },
+        text: {
+            bgcr: "#0b0b0b",
+            br: "0px",
+            bcr: "#000000",
+            rs: "18px",
+            tcr: "#f9fafb",
+            tty: "system",
+            ttsc: "20px",
+            tat: "start",
+            bycr: "#d1d5db",
+            byty: "system",
+            bytse: "16px",
+            byatt: "start",
+        },
+        features: {
+            bgcr: "#0b0b0b",
+            br: "0px",
+            bcr: "#000000",
+            rs: "18px",
+            tcr: "#f9fafb",
+            tty: "system",
+            ttse: "20px",
+            tatt: "start",
+            ibgcr: "#111111",
+            ibr: "0px",
+            ibcr: "#000000",
+            irs: "16px",
+            itcr: "#f9fafb",
+            itty: "system",
+            ittse: "16px",
+            itatt: "start",
+            itxcr: "#d1d5db",
+            itxty: "system",
+            itxtse: "14px",
+            itxatt: "start",
+        },
+        gallery: {
+            bgcr: "#0b0b0b",
+            br: "0px",
+            bcr: "#000000",
+            rs: "18px",
+            tcr: "#f9fafb",
+            tty: "system",
+            ttse: "14px",
+            tatt: "start",
+            cbcr: "#111111",
+            crs: "14px",
+        },
+        cta: {
+            bgcr: "#0b0b0b",
+            br: "0px",
+            bcr: "#000000",
+            rs: "18px",
+            ticr: "#f9fafb",
+            tity: "system",
+            titse: "20px",
+            tiatt: "start",
+            tcr: "#d1d5db",
+            tty: "system",
+            ttse: "14px",
+            tatt: "start",
+            btbdcr: "#f9fafb",
+            btbdcrhv: "#e5e7eb",
+            btbr: "0px",
+            btbrcr: "#000000",
+            btrs: "999px",
+            btcr: "#0b0b0b",
+            btty: "system",
+            bttse: "16px",
+            btan: "start",
+        },
+        productive: {
+            bgcr: "#0b0b0b",
+            br: "0px",
+            bcr: "#000000",
+            rs: "18px",
+            tcr: "#f9fafb",
+            tty: "system",
+            yyse: "20px",
+            tatt: "start",
+            itcr: "#f9fafb",
+            itty: "system",
+            itse: "16px",
+            itatt: "start",
+            itxcr: "#d1d5db",
+            itxty: "system",
+            itxtse: "14px",
+            itxatt: "start",
+        },
+    },
 };
 
 /**
- * Merge seguro: si te viene theme incompleto, lo completa con presets/classic.
- * También sirve para “aplicar preset” sin perder valores existentes (si pasás override como 2do arg).
+ * Merge seguro: completa con preset base (default) y aplica overrides.
+ * - Si preset es userPreset, el base cae a classic (para defaults),
+ *   y luego se aplica base/override.
  */
-
 export function mergeTheme(
     base?: Partial<BusinessThemeConfig> | null,
     override?: Partial<BusinessThemeConfig> | null
 ): BusinessThemeConfig {
     const preset = (override?.preset ?? base?.preset ?? "classic") as ThemePresetId;
-    const presetBase = THEME_PRESETS[preset] ?? THEME_PRESETS.classic;
+
+    // ✅ userPreset no está hardcodeado, así que tomamos classic como base visual
+    const presetBase =
+        preset === "userPreset"
+            ? THEME_PRESETS.classic
+            : (THEME_PRESETS[preset] ?? THEME_PRESETS.classic);
 
     return {
         preset,
-
-        main: {
-            ...presetBase.main,
-            ...(base?.main ?? {}),
-            ...(override?.main ?? {}),
-        },
 
         header: {
             ...presetBase.header,
@@ -389,4 +735,5 @@ export function mergeTheme(
         },
     };
 }
+
 

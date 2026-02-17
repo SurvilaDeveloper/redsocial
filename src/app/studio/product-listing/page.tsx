@@ -50,7 +50,7 @@ export default async function ProductListingStudioIndex() {
 
             <div className="flex items-center justify-between gap-4 mb-4">
                 <div className="flex flex-col gap-2">
-                    <BackToStudioBusiness label="Volver a mis negocios" />
+                    <BackToStudioBusiness label="Volver" />
 
                     <div>
                         <h1 className="text-xl font-semibold">Mis productos</h1>

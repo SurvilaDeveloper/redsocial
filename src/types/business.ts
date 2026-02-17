@@ -1,14 +1,16 @@
 // src/types/business.ts
 import type { BusinessPageContent } from "@/types/business-sections";
 
+export type BusinessNavKind = "home" | "page" | "contact";
+
+/**
+ * Regla: tab === navItem.slug SIEMPRE.
+ * kind solo indica el “tipo” de página.
+ */
 export type BusinessNavItem =
-    | { kind: "home"; title: string; order: number; visible: boolean }
-    | { kind: "products"; title: string; order: number; visible: boolean }
-    | { kind: "services"; title: string; order: number; visible: boolean }
-    | { kind: "wall"; title: string; order: number; visible: boolean }
-    | { kind: "contact"; title: string; order: number; visible: boolean }
-    | { kind: "page"; slug: string; title: string; order: number; visible: boolean }
-    | { kind: "external"; href: string; title: string; order: number; visible: boolean };
+    | { kind: "home"; slug: "home"; title: string; order: number; visible: boolean }
+    | { kind: "contact"; slug: "contacto"; title: string; order: number; visible: boolean }
+    | { kind: "page"; slug: string; title: string; order: number; visible: boolean };
 
 export type BusinessPageDTO = {
     id: number;
@@ -24,11 +26,16 @@ export type BusinessDTO = {
     headline: string;
     category: string;
 
+    surfaceBgColor: string;
+
     bgColor: string;
     width: string;
 
     headerHeight: string;
     headerBgColor: string;
+
+    headerBgSize: string;
+    headerBgPosition: string;
 
     titleColor: string;
     titleTypography: string;
@@ -52,8 +59,13 @@ export type BusinessDTO = {
 export type BusinessSiteDTO = {
     nav: BusinessNavItem[];
     homeContent: BusinessPageContent;
+
+    // ✅ NUEVO: preset activo en el sitio público
+    themePreset: string;
+
+    // userPreset guardado (si existe). En público NO manda, manda themePreset.
     themeConfig: any;
+
     showContactForm: boolean;
     contactEmailExists: boolean;
 };
-

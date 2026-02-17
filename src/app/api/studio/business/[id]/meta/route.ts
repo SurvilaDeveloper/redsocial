@@ -64,6 +64,8 @@ export async function PATCH(
             category: category || null,
 
             // layout
+            surfaceBgColor: safeStr(body?.surfaceBgColor, 20) || "#000000",
+
             bgColor: safeStr(body?.bgColor, 20) || "#000000",
             width: body?.width ?? "xl",
             headerHeight: body?.headerHeight ?? "md",

@@ -5,14 +5,7 @@ import React, { useMemo } from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
-export type BusinessNavItem =
-    | { kind: "home"; title: string; visible: boolean; order: number }
-    | { kind: "products"; title: string; visible: boolean; order: number }
-    | { kind: "services"; title: string; visible: boolean; order: number }
-    | { kind: "wall"; title: string; visible: boolean; order: number }
-    | { kind: "contact"; title: string; visible: boolean; order: number }
-    | { kind: "page"; slug: string; title: string; visible: boolean; order: number }
-    | { kind: "external"; href: string; title: string; visible: boolean; order: number };
+import type { BusinessNavItem } from "@/types/business";
 
 function safeStr(v: any, fallback = ""): string {
     const s = typeof v === "string" ? v.trim() : "";
@@ -33,26 +26,19 @@ function normalizeActiveKey(v: any): string {
     return safeStr(v, "").trim();
 }
 
+/**
+ * Regla: activeTab debe ser un slug (home/contacto/productos/...)
+ */
 function tabKey(item: BusinessNavItem): string {
-    if (item.kind === "home") return "home";
-    if (item.kind === "products") return "products";
-    if (item.kind === "services") return "services";
-    if (item.kind === "wall") return "wall";
-    if (item.kind === "contact") return "contact";
-    if (item.kind === "page") return safeStr(item.slug, "page");
-    if (item.kind === "external") return safeStr(item.href, "external");
-    return "home";
+    return item.slug;
 }
 
-function tabHref(slug: string, item: BusinessNavItem): string {
-    if (item.kind === "home") return `/b/${slug}/home`;
-    if (item.kind === "products") return `/b/${slug}/products`;
-    if (item.kind === "services") return `/b/${slug}/services`;
-    if (item.kind === "wall") return `/b/${slug}/wall`;
-    if (item.kind === "contact") return `/b/${slug}/contact`;
-    if (item.kind === "page") return `/b/${slug}/${safeStr(item.slug)}`;
-    if (item.kind === "external") return safeStr(item.href);
-    return `/b/${slug}`;
+/**
+ * Regla: SIEMPRE navegar por slug.
+ * Ej: contacto => /b/<businessSlug>/contacto
+ */
+function tabHref(businessSlug: string, item: BusinessNavItem): string {
+    return `/b/${businessSlug}/${item.slug}`;
 }
 
 export function BusinessTabs({
@@ -73,9 +59,14 @@ export function BusinessTabs({
         const pageSlugs = new Set((pages ?? []).map((p) => safeStr(p.slug)));
 
         return base
-            .filter((x) => !!x)
+            .filter(Boolean)
             .filter((x) => safeBool((x as any).visible, true))
-            .filter((x) => (x.kind === "page" ? pageSlugs.has(safeStr(x.slug)) : true))
+            .filter((x) => {
+                // home/contact siempre ok
+                if (x.kind !== "page") return true;
+                // page: debe existir
+                return pageSlugs.has(safeStr(x.slug));
+            })
             .slice()
             .sort((a, b) => safeNum(a.order, 0) - safeNum(b.order, 0));
     }, [nav, pages]);
@@ -91,8 +82,7 @@ export function BusinessTabs({
                 const key = tabKey(item);
                 const isActive = key === activeKey;
 
-                const common =
-                    "px-2 py-0 rounded-[var(--b-hr-brs)] transition select-none";
+                const common = "px-2 py-0 rounded-[var(--b-hr-brs)] transition select-none";
 
                 const className = cn(
                     common,
@@ -102,29 +92,6 @@ export function BusinessTabs({
                 );
 
                 const href = tabHref(slug, item);
-
-                // ✅ external => <a>
-                if (item.kind === "external") {
-                    return (
-                        <a
-                            key={key}
-                            href={href}
-                            target="_blank"
-                            rel="noreferrer"
-                            className={cn(
-                                common,
-                                "bg-slate-900 border border-slate-800 text-slate-200 hover:bg-slate-800"
-                            )}
-                            style={{
-                                borderWidth: "var(--b-hr-bbr)",
-                                fontSize: "var(--b-hr-btse)",
-                                fontFamily: "var(--b-hr-bty)",
-                            }}
-                        >
-                            {safeStr(item.title, "Link")}
-                        </a>
-                    );
-                }
 
                 return (
                     <Link
@@ -144,5 +111,6 @@ export function BusinessTabs({
         </div>
     );
 }
+
 
 

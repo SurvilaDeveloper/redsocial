@@ -26,6 +26,8 @@ import { uploadSiteImage } from "@/lib/cloudinary-functions";
 
 import { previewFontFamily, TYPO_OPTIONS } from "@/lib/fonts/families";
 
+import BackToStudioBusiness from "@/components/custom/BackToStudioBusiness";
+
 const FONT_SIZE_OPTIONS = [
     12, 13, 14, 15, 16, 17, 18, 20, 22, 24, 26, 28, 30, 32, 36, 40, 44, 50, 56, 62, 72,
 ];
@@ -66,6 +68,8 @@ export function BusinessHeaderEditor({
     initialCategory = "",
 
     // theme-ish
+    initialSurfaceBgColor,
+
     initialBgColor,
     initialWidth,
     initialHeaderHeight,
@@ -100,6 +104,8 @@ export function BusinessHeaderEditor({
 
     initialHeadline?: string;
     initialCategory?: string;
+
+    initialSurfaceBgColor?: string;
 
     initialBgColor?: string;
     initialWidth?: string;
@@ -136,7 +142,9 @@ export function BusinessHeaderEditor({
     const [category, setCategory] = useState(initialCategory);
 
     // page bg + layout
-    const [bgColor, setBgColor] = useState(initialBgColor ?? "#0b1220");
+    const [surfaceBgColor, setSurfaceBgColor] = useState(initialSurfaceBgColor ?? "#000000");
+
+    const [bgColor, setBgColor] = useState(initialBgColor ?? "#000000");
     const [width, setWidth] = useState(initialWidth ?? "xl");
     const [widthState, setWidthState] = useState("83%");
 
@@ -183,7 +191,7 @@ export function BusinessHeaderEditor({
 
     const fileRef = useRef<HTMLInputElement | null>(null);
 
-    const backHref = useMemo(() => `/studio/business/${businessId}`, [businessId]);
+    //const backHref = useMemo(() => `/studio/business/${businessId}`, [businessId]);
     const publicHref = useMemo(() => `/b/${businessSlug}`, [businessSlug]);
 
     const anyPending = pendingImg || pendingMeta;
@@ -338,6 +346,7 @@ export function BusinessHeaderEditor({
             category: clampText(category, 80),
 
             // layout
+            surfaceBgColor,
             bgColor,
             width,
             headerHeight,
@@ -401,88 +410,91 @@ export function BusinessHeaderEditor({
                     !openPreview && "pointer-events-none"
                 )}
             >
-                <div ref={previewWrapRef} className={cn("w-screen", openPreview ? "flex flex-row items-center justify-center w-full" : "hidden")}>
-                    <div className="w-full bg-black/80 backdrop-blur-md">
-                        <div className="flex flex-row items-center justify-center ">
-                            <div className="flex items-center justify-between gap-2">
+                <div
+                    ref={previewWrapRef}
+                    className={cn("w-screen", openPreview ? "flex flex-row items-center justify-center w-full" : "hidden")}
+                    style={{ backgroundColor: surfaceBgColor }}
+                >
 
-                                <button
-                                    type="button"
-                                    className="absolute top-4 right-4 rounded-lg bg-slate-900/70 px-3 py-1 text-xs hover:bg-slate-800"
-                                    onClick={() => setOpenPreview(false)}
-                                >
-                                    Cerrar preview
-                                </button>
-                            </div>
+                    <div className="flex flex-row items-center justify-center w-full">
+                        <div className="flex items-center justify-between gap-2">
 
-                            <div className="flex flex-row items-center justify-center w-full">
-                                <div
-                                    style={{
-                                        backgroundColor: bgColor,
-                                        width: widthState,
-                                    }}
+                            <button
+                                type="button"
+                                className="absolute top-4 right-4 rounded-lg bg-slate-900/70 px-3 py-1 text-xs hover:bg-slate-800"
+                                onClick={() => setOpenPreview(false)}
+                            >
+                                Cerrar preview
+                            </button>
+                        </div>
 
-                                >
-                                    <Card className="p-4 w-full border border-slate-700">
-                                        <div
-                                            className="overflow-hidden"
-                                            style={{
-                                                height: headerHeightState,
-                                                backgroundColor: headerBgColor,
-                                                backgroundImage: img?.url ? `url(${img.url})` : undefined,
-                                                backgroundSize: bgSize,
-                                                backgroundPosition: bgPosition,
-                                                backgroundRepeat: "no-repeat",
-                                            }}
-                                        >
-                                            <div className="backdrop-blur-[0px] bg-black/20 p-6 flex flex-col gap-2 h-full">
-                                                {/* Title */}
+                        <div className="flex flex-row items-center justify-center w-full">
+                            <div
+                                style={{
+                                    backgroundColor: bgColor,
+                                    width: widthState,
+                                }}
+
+                            >
+                                <Card className="p-4 w-full border border-slate-700">
+                                    <div
+                                        className="overflow-hidden"
+                                        style={{
+                                            height: headerHeightState,
+                                            backgroundColor: headerBgColor,
+                                            backgroundImage: img?.url ? `url(${img.url})` : undefined,
+                                            backgroundSize: bgSize,
+                                            backgroundPosition: bgPosition,
+                                            backgroundRepeat: "no-repeat",
+                                        }}
+                                    >
+                                        <div className="backdrop-blur-[0px] bg-black/20 p-6 flex flex-col gap-2 h-full">
+                                            {/* Title */}
+                                            <div
+                                                className="flex w-full font-semibold"
+                                                style={{
+                                                    color: titleColor,
+                                                    fontFamily: titleTypoFamily,
+                                                    fontSize: titleTextSizeState,
+                                                    justifyContent: titleAlignText,
+                                                }}
+                                            >
+                                                {name}
+                                            </div>
+
+                                            {/* Headline */}
+                                            {headline ? (
                                                 <div
-                                                    className="flex w-full font-semibold"
+                                                    className="flex w-full"
                                                     style={{
-                                                        color: titleColor,
-                                                        fontFamily: titleTypoFamily,
-                                                        fontSize: titleTextSizeState,
-                                                        justifyContent: titleAlignText,
+                                                        color: headlineColor,
+                                                        fontFamily: headlineTypoFamily,
+                                                        fontSize: headlineTextSizeState,
+                                                        justifyContent: headlineAlignText,
                                                     }}
                                                 >
-                                                    {name}
+                                                    {headline}
                                                 </div>
+                                            ) : null}
 
-                                                {/* Headline */}
-                                                {headline ? (
-                                                    <div
-                                                        className="flex w-full"
-                                                        style={{
-                                                            color: headlineColor,
-                                                            fontFamily: headlineTypoFamily,
-                                                            fontSize: headlineTextSizeState,
-                                                            justifyContent: headlineAlignText,
-                                                        }}
-                                                    >
-                                                        {headline}
-                                                    </div>
-                                                ) : null}
+                                            {/* Category */}
+                                            {category ? (
+                                                <div
+                                                    className="flex w-full"
+                                                    style={{
+                                                        color: categoryColor,
+                                                        fontFamily: categoryTypoFamily,
+                                                        fontSize: categoryTextSizeState,
+                                                        justifyContent: categoryAlignText,
+                                                    }}
+                                                >
+                                                    {category}
+                                                </div>
+                                            ) : null}
 
-                                                {/* Category */}
-                                                {category ? (
-                                                    <div
-                                                        className="flex w-full"
-                                                        style={{
-                                                            color: categoryColor,
-                                                            fontFamily: categoryTypoFamily,
-                                                            fontSize: categoryTextSizeState,
-                                                            justifyContent: categoryAlignText,
-                                                        }}
-                                                    >
-                                                        {category}
-                                                    </div>
-                                                ) : null}
-
-                                            </div>
                                         </div>
-                                    </Card>
-                                </div>
+                                    </div>
+                                </Card>
                             </div>
                         </div>
                     </div>
@@ -498,13 +510,7 @@ export function BusinessHeaderEditor({
                     </div>
 
                     <div className="mt-4 flex flex-wrap items-center gap-2">
-                        <Link
-                            href={backHref}
-                            className="inline-flex items-center px-3 py-2 text-sm rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-800"
-                        >
-                            <ArrowLeft size={16} className="mr-2 opacity-80" />
-                            Volver
-                        </Link>
+                        <BackToStudioBusiness label="Volver" />
 
                         <button
                             type="button"
@@ -642,10 +648,20 @@ export function BusinessHeaderEditor({
                         </label>
 
                         <hr className="lg:col-span-2 border-slate-800" />
-
-                        {/* ✅ SITE BG */}
+                        {/* ✅ SITE BG*/}
                         <label className="flex flex-col text-xs text-slate-400 gap-2">
                             Background del sitio
+                            <input
+                                type="color"
+                                value={surfaceBgColor}
+                                onChange={(e) => setSurfaceBgColor(e.target.value)}
+                                className="h-7 w-10 bg-transparent border-0 p-0"
+                            />
+                        </label>
+
+                        {/* ✅ BUSINESS BG */}
+                        <label className="flex flex-col text-xs text-slate-400 gap-2">
+                            Background de la página
                             <input
                                 type="color"
                                 value={bgColor}
@@ -655,7 +671,7 @@ export function BusinessHeaderEditor({
                         </label>
 
                         <label className="text-xs text-slate-400">
-                            Width del sitio
+                            Width de la página
                             <select
                                 value={width}
                                 onChange={(e) => setWidth(e.target.value)}

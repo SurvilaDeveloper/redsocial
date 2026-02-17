@@ -84,32 +84,8 @@ export function themeToCssVars(raw?: Partial<BusinessThemeConfig> | null): Recor
         "--b-pr-preset": t.preset, // theme preset id
 
         // =========================
-        // main (mn)
+        // Navbar (hr)
         // =========================
-        "--b-mn-bg": t.main.bg,           // main background color *
-        "--b-mn-surface": t.main.surface, // main surface color *
-        "--b-mn-width": t.main.width,     // main content width
-
-        // =========================
-        // header (hr)
-        // =========================
-        "--b-hr-bgcr": t.header.bgcr, // header background color
-
-        "--b-hr-tcr": t.header.tcr,   // title color *
-        "--b-hr-tty": toFontFamily(t.header.tty),   // title typography *
-        "--b-hr-tse": t.header.tse,   // title text size *
-        "--b-hr-tatt": t.header.tatt, // title align text *
-
-        "--b-hr-hcr": t.header.hcr,   // headline color *
-        "--b-hr-hty": toFontFamily(t.header.hty),   // headline typography *
-        "--b-hr-htse": t.header.htse, // headline text size *
-        "--b-hr-hatt": t.header.hatt, // headline align text *
-
-        "--b-hr-ccr": t.header.ccr,   // category color *
-        "--b-hr-cty": toFontFamily(t.header.cty),   // category typography *
-        "--b-hr-ctse": t.header.ctse, // category text size *
-        "--b-hr-catt": t.header.catt, // category align text *
-
         "--b-hr-bbg": t.header.bbg,   // button background *
         "--b-hr-bbhr": t.header.bbhr, // button background hover *
         "--b-hr-bcr": t.header.bcr,   // button text color *

@@ -27,6 +27,8 @@ export default async function BusinessHeaderStudioPage({
             category: true,
             slug: true,
 
+            surfaceBgColor: true,
+
             bgColor: true,
             width: true,
             headerHeight: true,
@@ -65,6 +67,8 @@ export default async function BusinessHeaderStudioPage({
                 initialHeadline={business.headline || ""}
                 initialCategory={business.category || ""}
                 businessSlug={business.slug}
+
+                initialSurfaceBgColor={business.surfaceBgColor}
 
                 initialBgColor={business.bgColor}
                 initialWidth={business.width}

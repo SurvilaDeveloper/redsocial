@@ -12,6 +12,8 @@ import { cn } from "@/lib/utils";
 import type { BusinessPageContent } from "@/types/business-sections";
 import { BusinessSectionsEditor } from "@/components/business/editor/BusinessSectionsEditor";
 
+import BackToStudioBusiness from "@/components/custom/BackToStudioBusiness";
+
 export function BusinessHomeEditor({
     businessId,
     businessSlug,
@@ -34,7 +36,7 @@ export function BusinessHomeEditor({
     // tu ruta pública real de home parece ser /b/:slug (no /home)
     const previewHref = useMemo(() => `/b/${businessSlug}`, [businessSlug]);
 
-    const backHref = useMemo(() => `/studio/business/${businessId}`, [businessId]);
+    //const backHref = useMemo(() => `/studio/business/${businessId}`, [businessId]);
 
     function save() {
         setStatus(null);
@@ -79,14 +81,8 @@ export function BusinessHomeEditor({
 
                         <div className="mt-3 flex flex-wrap items-center gap-2">
                             {/* ✅ Volver al hub del negocio */}
-                            <Link
-                                href={backHref}
-                                className="inline-flex items-center px-3 py-2 text-sm rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-800"
-                                title="Volver al panel del negocio"
-                            >
-                                <ArrowLeft size={16} className="mr-2 opacity-80" />
-                                Volver
-                            </Link>
+                            <BackToStudioBusiness label="Volver" />
+
 
                             <Button
                                 onClick={save}

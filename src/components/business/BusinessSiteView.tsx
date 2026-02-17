@@ -1,4 +1,4 @@
-//src/components/business/BusinessSiteView.tsx
+// src/components/business/BusinessSiteView.tsx
 "use client";
 
 import React, { useMemo } from "react";
@@ -12,6 +12,7 @@ import { BusinessContactSection } from "./BusinessContactSection";
 import { BusinessSiteHeader } from "./BusinessSiteHeader";
 
 import type { BusinessDTO, BusinessSiteDTO, BusinessPageDTO } from "@/types/business";
+import { cn } from "@/lib/utils";
 
 export function BusinessSiteView({
     business,
@@ -33,11 +34,10 @@ export function BusinessSiteView({
     }, [site.nav]);
 
     const current = useMemo(() => {
+        // ✅ Solo 3 casos: home, contacto, page(slug)
         if (tab === "home") return { kind: "home" as const };
-        if (tab === "products") return { kind: "products" as const };
-        if (tab === "services") return { kind: "services" as const };
-        if (tab === "wall") return { kind: "wall" as const };
-        if (tab === "contact") return { kind: "contact" as const };
+
+        if (tab === "contacto") return { kind: "contact" as const };
 
         const page = pages.find((p) => p.slug === tab);
         if (page) return { kind: "page" as const, page };
@@ -45,144 +45,130 @@ export function BusinessSiteView({
         return { kind: "notfound" as const };
     }, [tab, pages]);
 
-    const widthPCent = business.width === "full" ? "100%" :
-        business.width === "xl" ? "83%" :
-            business.width === "lg" ? "75%" :
-                business.width === "md" ? "66%" :
-                    business.width === "sm" ? "50%" : "83%";
+    const widthPCent =
+        business.width === "full"
+            ? "w-full"
+            : business.width === "xl"
+                ? "lg:w-[83%] w-full"
+                : business.width === "lg"
+                    ? "lg:w-[75%] w-full"
+                    : business.width === "md"
+                        ? "lg:w-[66%] w-full"
+                        : business.width === "sm"
+                            ? "lg:w-[50%] w-full"
+                            : "lg:w-[83%] w-full";
 
     return (
-        <div
-            className="min-h-dvh text-slate-100 relative pb-6"
-            style={{
-                backgroundColor: business.bgColor,
-                width: widthPCent,
-            }}
-        >
-            <div className="bg-black sticky top-0 z-50 w-full">
-                <BusinessTabs slug={business.slug} nav={sortedNav} activeTab={tab} pages={pages} />
-            </div>
-            {(business.name || business.headline || business.category) &&
-                <BusinessSiteHeader
-                    name={business.name}
-                    headline={business.headline}
-                    category={business.category}
-                    bgImageUrl={(business as any).headerBgImageUrl ?? (business as any)?.headerBgImage?.url ?? null}
+        <div className="flex flex-row items-center justify-center w-screen" style={{ backgroundColor: business.surfaceBgColor }}>
+            <div
+                className={cn(widthPCent, "min-h-dvh text-slate-100 relative pb-6")}
+                style={{ backgroundColor: business.bgColor }}
+            >
+                <div className="bg-black sticky top-0 z-50 w-full">
+                    <BusinessTabs slug={business.slug} nav={sortedNav} activeTab={tab} pages={pages} />
+                </div>
 
-                    headerHeight={business.headerHeight}
-                    headerBgColor={business.headerBgColor}
+                {(business.name || business.headline || business.category) && (
+                    <BusinessSiteHeader
+                        name={business.name}
+                        headline={business.headline}
+                        category={business.category}
+                        bgImageUrl={(business as any).headerBgImageUrl ?? (business as any)?.headerBgImage?.url ?? null}
 
-                    titleColor={business.titleColor}
-                    titleTypography={business.titleTypography}
-                    titleTextSize={business.titleTextSize}
-                    titleAlignText={business.titleAlignText}
+                        headerHeight={business.headerHeight}
+                        headerBgColor={business.headerBgColor}
 
-                    headlineColor={business.headlineColor}
-                    headlineTypography={business.headlineTypography}
-                    headlineTextSize={business.headlineTextSize}
-                    headlineAlignText={business.headlineAlignText}
+                        headerBgSize={business.headerBgSize}
+                        headerBgPosition={business.headerBgPosition}
 
-                    categoryColor={business.categoryColor}
-                    categoryTypography={business.categoryTypography}
-                    categoryTextSize={business.categoryTextSize}
-                    categoryAlignText={business.categoryAlignText}
-                />
-            }
+                        titleColor={business.titleColor}
+                        titleTypography={business.titleTypography}
+                        titleTextSize={business.titleTextSize}
+                        titleAlignText={business.titleAlignText}
 
-            <main className="relative mx-auto w-full px-3 pb-0 mt-4">
+                        headlineColor={business.headlineColor}
+                        headlineTypography={business.headlineTypography}
+                        headlineTextSize={business.headlineTextSize}
+                        headlineAlignText={business.headlineAlignText}
 
-
-                {current.kind === "home" && (
-                    <div className="flex flex-col gap-4">
-                        {site.homeContent?.length ? (
-                            <BusinessSectionRenderer sections={site.homeContent} businessSlug={business.slug} />
-                        ) : (
-                            <Card className="bg-slate-950 border-slate-800 p-5 rounded-2xl">
-                                <div className="flex items-center gap-2 text-slate-200">
-                                    <LayoutGrid size={16} className="opacity-80" />
-                                    <span className="font-medium">Inicio</span>
-                                </div>
-                                <p className="mt-2 text-sm text-slate-400">
-                                    Este negocio todavía no configuró su página de inicio.
-                                </p>
-                            </Card>
-                        )}
-                    </div>
+                        categoryColor={business.categoryColor}
+                        categoryTypography={business.categoryTypography}
+                        categoryTextSize={business.categoryTextSize}
+                        categoryAlignText={business.categoryAlignText}
+                    />
                 )}
 
-                {current.kind === "page" && (
-                    <Card className="bg-slate-950 border-slate-800 p-5 rounded-2xl">
-                        <div className="text-lg font-semibold">{current.page.title}</div>
-                        <div className="mt-4">
-                            <BusinessSectionRenderer sections={current.page.content} businessSlug={business.slug} />
+                <main className="relative mx-auto w-full px-3 pb-0 mt-4">
+                    {current.kind === "home" && (
+                        <div className="flex flex-col gap-4">
+                            {site.homeContent?.length ? (
+                                <BusinessSectionRenderer sections={site.homeContent} businessSlug={business.slug} />
+                            ) : (
+                                <Card className="bg-slate-950 border-slate-800 p-5 rounded-2xl">
+                                    <div className="flex items-center gap-2 text-slate-200">
+                                        <LayoutGrid size={16} className="opacity-80" />
+                                        <span className="font-medium">Inicio</span>
+                                    </div>
+                                    <p className="mt-2 text-sm text-slate-400">
+                                        Este negocio todavía no configuró su página de inicio.
+                                    </p>
+                                </Card>
+                            )}
                         </div>
-                    </Card>
-                )}
+                    )}
 
-                {current.kind === "products" && (
-                    <Card className="bg-slate-950 border-slate-800 p-5 rounded-2xl">
-                        <div className="text-lg font-semibold">Productos</div>
-                        <p className="mt-2 text-sm text-slate-400">(MVP) Pendiente: listar ProductListing.</p>
-                    </Card>
-                )}
-
-                {current.kind === "services" && (
-                    <Card className="bg-slate-950 border-slate-800 p-5 rounded-2xl">
-                        <div className="text-lg font-semibold">Servicios</div>
-                        <p className="mt-2 text-sm text-slate-400">(MVP) Pendiente: listar ServiceListing.</p>
-                    </Card>
-                )}
-
-                {current.kind === "wall" && (
-                    <Card className="bg-slate-950 border-slate-800 p-5 rounded-2xl">
-                        <div className="text-lg font-semibold">Novedades</div>
-                        <p className="mt-2 text-sm text-slate-400">(MVP) Pendiente: muro del negocio.</p>
-                    </Card>
-                )}
-
-                {current.kind === "contact" && (
-                    <div className="flex flex-col gap-4">
+                    {current.kind === "page" && (
                         <Card className="bg-slate-950 border-slate-800 p-5 rounded-2xl">
-                            <div className="text-lg font-semibold">Contacto</div>
-                            <p className="mt-2 text-sm text-slate-400">
-                                Completá el formulario y el dueño del negocio recibirá un email para responderte.
-                            </p>
+                            <div className="text-lg font-semibold">{current.page.title}</div>
+                            <div className="mt-4">
+                                <BusinessSectionRenderer sections={current.page.content} businessSlug={business.slug} />
+                            </div>
                         </Card>
+                    )}
 
-                        {site.showContactForm && site.contactEmailExists ? (
-                            <BusinessContactSection businessSlug={business.slug} />
-                        ) : (
+                    {current.kind === "contact" && (
+                        <div className="flex flex-col gap-4">
                             <Card className="bg-slate-950 border-slate-800 p-5 rounded-2xl">
-                                <div className="flex items-center gap-2 text-slate-300">
-                                    <Mail size={16} className="opacity-80" />
-                                    <span>Formulario deshabilitado</span>
-                                </div>
+                                <div className="text-lg font-semibold">Contacto</div>
                                 <p className="mt-2 text-sm text-slate-400">
-                                    El negocio no tiene configurado el contacto por email.
+                                    Completá el formulario y el dueño del negocio recibirá un email para responderte.
                                 </p>
                             </Card>
-                        )}
-                    </div>
-                )}
 
-                {current.kind === "notfound" && (
-                    <Card className="bg-slate-950 border-slate-800 p-5 rounded-2xl">
-                        <div className="text-lg font-semibold">Sección no encontrada</div>
-                        <p className="mt-2 text-sm text-slate-400">
-                            Este tab no existe. Revisá la navegación del negocio.
-                        </p>
-                        <div className="mt-4">
-                            <Link
-                                href={`/b/${business.slug}/home`}
-                                className="text-sm text-emerald-300 hover:text-emerald-200"
-                            >
-                                Volver al inicio
-                            </Link>
+                            {site.showContactForm && site.contactEmailExists ? (
+                                <BusinessContactSection businessSlug={business.slug} />
+                            ) : (
+                                <Card className="bg-slate-950 border-slate-800 p-5 rounded-2xl">
+                                    <div className="flex items-center gap-2 text-slate-300">
+                                        <Mail size={16} className="opacity-80" />
+                                        <span>Formulario deshabilitado</span>
+                                    </div>
+                                    <p className="mt-2 text-sm text-slate-400">
+                                        El negocio no tiene configurado el contacto por email.
+                                    </p>
+                                </Card>
+                            )}
                         </div>
-                    </Card>
-                )}
-            </main>
+                    )}
+
+                    {current.kind === "notfound" && (
+                        <Card className="bg-slate-950 border-slate-800 p-5 rounded-2xl">
+                            <div className="text-lg font-semibold">Sección no encontrada</div>
+                            <p className="mt-2 text-sm text-slate-400">
+                                Este tab no existe. Revisá la navegación del negocio.
+                            </p>
+                            <div className="mt-4">
+                                <Link
+                                    href={`/b/${business.slug}/home`}
+                                    className="text-sm text-emerald-300 hover:text-emerald-200"
+                                >
+                                    Volver al inicio
+                                </Link>
+                            </div>
+                        </Card>
+                    )}
+                </main>
+            </div>
         </div>
     );
 }
-

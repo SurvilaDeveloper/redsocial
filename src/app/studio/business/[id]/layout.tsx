@@ -54,7 +54,7 @@ export default async function BusinessStudioLayout({
                         className="px-3 py-2 text-sm rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-800"
                         title="Volver a Mis negocios"
                     >
-                        Volver en studio/business/[id]/layout.tsx
+                        Volver a Mis negocios
                     </Link>
 
                     <a
@@ -64,7 +64,7 @@ export default async function BusinessStudioLayout({
                         className="px-3 py-2 text-sm rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-800"
                         title="Ver público"
                     >
-                        Ver público en studio/business/[id]/layout.tsx
+                        Ver público
                     </a>
                 </div>
             </div>

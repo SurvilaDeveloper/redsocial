@@ -895,6 +895,8 @@ model Business {
 
   //Estilos
 
+  surfaceBgColor String @default("#000000") @db.VarChar(20)
+
   bgColor String        @default("#000000") @db.VarChar(20)
   width   BusinessWidth @default(xl)
 
@@ -945,6 +947,8 @@ model Business {
 model BusinessSite {
   id         Int @id @default(autoincrement())
   businessId Int @unique
+
+  themePreset String @default("classic") @db.VarChar(20)
 
   // branding / theme (guardalo como quieras)
   themeConfig Json?

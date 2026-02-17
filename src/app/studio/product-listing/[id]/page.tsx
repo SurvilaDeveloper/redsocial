@@ -70,7 +70,7 @@ export default async function ProductListingEditPage({
             <Navbar />
 
             <div className="mb-4">
-                <BackToStudioBusiness label="Volver a mis negocios" />
+                <BackToStudioBusiness label="Volver" />
             </div>
 
             <ProductListingEditor
