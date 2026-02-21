@@ -1,6 +1,8 @@
 //src/components/business/BusinessSiteHeader.tsx
 "use client";
 
+type OverlayPosition = "left" | "center" | "right" | "none";
+
 export function BusinessSiteHeader({
     name,
     headline,
@@ -9,9 +11,12 @@ export function BusinessSiteHeader({
 
     headerHeight,
     headerBgColor,
+    headerOpacityOverlay,
 
     headerBgSize,
     headerBgPosition,
+
+    headerOverlayPosition, // ✅ NUEVO
 
     titleColor,
     titleTypography,
@@ -35,9 +40,13 @@ export function BusinessSiteHeader({
 
     headerHeight?: string;
     headerBgColor?: string;
+    headerOpacityOverlay?: number; // 0..100 (ej: 0,10,20,...)
 
     headerBgSize?: string;
     headerBgPosition?: string;
+
+    // ✅ NUEVO
+    headerOverlayPosition?: OverlayPosition; // left | center | right | none
 
     titleColor?: string;
     titleTypography?: string;
@@ -54,12 +63,19 @@ export function BusinessSiteHeader({
     categoryTextSize?: number;
     categoryAlignText?: string;
 }) {
+    const headerHeightPx =
+        headerHeight === "full"
+            ? "320px"
+            : headerHeight === "xl"
+                ? "270px"
+                : headerHeight === "lg"
+                    ? "220px"
+                    : headerHeight === "md"
+                        ? "170px"
+                        : headerHeight === "sm"
+                            ? "120px"
+                            : "170px";
 
-    const headerHeightPx = headerHeight === "full" ? "320px" :
-        headerHeight === "xl" ? "270px" :
-            headerHeight === "lg" ? "220px" :
-                headerHeight === "md" ? "170px" :
-                    headerHeight === "sm" ? "120px" : "170px";
     const titleSize = String(titleTextSize) + "px";
     const headlineSize = String(headlineTextSize) + "px";
     const categorySize = String(categoryTextSize) + "px";
@@ -67,26 +83,75 @@ export function BusinessSiteHeader({
     const headerBgSizeFallback = headerBgSize ? headerBgSize : "contain";
     const headerBgPositionFallback = headerBgPosition ? headerBgPosition : "left";
 
+    // ✅ overlay opacity (0..100) -> CSS opacity (0..1)
+    const overlayPct =
+        typeof headerOpacityOverlay === "number"
+            ? Math.max(0, Math.min(100, headerOpacityOverlay))
+            : 0;
+    const overlayOpacity = overlayPct / 100;
+
+    // ✅ Define el tipo de overlay horizontal
+    // - none/undefined/null: negro parejo
+    // - left:    (negro, negro, transparente)
+    // - center:  (transparente, negro, transparente)
+    // - right:   (transparente, negro, negro)
+    const overlayPos: OverlayPosition = headerOverlayPosition ?? "none";
+
+    // Usamos alpha=1 en el gradient y controlamos intensidad con `opacity: overlayOpacity`.
+    // Así no tenés que recalcular rgba() por stop.
+    const overlayBackgroundImage =
+        overlayPos === "left"
+            ? "linear-gradient(to right, #000 0%, #000 55%, transparent 100%)"
+            : overlayPos === "center"
+                ? "linear-gradient(to right, transparent 0%, #000 50%, transparent 100%)"
+                : overlayPos === "right"
+                    ? "linear-gradient(to right, transparent 0%, #000 45%, #000 100%)"
+                    : undefined;
+
     return (
-        <div id="c" className="mx-auto mb-4 w-full">
-            <div id="d" className="flex flex-col">
+        <div className="mx-auto mb-4 w-full">
+            <div className="flex flex-col">
                 <div
-                    className="flex flex-col w-full items-center justify-center gap-4 p-4 lg:min-h-[160px] min-h-[120px]"
+                    className="relative flex flex-col w-full items-center justify-center gap-4 p-4 lg:min-h-[160px] min-h-[120px]"
                     style={{
                         backgroundColor: headerBgColor,
-                        ...(bgImageUrl
-                            ? {
+                        height: headerHeightPx,
+                    }}
+                >
+                    {/* ✅ Capa de imagen */}
+                    {bgImageUrl && (
+                        <div
+                            className="absolute inset-0"
+                            style={{
                                 backgroundImage: `url(${bgImageUrl})`,
                                 backgroundSize: headerBgSizeFallback,
                                 backgroundRepeat: "no-repeat",
                                 backgroundPosition: headerBgPositionFallback,
-                            }
-                            : {}),
-                        height: headerHeightPx
-                    }}
-                >
+                                pointerEvents: "none",
+                            }}
+                        >
+                            {/* ✅ Overlay SOLO sobre la imagen */}
+                            {overlayOpacity > 0 && (
+                                <div
+                                    className="absolute inset-0"
+                                    style={{
+                                        // Si overlayPosition es none -> negro parejo
+                                        backgroundColor:
+                                            overlayPos === "none" ? "#000" : undefined,
+
+                                        // Si overlayPosition es left/center/right -> gradiente horizontal
+                                        backgroundImage: overlayBackgroundImage,
+
+                                        opacity: overlayOpacity,
+                                    }}
+                                />
+                            )}
+                        </div>
+                    )}
+
+                    {/* ✅ Contenido arriba del overlay */}
                     <div
-                        className="flex flex-row w-full font-semibold leading-tight"
+                        className="relative z-10 flex flex-row w-full font-semibold leading-tight"
                         style={{
                             color: titleColor,
                             fontSize: titleSize,
@@ -99,7 +164,7 @@ export function BusinessSiteHeader({
 
                     {!!headline && (
                         <div
-                            className="flex flex-row w-full"
+                            className="relative z-10 flex flex-row w-full"
                             style={{
                                 color: headlineColor,
                                 fontSize: headlineSize,
@@ -113,7 +178,7 @@ export function BusinessSiteHeader({
 
                     {!!category && (
                         <div
-                            className="flex flex-row w-full"
+                            className="relative z-10 flex flex-row w-full"
                             style={{
                                 color: categoryColor,
                                 fontSize: categorySize,
@@ -129,3 +194,4 @@ export function BusinessSiteHeader({
         </div>
     );
 }
+

@@ -82,8 +82,8 @@ export const BusinessProductiveSectionSchema = z.object({
                     text: z.string().trim().max(300).optional(),
                 })
             )
-            .min(1)
-            .max(24),
+            .max(24)
+            .default([]),
     }),
 });
 

@@ -1,0 +1,4242 @@
+[
+    {
+        "id": "pizzeria-clasica",
+        "label": "Pizzería clásica",
+        "previewImage": "/templates/pizzeria/preview.jpg",
+        "business": {
+            "id": 0,
+            "slug": "pizzeria-clasica",
+            "name": "Pizzería Don Luigi",
+            "headline": "Pizza a la piedra · Empanadas · Delivery",
+            "category": "Gastronomía",
+            "surfaceBgColor": "#000000",
+            "bgColor": "#000022",
+            "width": "lg",
+            "headerHeight": "lg",
+            "headerBgColor": "#000044",
+            "headerBgSize": "cover",
+            "headerBgPosition": "center",
+            "headerOpacityOverlay": 80,
+            "headerOverlayPosition": "left",
+            "titleColor": "#ffffff",
+            "titleTypography": "Inter, system-ui, sans-serif",
+            "titleTextSize": 30,
+            "titleAlignText": "center",
+            "headlineColor": "#cbd5e1",
+            "headlineTypography": "Inter, system-ui, sans-serif",
+            "headlineTextSize": 16,
+            "headlineAlignText": "center",
+            "categoryColor": "#94a3b8",
+            "categoryTypography": "Inter, system-ui, sans-serif",
+            "categoryTextSize": 12,
+            "categoryAlignText": "center",
+            "ownerName": "Demo",
+            "headerBgImageUrl": "/templates/pizzeria/header.jpg"
+        },
+        "site": {
+            "nav": [
+                {
+                    "kind": "home",
+                    "slug": "home",
+                    "title": "Inicio",
+                    "order": 0,
+                    "visible": true
+                },
+                {
+                    "kind": "page",
+                    "slug": "menu",
+                    "title": "Menú",
+                    "order": 1,
+                    "visible": true
+                },
+                {
+                    "kind": "page",
+                    "slug": "promos",
+                    "title": "Promos",
+                    "order": 2,
+                    "visible": true
+                },
+                {
+                    "kind": "contact",
+                    "slug": "contacto",
+                    "title": "Contacto",
+                    "order": 3,
+                    "visible": true
+                }
+            ],
+            "homeContent": [
+                {
+                    "id": "hero-1",
+                    "kind": "hero",
+                    "data": {
+                        "title": "Pizzería Don Luigi",
+                        "subtitle": "La mejor pizza del barrio",
+                        "align": "center"
+                    }
+                },
+                {
+                    "id": "features-1",
+                    "kind": "features",
+                    "data": {
+                        "title": "Por qué elegirnos",
+                        "columns": 3,
+                        "items": [
+                            {
+                                "title": "Horno a la piedra",
+                                "text": "Sabor auténtico"
+                            },
+                            {
+                                "title": "Ingredientes frescos",
+                                "text": "Calidad todos los días"
+                            },
+                            {
+                                "title": "Delivery rápido",
+                                "text": "Llegamos a tu casa"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "id": "productive-1",
+                    "kind": "productive",
+                    "data": {
+                        "title": "Productos destacados (demo)",
+                        "type": "product",
+                        "items": [
+                            {
+                                "listingId": 101,
+                                "title": "Muzzarella",
+                                "text": "Clásica",
+                                "thumbUrl": "/templates/pizzeria/thumbs/muzza.jpg"
+                            },
+                            {
+                                "listingId": 102,
+                                "title": "Napolitana",
+                                "text": "Con tomate y ajo",
+                                "thumbUrl": "/templates/pizzeria/thumbs/napo.jpg"
+                            },
+                            {
+                                "listingId": 103,
+                                "title": "Fugazzetta",
+                                "text": "Queso y cebolla",
+                                "thumbUrl": "/templates/pizzeria/thumbs/fugazzetta.jpg"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "id": "gallery-1",
+                    "kind": "gallery",
+                    "data": {
+                        "title": "Galería",
+                        "columns": 3,
+                        "swiper": "false",
+                        "width": "100%",
+                        "minWidth": "320px",
+                        "images": [
+                            {
+                                "url": "/templates/pizzeria/gallery/1.jpg",
+                                "alt": "Pizza 1"
+                            },
+                            {
+                                "url": "/templates/pizzeria/gallery/2.jpg",
+                                "alt": "Pizza 2"
+                            },
+                            {
+                                "url": "/templates/pizzeria/gallery/3.jpg",
+                                "alt": "Pizza 3"
+                            }
+                        ]
+                    }
+                }
+            ],
+            "themePreset": "userPreset",
+            "themeConfig": {
+                "preset": "userPreset",
+                "components": {
+                    "card": {
+                        "shadow": "none"
+                    },
+                    "button": {
+                        "variant": "solid"
+                    }
+                },
+                "hero": {
+                    "bgcr": "#0b0b0b",
+                    "tcr": "#f9fafb",
+                    "scr": "#9ca3af",
+                    "ttse": "22px",
+                    "stse": "16px",
+                    "tatt": "start",
+                    "satt": "start",
+                    "tty": "system",
+                    "sty": "system",
+                    "br": "0px",
+                    "rs": "18px",
+                    "bcr": "#000000"
+                },
+                "features": {
+                    "bgcr": "#0b0b0b",
+                    "tcr": "#f9fafb",
+                    "ttse": "20px",
+                    "tatt": "start",
+                    "ibgcr": "#111111",
+                    "itcr": "#f9fafb",
+                    "itxcr": "#d1d5db",
+                    "itxtse": "14px",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                },
+                "productive": {
+                    "bgcr": "#0b0b0b",
+                    "tcr": "#f9fafb",
+                    "yyse": "20px",
+                    "itcr": "#f9fafb",
+                    "itxcr": "#d1d5db",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                },
+                "gallery": {
+                    "bgcr": "#0b0b0b",
+                    "tcr": "#f9fafb",
+                    "ttse": "14px",
+                    "cbcr": "#111111",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                },
+                "cta": {
+                    "bgcr": "#0b0b0b",
+                    "tcr": "#d1d5db",
+                    "ticr": "#f9fafb",
+                    "titse": "20px",
+                    "ttse": "14px",
+                    "btse": "16px",
+                    "bttse": "16px",
+                    "btrs": "999px",
+                    "btbdcr": "#f9fafb",
+                    "btbdcrhv": "#e5e7eb",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                }
+            },
+            "showContactForm": true,
+            "contactEmailExists": false
+        },
+        "pages": [
+            {
+                "id": 1,
+                "slug": "menu",
+                "title": "Menú",
+                "content": [
+                    {
+                        "id": "text-menu",
+                        "kind": "text",
+                        "data": {
+                            "title": "Carta",
+                            "body": "Pizzas clásicas · Especiales · Empanadas\nBebidas · Postres"
+                        }
+                    }
+                ]
+            },
+            {
+                "id": 2,
+                "slug": "promos",
+                "title": "Promos",
+                "content": [
+                    {
+                        "id": "cta-1",
+                        "kind": "cta",
+                        "data": {
+                            "title": "Promo 2x1 (demo)",
+                            "text": "Solo para ejemplo de template.",
+                            "buttonText": "Ver más",
+                            "href": "#"
+                        }
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": "estudio-abogados",
+        "label": "Estudio de abogados",
+        "previewImage": "/templates/abogados/preview.jpg",
+        "business": {
+            "id": 0,
+            "slug": "estudio-abogados",
+            "name": "Estudio Ríos & Asociados",
+            "headline": "Civil · Laboral · Comercial · Familia",
+            "category": "Servicios legales",
+            "surfaceBgColor": "#05060a",
+            "bgColor": "#0b1020",
+            "width": "md",
+            "headerHeight": "md",
+            "headerBgColor": "#0b1020",
+            "headerBgSize": "cover",
+            "headerBgPosition": "right",
+            "headerOpacityOverlay": 70,
+            "headerOverlayPosition": "right",
+            "titleColor": "#f8fafc",
+            "titleTypography": "Georgia, serif",
+            "titleTextSize": 28,
+            "titleAlignText": "start",
+            "headlineColor": "#cbd5e1",
+            "headlineTypography": "Inter, system-ui, sans-serif",
+            "headlineTextSize": 14,
+            "headlineAlignText": "start",
+            "categoryColor": "#94a3b8",
+            "categoryTypography": "Inter, system-ui, sans-serif",
+            "categoryTextSize": 12,
+            "categoryAlignText": "start",
+            "ownerName": "Demo",
+            "headerBgImageUrl": "/templates/abogados/header.jpg"
+        },
+        "site": {
+            "nav": [
+                {
+                    "kind": "home",
+                    "slug": "home",
+                    "title": "Inicio",
+                    "order": 0,
+                    "visible": true
+                },
+                {
+                    "kind": "page",
+                    "slug": "servicios",
+                    "title": "Servicios",
+                    "order": 1,
+                    "visible": true
+                },
+                {
+                    "kind": "page",
+                    "slug": "equipo",
+                    "title": "Equipo",
+                    "order": 2,
+                    "visible": true
+                },
+                {
+                    "kind": "page",
+                    "slug": "preguntas",
+                    "title": "Preguntas",
+                    "order": 3,
+                    "visible": true
+                },
+                {
+                    "kind": "contact",
+                    "slug": "contacto",
+                    "title": "Contacto",
+                    "order": 4,
+                    "visible": true
+                }
+            ],
+            "homeContent": [
+                {
+                    "id": "hero-1",
+                    "kind": "hero",
+                    "data": {
+                        "title": "Estudio Ríos & Asociados",
+                        "subtitle": "Asesoramiento claro. Estrategia. Resultados.",
+                        "align": "left"
+                    }
+                },
+                {
+                    "id": "text-1",
+                    "kind": "text",
+                    "data": {
+                        "title": "Enfoque profesional",
+                        "body": "Atención personalizada y seguimiento constante.\nConsultas presenciales y online.\nConfidencialidad y compromiso."
+                    }
+                },
+                {
+                    "id": "features-1",
+                    "kind": "features",
+                    "data": {
+                        "title": "Áreas de práctica",
+                        "columns": 3,
+                        "items": [
+                            {
+                                "title": "Derecho laboral",
+                                "text": "Despidos, indemnizaciones, ART."
+                            },
+                            {
+                                "title": "Derecho civil",
+                                "text": "Daños, contratos, sucesiones."
+                            },
+                            {
+                                "title": "Familia",
+                                "text": "Divorcios, alimentos, cuidado personal."
+                            }
+                        ]
+                    }
+                },
+                {
+                    "id": "cta-1",
+                    "kind": "cta",
+                    "data": {
+                        "title": "¿Necesitás una consulta?",
+                        "text": "Escribinos y coordinamos una entrevista.",
+                        "buttonText": "Solicitar consulta",
+                        "href": "#"
+                    }
+                }
+            ],
+            "themePreset": "userPreset",
+            "themeConfig": {
+                "preset": "userPreset",
+                "components": {
+                    "card": {
+                        "shadow": "none"
+                    },
+                    "button": {
+                        "variant": "outline"
+                    }
+                },
+                "hero": {
+                    "bgcr": "#0b1020",
+                    "tcr": "#f8fafc",
+                    "scr": "#cbd5e1",
+                    "ttse": "22px",
+                    "stse": "14px",
+                    "tatt": "start",
+                    "satt": "start",
+                    "tty": "system",
+                    "sty": "system",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                },
+                "text": {
+                    "bgcr": "#0b1020",
+                    "tcr": "#f8fafc",
+                    "bycr": "#cbd5e1",
+                    "ttsc": "18px",
+                    "bytse": "14px",
+                    "tat": "start",
+                    "byatt": "start",
+                    "tty": "system",
+                    "byty": "system",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                },
+                "features": {
+                    "bgcr": "#0b1020",
+                    "tcr": "#f8fafc",
+                    "ttse": "18px",
+                    "tatt": "start",
+                    "ibgcr": "#101a33",
+                    "itcr": "#f8fafc",
+                    "itxcr": "#cbd5e1",
+                    "itxtse": "13px",
+                    "tty": "system",
+                    "itty": "system",
+                    "itxty": "system",
+                    "itatt": "start",
+                    "itxatt": "start",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                },
+                "cta": {
+                    "bgcr": "#0b1020",
+                    "ticr": "#f8fafc",
+                    "tcr": "#cbd5e1",
+                    "titse": "18px",
+                    "ttse": "14px",
+                    "tity": "system",
+                    "tty": "system",
+                    "tatt": "start",
+                    "tiatt": "start",
+                    "btrs": "999px",
+                    "btbdcr": "#f8fafc",
+                    "btbdcrhv": "#e2e8f0",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                }
+            },
+            "showContactForm": true,
+            "contactEmailExists": false
+        },
+        "pages": [
+            {
+                "id": 1,
+                "slug": "servicios",
+                "title": "Servicios",
+                "content": [
+                    {
+                        "id": "text-s1",
+                        "kind": "text",
+                        "data": {
+                            "title": "Asesoramiento y litigios",
+                            "body": "Consultas y representación.\nRedacción de contratos.\nMediaciones."
+                        }
+                    },
+                    {
+                        "id": "features-s2",
+                        "kind": "features",
+                        "data": {
+                            "title": "Servicios frecuentes",
+                            "columns": 2,
+                            "items": [
+                                {
+                                    "title": "Laboral",
+                                    "text": "Reclamos, acuerdos, audiencias."
+                                },
+                                {
+                                    "title": "Civil y comercial",
+                                    "text": "Contratos, daños, cobros."
+                                }
+                            ]
+                        }
+                    }
+                ]
+            },
+            {
+                "id": 2,
+                "slug": "equipo",
+                "title": "Equipo",
+                "content": [
+                    {
+                        "id": "text-e1",
+                        "kind": "text",
+                        "data": {
+                            "title": "Abogadas/os",
+                            "body": "Equipo interdisciplinario con experiencia en tribunales.\nAtención cálida y profesional."
+                        }
+                    }
+                ]
+            },
+            {
+                "id": 3,
+                "slug": "preguntas",
+                "title": "Preguntas frecuentes",
+                "content": [
+                    {
+                        "id": "text-f1",
+                        "kind": "text",
+                        "data": {
+                            "title": "FAQ",
+                            "body": "¿Cómo es la primera consulta?\n¿Qué documentación necesito?\n¿Cuáles son los plazos?"
+                        }
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": "carpinteria-artesanal",
+        "label": "Carpintería artesanal",
+        "previewImage": "/templates/carpinteria/preview.jpg",
+        "business": {
+            "id": 0,
+            "slug": "carpinteria-artesanal",
+            "name": "Carpintería Roble",
+            "headline": "Muebles a medida · Restauración · Instalaciones",
+            "category": "Carpintería",
+            "surfaceBgColor": "#070707",
+            "bgColor": "#120d08",
+            "width": "lg",
+            "headerHeight": "lg",
+            "headerBgColor": "#1a120b",
+            "headerBgSize": "cover",
+            "headerBgPosition": "center",
+            "headerOpacityOverlay": 55,
+            "headerOverlayPosition": "left",
+            "titleColor": "#fff7ed",
+            "titleTypography": "Inter, system-ui, sans-serif",
+            "titleTextSize": 30,
+            "titleAlignText": "start",
+            "headlineColor": "#fed7aa",
+            "headlineTypography": "Inter, system-ui, sans-serif",
+            "headlineTextSize": 14,
+            "headlineAlignText": "start",
+            "categoryColor": "#fdba74",
+            "categoryTypography": "Inter, system-ui, sans-serif",
+            "categoryTextSize": 12,
+            "categoryAlignText": "start",
+            "ownerName": "Demo",
+            "headerBgImageUrl": "/templates/carpinteria/header.jpg"
+        },
+        "site": {
+            "nav": [
+                {
+                    "kind": "home",
+                    "slug": "home",
+                    "title": "Inicio",
+                    "order": 0,
+                    "visible": true
+                },
+                {
+                    "kind": "page",
+                    "slug": "trabajos",
+                    "title": "Trabajos",
+                    "order": 1,
+                    "visible": true
+                },
+                {
+                    "kind": "page",
+                    "slug": "servicios",
+                    "title": "Servicios",
+                    "order": 2,
+                    "visible": true
+                },
+                {
+                    "kind": "contact",
+                    "slug": "contacto",
+                    "title": "Contacto",
+                    "order": 3,
+                    "visible": true
+                }
+            ],
+            "homeContent": [
+                {
+                    "id": "hero-1",
+                    "kind": "hero",
+                    "data": {
+                        "title": "Carpintería Roble",
+                        "subtitle": "Madera, detalle y terminaciones premium.",
+                        "align": "left"
+                    }
+                },
+                {
+                    "id": "features-1",
+                    "kind": "features",
+                    "data": {
+                        "title": "Qué hacemos",
+                        "columns": 3,
+                        "items": [
+                            {
+                                "title": "Muebles a medida",
+                                "text": "Cocinas, placares, bibliotecas."
+                            },
+                            {
+                                "title": "Restauración",
+                                "text": "Recuperamos piezas con historia."
+                            },
+                            {
+                                "title": "Instalación",
+                                "text": "Colocación prolija y segura."
+                            }
+                        ]
+                    }
+                },
+                {
+                    "id": "gallery-1",
+                    "kind": "gallery",
+                    "data": {
+                        "title": "Proyectos recientes",
+                        "columns": 3,
+                        "swiper": "false",
+                        "width": "100%",
+                        "minWidth": "320px",
+                        "images": [
+                            {
+                                "url": "/templates/carpinteria/gallery/1.jpg",
+                                "alt": "Mueble 1"
+                            },
+                            {
+                                "url": "/templates/carpinteria/gallery/2.jpg",
+                                "alt": "Mueble 2"
+                            },
+                            {
+                                "url": "/templates/carpinteria/gallery/3.jpg",
+                                "alt": "Mueble 3"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "id": "cta-1",
+                    "kind": "cta",
+                    "data": {
+                        "title": "Pedí tu presupuesto",
+                        "text": "Contanos medidas, materiales y estilo.",
+                        "buttonText": "Consultar",
+                        "href": "#"
+                    }
+                }
+            ],
+            "themePreset": "userPreset",
+            "themeConfig": {
+                "cta": {
+                    "br": "0px",
+                    "rs": "18px",
+                    "bcr": "#22170e",
+                    "tcr": "#fed7aa",
+                    "tty": "system",
+                    "bgcr": "#22170e",
+                    "btan": "start",
+                    "btbr": "1px",
+                    "btcr": "#413e3e",
+                    "btrs": "999px",
+                    "btty": "system",
+                    "tatt": "start",
+                    "ticr": "#fff7ed",
+                    "tity": "system",
+                    "ttse": "14px",
+                    "bttse": "18px",
+                    "tiatt": "start",
+                    "titse": "18px",
+                    "btbdcr": "#fff7ed",
+                    "btbrcr": "#33ff33",
+                    "btbdcrhv": "#fed7aa"
+                },
+                "hero": {
+                    "br": "0px",
+                    "rs": "18px",
+                    "bcr": "#000000",
+                    "scr": "#fed7aa",
+                    "sty": "system",
+                    "tcr": "#fff7ed",
+                    "tty": "system",
+                    "bgcr": "#1a120b",
+                    "satt": "start",
+                    "stse": "14px",
+                    "tatt": "start",
+                    "ttse": "22px"
+                },
+                "text": {
+                    "br": "0px",
+                    "rs": "8px",
+                    "bcr": "#22170e",
+                    "tat": "start",
+                    "tcr": "#dddddd",
+                    "tty": "system",
+                    "bgcr": "#22170e",
+                    "bycr": "#dddddd",
+                    "byty": "system",
+                    "ttsc": "20px",
+                    "byatt": "start",
+                    "bytse": "18px"
+                },
+                "header": {
+                    "ban": "start",
+                    "bbg": "#444444",
+                    "bbr": "1px",
+                    "bcr": "#dddddd",
+                    "bgp": "4px",
+                    "brs": "8px",
+                    "bty": "system",
+                    "bbae": "#444444",
+                    "bbcr": "#dddddd",
+                    "bbhr": "#555555",
+                    "bcae": "#ffffff",
+                    "btse": "20px",
+                    "bbcae": "#555555"
+                },
+                "preset": "userPreset",
+                "gallery": {
+                    "br": "0px",
+                    "rs": "18px",
+                    "bcr": "#000000",
+                    "crs": "6px",
+                    "tcr": "#fff7ed",
+                    "tty": "system",
+                    "bgcr": "#120d08",
+                    "cbcr": "#22170e",
+                    "tatt": "start",
+                    "ttse": "14px"
+                },
+                "features": {
+                    "br": "0px",
+                    "rs": "18px",
+                    "bcr": "#000000",
+                    "ibr": "0px",
+                    "irs": "6px",
+                    "tcr": "#fff7ed",
+                    "tty": "system",
+                    "bgcr": "#120d08",
+                    "ibcr": "#22170e",
+                    "itcr": "#fff7ed",
+                    "itty": "system",
+                    "tatt": "start",
+                    "ttse": "18px",
+                    "ibgcr": "#22170e",
+                    "itatt": "start",
+                    "ittse": "18px",
+                    "itxcr": "#fed7aa",
+                    "itxty": "system",
+                    "itxatt": "start",
+                    "itxtse": "13px"
+                },
+                "components": {
+                    "card": {
+                        "shadow": "none"
+                    },
+                    "button": {
+                        "variant": "solid"
+                    }
+                },
+                "productive": {
+                    "br": "0px",
+                    "rs": "8px",
+                    "bcr": "#22170e",
+                    "tcr": "#dddddd",
+                    "tty": "system",
+                    "bgcr": "#22170e",
+                    "itcr": "#dddddd",
+                    "itse": "18px",
+                    "itty": "system",
+                    "tatt": "start",
+                    "yyse": "20px",
+                    "itatt": "start",
+                    "itxcr": "#dddddd",
+                    "itxty": "system",
+                    "itxatt": "start",
+                    "itxtse": "16px"
+                }
+            },
+            "showContactForm": true,
+            "contactEmailExists": false
+        },
+        "pages": [
+            {
+                "id": 1,
+                "slug": "trabajos",
+                "title": "Trabajos",
+                "content": [
+                    {
+                        "id": "text-t1",
+                        "kind": "text",
+                        "data": {
+                            "title": "Portfolio",
+                            "body": "Placares · Muebles de baño · Muebles de cocina · Escritorios.\nConsultá por maderas y terminaciones."
+                        }
+                    }
+                ]
+            },
+            {
+                "id": 2,
+                "slug": "servicios",
+                "title": "Servicios",
+                "content": [
+                    {
+                        "id": "features-s1",
+                        "kind": "features",
+                        "data": {
+                            "title": "Servicios",
+                            "columns": 2,
+                            "items": [
+                                {
+                                    "title": "Diseño y medición",
+                                    "text": "Visita y asesoramiento."
+                                },
+                                {
+                                    "title": "Fabricación e instalación",
+                                    "text": "Entrega e instalación."
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": "taller-mecanico",
+        "label": "Taller mecánico de autos",
+        "previewImage": "/templates/taller/preview.jpg",
+        "business": {
+            "id": 0,
+            "slug": "taller-mecanico",
+            "name": "Taller Ruta 9",
+            "headline": "Diagnóstico · Tren delantero · Frenos · Service",
+            "category": "Taller mecánico",
+            "surfaceBgColor": "#050507",
+            "bgColor": "#0b0b0f",
+            "width": "lg",
+            "headerHeight": "lg",
+            "headerBgColor": "#0b0b0f",
+            "headerBgSize": "cover",
+            "headerBgPosition": "center",
+            "headerOpacityOverlay": 65,
+            "headerOverlayPosition": "center",
+            "titleColor": "#f8fafc",
+            "titleTypography": "Inter, system-ui, sans-serif",
+            "titleTextSize": 30,
+            "titleAlignText": "center",
+            "headlineColor": "#e2e8f0",
+            "headlineTypography": "Inter, system-ui, sans-serif",
+            "headlineTextSize": 14,
+            "headlineAlignText": "center",
+            "categoryColor": "#94a3b8",
+            "categoryTypography": "Inter, system-ui, sans-serif",
+            "categoryTextSize": 12,
+            "categoryAlignText": "center",
+            "ownerName": "Demo",
+            "headerBgImageUrl": "/templates/taller/header.jpg"
+        },
+        "site": {
+            "nav": [
+                {
+                    "kind": "home",
+                    "slug": "home",
+                    "title": "Inicio",
+                    "order": 0,
+                    "visible": true
+                },
+                {
+                    "kind": "page",
+                    "slug": "servicios",
+                    "title": "Servicios",
+                    "order": 1,
+                    "visible": true
+                },
+                {
+                    "kind": "page",
+                    "slug": "turnos",
+                    "title": "Turnos",
+                    "order": 2,
+                    "visible": true
+                },
+                {
+                    "kind": "contact",
+                    "slug": "contacto",
+                    "title": "Contacto",
+                    "order": 3,
+                    "visible": true
+                }
+            ],
+            "homeContent": [
+                {
+                    "id": "hero-1",
+                    "kind": "hero",
+                    "data": {
+                        "title": "Taller Ruta 9",
+                        "subtitle": "Mecánica general con diagnóstico y garantía.",
+                        "align": "center"
+                    }
+                },
+                {
+                    "id": "features-1",
+                    "kind": "features",
+                    "data": {
+                        "title": "Servicios",
+                        "columns": 3,
+                        "items": [
+                            {
+                                "title": "Service",
+                                "text": "Aceite, filtros, correas."
+                            },
+                            {
+                                "title": "Frenos",
+                                "text": "Pastillas, discos, líquido."
+                            },
+                            {
+                                "title": "Tren delantero",
+                                "text": "Amortiguadores, rótulas."
+                            }
+                        ]
+                    }
+                },
+                {
+                    "id": "text-1",
+                    "kind": "text",
+                    "data": {
+                        "title": "Diagnóstico",
+                        "body": "Escáner OBD · chequeo completo · presupuesto antes de reparar.\nAtendemos con turno y urgencias según disponibilidad."
+                    }
+                },
+                {
+                    "id": "cta-1",
+                    "kind": "cta",
+                    "data": {
+                        "title": "Pedí turno",
+                        "text": "Dejanos tu consulta con modelo y patente (opcional).",
+                        "buttonText": "Solicitar turno",
+                        "href": "#"
+                    }
+                }
+            ],
+            "themePreset": "userPreset",
+            "themeConfig": {
+                "preset": "userPreset",
+                "components": {
+                    "card": {
+                        "shadow": "none"
+                    },
+                    "button": {
+                        "variant": "solid"
+                    }
+                },
+                "hero": {
+                    "bgcr": "#0b0b0f",
+                    "tcr": "#f8fafc",
+                    "scr": "#e2e8f0",
+                    "ttse": "22px",
+                    "stse": "14px",
+                    "tatt": "center",
+                    "satt": "center",
+                    "tty": "system",
+                    "sty": "system",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                },
+                "features": {
+                    "bgcr": "#0b0b0f",
+                    "tcr": "#f8fafc",
+                    "ttse": "18px",
+                    "tatt": "start",
+                    "ibgcr": "#111118",
+                    "itcr": "#f8fafc",
+                    "itxcr": "#cbd5e1",
+                    "itxtse": "13px",
+                    "tty": "system",
+                    "itty": "system",
+                    "itxty": "system",
+                    "itatt": "start",
+                    "itxatt": "start",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                },
+                "text": {
+                    "bgcr": "#0b0b0f",
+                    "tcr": "#f8fafc",
+                    "bycr": "#cbd5e1",
+                    "ttsc": "18px",
+                    "bytse": "14px",
+                    "tat": "start",
+                    "byatt": "start",
+                    "tty": "system",
+                    "byty": "system",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                },
+                "cta": {
+                    "bgcr": "#0b0b0f",
+                    "ticr": "#f8fafc",
+                    "tcr": "#cbd5e1",
+                    "titse": "18px",
+                    "ttse": "14px",
+                    "tity": "system",
+                    "tty": "system",
+                    "tatt": "start",
+                    "tiatt": "start",
+                    "btrs": "999px",
+                    "btbdcr": "#f8fafc",
+                    "btbdcrhv": "#e2e8f0",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                }
+            },
+            "showContactForm": true,
+            "contactEmailExists": false
+        },
+        "pages": [
+            {
+                "id": 1,
+                "slug": "servicios",
+                "title": "Servicios",
+                "content": [
+                    {
+                        "id": "features-s1",
+                        "kind": "features",
+                        "data": {
+                            "title": "Mecánica general",
+                            "columns": 2,
+                            "items": [
+                                {
+                                    "title": "Motor",
+                                    "text": "Diagnóstico y reparación."
+                                },
+                                {
+                                    "title": "Electricidad",
+                                    "text": "Batería, alternador, arranque."
+                                }
+                            ]
+                        }
+                    }
+                ]
+            },
+            {
+                "id": 2,
+                "slug": "turnos",
+                "title": "Turnos",
+                "content": [
+                    {
+                        "id": "text-t1",
+                        "kind": "text",
+                        "data": {
+                            "title": "Cómo pedir turno",
+                            "body": "Indicá: marca/modelo/año · síntoma · disponibilidad horaria.\nRespondemos a la brevedad."
+                        }
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": "electricista",
+        "label": "Electricista",
+        "previewImage": "/templates/electricista/preview.jpg",
+        "business": {
+            "id": 0,
+            "slug": "electricista",
+            "name": "Electricidad Segura",
+            "headline": "Urgencias 24h · Instalaciones · Tableros · Puestas a tierra",
+            "category": "Electricista matriculado",
+            "surfaceBgColor": "#05070a",
+            "bgColor": "#07121f",
+            "width": "md",
+            "headerHeight": "md",
+            "headerBgColor": "#07121f",
+            "headerBgSize": "cover",
+            "headerBgPosition": "left",
+            "headerOpacityOverlay": 60,
+            "headerOverlayPosition": "left",
+            "titleColor": "#f8fafc",
+            "titleTypography": "Inter, system-ui, sans-serif",
+            "titleTextSize": 28,
+            "titleAlignText": "start",
+            "headlineColor": "#e2e8f0",
+            "headlineTypography": "Inter, system-ui, sans-serif",
+            "headlineTextSize": 14,
+            "headlineAlignText": "start",
+            "categoryColor": "#93c5fd",
+            "categoryTypography": "Inter, system-ui, sans-serif",
+            "categoryTextSize": 12,
+            "categoryAlignText": "start",
+            "ownerName": "Demo",
+            "headerBgImageUrl": "/templates/electricista/header.jpg"
+        },
+        "site": {
+            "nav": [
+                {
+                    "kind": "home",
+                    "slug": "home",
+                    "title": "Inicio",
+                    "order": 0,
+                    "visible": true
+                },
+                {
+                    "kind": "page",
+                    "slug": "servicios",
+                    "title": "Servicios",
+                    "order": 1,
+                    "visible": true
+                },
+                {
+                    "kind": "page",
+                    "slug": "zonas",
+                    "title": "Zonas",
+                    "order": 2,
+                    "visible": true
+                },
+                {
+                    "kind": "contact",
+                    "slug": "contacto",
+                    "title": "Contacto",
+                    "order": 3,
+                    "visible": true
+                }
+            ],
+            "homeContent": [
+                {
+                    "id": "hero-1",
+                    "kind": "hero",
+                    "data": {
+                        "title": "Electricidad Segura",
+                        "subtitle": "Atención rápida y prolija. Trabajo garantizado.",
+                        "align": "left"
+                    }
+                },
+                {
+                    "id": "features-1",
+                    "kind": "features",
+                    "data": {
+                        "title": "Servicios",
+                        "columns": 3,
+                        "items": [
+                            {
+                                "title": "Urgencias",
+                                "text": "Cortes, llaves térmicas, cortos."
+                            },
+                            {
+                                "title": "Tableros",
+                                "text": "Reemplazo y normalización."
+                            },
+                            {
+                                "title": "Instalación",
+                                "text": "Luminarias y tomas."
+                            }
+                        ]
+                    }
+                },
+                {
+                    "id": "cta-1",
+                    "kind": "cta",
+                    "data": {
+                        "title": "¿Tenés una urgencia?",
+                        "text": "Escribinos y coordinamos visita.",
+                        "buttonText": "Contactar",
+                        "href": "#"
+                    }
+                }
+            ],
+            "themePreset": "userPreset",
+            "themeConfig": {
+                "preset": "userPreset",
+                "components": {
+                    "card": {
+                        "shadow": "none"
+                    },
+                    "button": {
+                        "variant": "solid"
+                    }
+                },
+                "hero": {
+                    "bgcr": "#07121f",
+                    "tcr": "#f8fafc",
+                    "scr": "#e2e8f0",
+                    "ttse": "22px",
+                    "stse": "14px",
+                    "tatt": "start",
+                    "satt": "start",
+                    "tty": "system",
+                    "sty": "system",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                },
+                "features": {
+                    "bgcr": "#07121f",
+                    "tcr": "#f8fafc",
+                    "ttse": "18px",
+                    "tatt": "start",
+                    "ibgcr": "#0b1a2c",
+                    "itcr": "#f8fafc",
+                    "itxcr": "#cbd5e1",
+                    "itxtse": "13px",
+                    "tty": "system",
+                    "itty": "system",
+                    "itxty": "system",
+                    "itatt": "start",
+                    "itxatt": "start",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                },
+                "cta": {
+                    "bgcr": "#07121f",
+                    "ticr": "#f8fafc",
+                    "tcr": "#cbd5e1",
+                    "titse": "18px",
+                    "ttse": "14px",
+                    "tity": "system",
+                    "tty": "system",
+                    "tatt": "start",
+                    "tiatt": "start",
+                    "btrs": "999px",
+                    "btbdcr": "#93c5fd",
+                    "btbdcrhv": "#bfdbfe",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                }
+            },
+            "showContactForm": true,
+            "contactEmailExists": false
+        },
+        "pages": [
+            {
+                "id": 1,
+                "slug": "servicios",
+                "title": "Servicios",
+                "content": [
+                    {
+                        "id": "text-s1",
+                        "kind": "text",
+                        "data": {
+                            "title": "Instalaciones y reparaciones",
+                            "body": "Instalación domiciliaria.\nTableros.\nPuesta a tierra.\nIluminación."
+                        }
+                    }
+                ]
+            },
+            {
+                "id": 2,
+                "slug": "zonas",
+                "title": "Zonas",
+                "content": [
+                    {
+                        "id": "text-z1",
+                        "kind": "text",
+                        "data": {
+                            "title": "Cobertura",
+                            "body": "Atención en CABA y GBA (según disponibilidad).\nConsultá tu zona."
+                        }
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": "instituto-ingles",
+        "label": "Instituto de Enseñanza de Inglés",
+        "previewImage": "/templates/ingles/preview.jpg",
+        "business": {
+            "id": 0,
+            "slug": "instituto-ingles",
+            "name": "English Bridge Institute",
+            "headline": "Cursos para adultos y niños · Preparación exámenes",
+            "category": "Educación",
+            "surfaceBgColor": "#040a12",
+            "bgColor": "#071a2b",
+            "width": "lg",
+            "headerHeight": "lg",
+            "headerBgColor": "#071a2b",
+            "headerBgSize": "cover",
+            "headerBgPosition": "center",
+            "headerOpacityOverlay": 55,
+            "headerOverlayPosition": "center",
+            "titleColor": "#f8fafc",
+            "titleTypography": "Inter, system-ui, sans-serif",
+            "titleTextSize": 30,
+            "titleAlignText": "center",
+            "headlineColor": "#bae6fd",
+            "headlineTypography": "Inter, system-ui, sans-serif",
+            "headlineTextSize": 14,
+            "headlineAlignText": "center",
+            "categoryColor": "#93c5fd",
+            "categoryTypography": "Inter, system-ui, sans-serif",
+            "categoryTextSize": 12,
+            "categoryAlignText": "center",
+            "ownerName": "Demo",
+            "headerBgImageUrl": "/templates/ingles/header.jpg"
+        },
+        "site": {
+            "nav": [
+                {
+                    "kind": "home",
+                    "slug": "home",
+                    "title": "Inicio",
+                    "order": 0,
+                    "visible": true
+                },
+                {
+                    "kind": "page",
+                    "slug": "cursos",
+                    "title": "Cursos",
+                    "order": 1,
+                    "visible": true
+                },
+                {
+                    "kind": "page",
+                    "slug": "niveles",
+                    "title": "Niveles",
+                    "order": 2,
+                    "visible": true
+                },
+                {
+                    "kind": "page",
+                    "slug": "inscripcion",
+                    "title": "Inscripción",
+                    "order": 3,
+                    "visible": true
+                },
+                {
+                    "kind": "contact",
+                    "slug": "contacto",
+                    "title": "Contacto",
+                    "order": 4,
+                    "visible": true
+                }
+            ],
+            "homeContent": [
+                {
+                    "id": "hero-1",
+                    "kind": "hero",
+                    "data": {
+                        "title": "English Bridge Institute",
+                        "subtitle": "Aprendé inglés con un plan claro y medible.",
+                        "align": "center"
+                    }
+                },
+                {
+                    "id": "features-1",
+                    "kind": "features",
+                    "data": {
+                        "title": "Modalidades",
+                        "columns": 3,
+                        "items": [
+                            {
+                                "title": "Presencial",
+                                "text": "Clases grupales reducidas."
+                            },
+                            {
+                                "title": "Online",
+                                "text": "En vivo y con materiales."
+                            },
+                            {
+                                "title": "Exámenes",
+                                "text": "Preparación internacional."
+                            }
+                        ]
+                    }
+                },
+                {
+                    "id": "text-1",
+                    "kind": "text",
+                    "data": {
+                        "title": "Metodología",
+                        "body": "Seguimiento por objetivos.\nPráctica conversacional.\nEvaluaciones periódicas."
+                    }
+                },
+                {
+                    "id": "cta-1",
+                    "kind": "cta",
+                    "data": {
+                        "title": "Hacé el test de nivel",
+                        "text": "Te recomendamos el curso ideal.",
+                        "buttonText": "Quiero empezar",
+                        "href": "#"
+                    }
+                }
+            ],
+            "themePreset": "userPreset",
+            "themeConfig": {
+                "preset": "userPreset",
+                "components": {
+                    "card": {
+                        "shadow": "none"
+                    },
+                    "button": {
+                        "variant": "solid"
+                    }
+                },
+                "hero": {
+                    "bgcr": "#071a2b",
+                    "tcr": "#f8fafc",
+                    "scr": "#bae6fd",
+                    "ttse": "22px",
+                    "stse": "14px",
+                    "tatt": "center",
+                    "satt": "center",
+                    "tty": "system",
+                    "sty": "system",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                },
+                "features": {
+                    "bgcr": "#071a2b",
+                    "tcr": "#f8fafc",
+                    "ttse": "18px",
+                    "tatt": "start",
+                    "ibgcr": "#0b2238",
+                    "itcr": "#f8fafc",
+                    "itxcr": "#bae6fd",
+                    "itxtse": "13px",
+                    "tty": "system",
+                    "itty": "system",
+                    "itxty": "system",
+                    "itatt": "start",
+                    "itxatt": "start",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                },
+                "text": {
+                    "bgcr": "#071a2b",
+                    "tcr": "#f8fafc",
+                    "bycr": "#bae6fd",
+                    "ttsc": "18px",
+                    "bytse": "14px",
+                    "tat": "start",
+                    "byatt": "start",
+                    "tty": "system",
+                    "byty": "system",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                },
+                "cta": {
+                    "bgcr": "#071a2b",
+                    "ticr": "#f8fafc",
+                    "tcr": "#bae6fd",
+                    "titse": "18px",
+                    "ttse": "14px",
+                    "tity": "system",
+                    "tty": "system",
+                    "tatt": "start",
+                    "tiatt": "start",
+                    "btrs": "999px",
+                    "btbdcr": "#93c5fd",
+                    "btbdcrhv": "#bfdbfe",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                }
+            },
+            "showContactForm": true,
+            "contactEmailExists": false
+        },
+        "pages": [
+            {
+                "id": 1,
+                "slug": "cursos",
+                "title": "Cursos",
+                "content": [
+                    {
+                        "id": "features-c1",
+                        "kind": "features",
+                        "data": {
+                            "title": "Oferta académica",
+                            "columns": 2,
+                            "items": [
+                                {
+                                    "title": "Adultos",
+                                    "text": "General English · Conversation."
+                                },
+                                {
+                                    "title": "Niños y adolescentes",
+                                    "text": "Programas por edades."
+                                }
+                            ]
+                        }
+                    }
+                ]
+            },
+            {
+                "id": 2,
+                "slug": "niveles",
+                "title": "Niveles",
+                "content": [
+                    {
+                        "id": "text-n1",
+                        "kind": "text",
+                        "data": {
+                            "title": "Niveles",
+                            "body": "A1–A2: Bases\nB1–B2: Fluidez\nC1–C2: Avanzado"
+                        }
+                    }
+                ]
+            },
+            {
+                "id": 3,
+                "slug": "inscripcion",
+                "title": "Inscripción",
+                "content": [
+                    {
+                        "id": "cta-i1",
+                        "kind": "cta",
+                        "data": {
+                            "title": "Inscribite (demo)",
+                            "text": "Este es un template de ejemplo.",
+                            "buttonText": "Enviar consulta",
+                            "href": "#"
+                        }
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": "casa-instrumentos",
+        "label": "Casa de instrumentos musicales",
+        "previewImage": "/templates/instrumentos/preview.jpg",
+        "business": {
+            "id": 0,
+            "slug": "casa-instrumentos",
+            "name": "Casa Sonora",
+            "headline": "Guitarras · Teclados · Baterías · Accesorios",
+            "category": "Música",
+            "surfaceBgColor": "#06050a",
+            "bgColor": "#120a1d",
+            "width": "lg",
+            "headerHeight": "lg",
+            "headerBgColor": "#120a1d",
+            "headerBgSize": "cover",
+            "headerBgPosition": "center",
+            "headerOpacityOverlay": 70,
+            "headerOverlayPosition": "left",
+            "titleColor": "#f8fafc",
+            "titleTypography": "Inter, system-ui, sans-serif",
+            "titleTextSize": 30,
+            "titleAlignText": "start",
+            "headlineColor": "#e9d5ff",
+            "headlineTypography": "Inter, system-ui, sans-serif",
+            "headlineTextSize": 14,
+            "headlineAlignText": "start",
+            "categoryColor": "#c4b5fd",
+            "categoryTypography": "Inter, system-ui, sans-serif",
+            "categoryTextSize": 12,
+            "categoryAlignText": "start",
+            "ownerName": "Demo",
+            "headerBgImageUrl": "/templates/instrumentos/header.jpg"
+        },
+        "site": {
+            "nav": [
+                {
+                    "kind": "home",
+                    "slug": "home",
+                    "title": "Inicio",
+                    "order": 0,
+                    "visible": true
+                },
+                {
+                    "kind": "page",
+                    "slug": "catalogo",
+                    "title": "Catálogo",
+                    "order": 1,
+                    "visible": true
+                },
+                {
+                    "kind": "page",
+                    "slug": "servicios",
+                    "title": "Servicios",
+                    "order": 2,
+                    "visible": true
+                },
+                {
+                    "kind": "contact",
+                    "slug": "contacto",
+                    "title": "Contacto",
+                    "order": 3,
+                    "visible": true
+                }
+            ],
+            "homeContent": [
+                {
+                    "id": "hero-1",
+                    "kind": "hero",
+                    "data": {
+                        "title": "Casa Sonora",
+                        "subtitle": "Instrumentos y accesorios para todos los niveles.",
+                        "align": "left"
+                    }
+                },
+                {
+                    "id": "productive-1",
+                    "kind": "productive",
+                    "data": {
+                        "title": "Destacados (demo)",
+                        "type": "product",
+                        "items": [
+                            {
+                                "listingId": 201,
+                                "title": "Guitarra acústica",
+                                "text": "Ideal para empezar",
+                                "thumbUrl": "/templates/instrumentos/thumbs/guitarra.jpg"
+                            },
+                            {
+                                "listingId": 202,
+                                "title": "Teclado 61 teclas",
+                                "text": "Con ritmos",
+                                "thumbUrl": "/templates/instrumentos/thumbs/teclado.jpg"
+                            },
+                            {
+                                "listingId": 203,
+                                "title": "Pedal multiefecto",
+                                "text": "Para guitarra",
+                                "thumbUrl": "/templates/instrumentos/thumbs/pedal.jpg"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "id": "features-1",
+                    "kind": "features",
+                    "data": {
+                        "title": "Por qué elegirnos",
+                        "columns": 3,
+                        "items": [
+                            {
+                                "title": "Asesoramiento",
+                                "text": "Te ayudamos a elegir."
+                            },
+                            {
+                                "title": "Garantía",
+                                "text": "Productos originales."
+                            },
+                            {
+                                "title": "Accesorios",
+                                "text": "Todo en un solo lugar."
+                            }
+                        ]
+                    }
+                },
+                {
+                    "id": "gallery-1",
+                    "kind": "gallery",
+                    "data": {
+                        "title": "Showroom",
+                        "columns": 3,
+                        "swiper": "false",
+                        "width": "100%",
+                        "minWidth": "320px",
+                        "images": [
+                            {
+                                "url": "/templates/instrumentos/gallery/1.jpg",
+                                "alt": "Showroom 1"
+                            },
+                            {
+                                "url": "/templates/instrumentos/gallery/2.jpg",
+                                "alt": "Showroom 2"
+                            },
+                            {
+                                "url": "/templates/instrumentos/gallery/3.jpg",
+                                "alt": "Showroom 3"
+                            }
+                        ]
+                    }
+                }
+            ],
+            "themePreset": "userPreset",
+            "themeConfig": {
+                "preset": "userPreset",
+                "components": {
+                    "card": {
+                        "shadow": "none"
+                    },
+                    "button": {
+                        "variant": "solid"
+                    }
+                },
+                "hero": {
+                    "bgcr": "#120a1d",
+                    "tcr": "#f8fafc",
+                    "scr": "#e9d5ff",
+                    "ttse": "22px",
+                    "stse": "14px",
+                    "tatt": "start",
+                    "satt": "start",
+                    "tty": "system",
+                    "sty": "system",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                },
+                "productive": {
+                    "bgcr": "#120a1d",
+                    "tcr": "#f8fafc",
+                    "yyse": "18px",
+                    "itcr": "#f8fafc",
+                    "itxcr": "#e9d5ff",
+                    "itty": "system",
+                    "itxty": "system",
+                    "itatt": "start",
+                    "itxatt": "start",
+                    "tty": "system",
+                    "tatt": "start",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                },
+                "features": {
+                    "bgcr": "#120a1d",
+                    "tcr": "#f8fafc",
+                    "ttse": "18px",
+                    "tatt": "start",
+                    "ibgcr": "#1b0f2a",
+                    "itcr": "#f8fafc",
+                    "itxcr": "#e9d5ff",
+                    "itxtse": "13px",
+                    "tty": "system",
+                    "itty": "system",
+                    "itxty": "system",
+                    "itatt": "start",
+                    "itxatt": "start",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                },
+                "gallery": {
+                    "bgcr": "#120a1d",
+                    "tcr": "#f8fafc",
+                    "ttse": "14px",
+                    "tatt": "start",
+                    "tty": "system",
+                    "cbcr": "#1b0f2a",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                },
+                "text": {
+                    "bgcr": "#120a1d",
+                    "tcr": "#f8fafc",
+                    "bycr": "#e9d5ff",
+                    "ttsc": "18px",
+                    "bytse": "14px",
+                    "tat": "start",
+                    "byatt": "start",
+                    "tty": "system",
+                    "byty": "system",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                },
+                "cta": {
+                    "bgcr": "#120a1d",
+                    "ticr": "#f8fafc",
+                    "tcr": "#e9d5ff",
+                    "titse": "18px",
+                    "ttse": "14px",
+                    "tity": "system",
+                    "tty": "system",
+                    "tatt": "start",
+                    "tiatt": "start",
+                    "btrs": "999px",
+                    "btbdcr": "#c4b5fd",
+                    "btbdcrhv": "#ddd6fe",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                }
+            },
+            "showContactForm": true,
+            "contactEmailExists": false
+        },
+        "pages": [
+            {
+                "id": 1,
+                "slug": "catalogo",
+                "title": "Catálogo",
+                "content": [
+                    {
+                        "id": "text-cat",
+                        "kind": "text",
+                        "data": {
+                            "title": "Categorías",
+                            "body": "Guitarras · Bajos · Teclados · Baterías · Vientos · Accesorios"
+                        }
+                    }
+                ]
+            },
+            {
+                "id": 2,
+                "slug": "servicios",
+                "title": "Servicios",
+                "content": [
+                    {
+                        "id": "features-serv",
+                        "kind": "features",
+                        "data": {
+                            "title": "Servicios",
+                            "columns": 2,
+                            "items": [
+                                {
+                                    "title": "Setups",
+                                    "text": "Calibración y ajustes."
+                                },
+                                {
+                                    "title": "Encordado",
+                                    "text": "Cambio y mantenimiento."
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": "indumentaria-deportiva",
+        "label": "Tienda de indumentaria deportiva",
+        "previewImage": "/templates/deportiva/preview.jpg",
+        "business": {
+            "id": 0,
+            "slug": "indumentaria-deportiva",
+            "name": "SportZone",
+            "headline": "Running · Training · Fútbol · Outdoor",
+            "category": "Indumentaria deportiva",
+            "surfaceBgColor": "#050505",
+            "bgColor": "#0b0b0b",
+            "width": "md",
+            "headerHeight": "lg",
+            "headerBgColor": "#0b0b0b",
+            "headerBgSize": "cover",
+            "headerBgPosition": "center",
+            "headerOpacityOverlay": 75,
+            "headerOverlayPosition": "right",
+            "titleColor": "#f8fafc",
+            "titleTypography": "Inter, system-ui, sans-serif",
+            "titleTextSize": 34,
+            "titleAlignText": "end",
+            "headlineColor": "#e2e8f0",
+            "headlineTypography": "Inter, system-ui, sans-serif",
+            "headlineTextSize": 14,
+            "headlineAlignText": "end",
+            "categoryColor": "#86efac",
+            "categoryTypography": "Inter, system-ui, sans-serif",
+            "categoryTextSize": 12,
+            "categoryAlignText": "end",
+            "ownerName": "Demo",
+            "headerBgImageUrl": "/templates/deportiva/header.jpg"
+        },
+        "site": {
+            "nav": [
+                {
+                    "kind": "home",
+                    "slug": "home",
+                    "title": "Inicio",
+                    "order": 0,
+                    "visible": true
+                },
+                {
+                    "kind": "page",
+                    "slug": "productos",
+                    "title": "Productos",
+                    "order": 1,
+                    "visible": true
+                },
+                {
+                    "kind": "page",
+                    "slug": "talles",
+                    "title": "Talles",
+                    "order": 2,
+                    "visible": true
+                },
+                {
+                    "kind": "page",
+                    "slug": "envios",
+                    "title": "Envíos",
+                    "order": 3,
+                    "visible": true
+                },
+                {
+                    "kind": "contact",
+                    "slug": "contacto",
+                    "title": "Contacto",
+                    "order": 4,
+                    "visible": true
+                }
+            ],
+            "homeContent": [
+                {
+                    "id": "hero-1",
+                    "kind": "hero",
+                    "data": {
+                        "title": "SportZone",
+                        "subtitle": "Rendimiento y comodidad para entrenar.",
+                        "align": "right"
+                    }
+                },
+                {
+                    "id": "productive-1",
+                    "kind": "productive",
+                    "data": {
+                        "title": "Lo más vendido (demo)",
+                        "type": "product",
+                        "items": [
+                            {
+                                "listingId": 301,
+                                "title": "Remera dry-fit",
+                                "text": "Transpirable",
+                                "thumbUrl": "/templates/deportiva/thumbs/remera.jpg"
+                            },
+                            {
+                                "listingId": 302,
+                                "title": "Calza training",
+                                "text": "Compresión",
+                                "thumbUrl": "/templates/deportiva/thumbs/calza.jpg"
+                            },
+                            {
+                                "listingId": 303,
+                                "title": "Campera liviana",
+                                "text": "Outdoor",
+                                "thumbUrl": "/templates/deportiva/thumbs/campera.jpg"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "id": "features-1",
+                    "kind": "features",
+                    "data": {
+                        "title": "Beneficios",
+                        "columns": 3,
+                        "items": [
+                            {
+                                "title": "Cambios",
+                                "text": "Simple y rápido."
+                            },
+                            {
+                                "title": "Envíos",
+                                "text": "A todo el país."
+                            },
+                            {
+                                "title": "Pagos",
+                                "text": "Múltiples medios."
+                            }
+                        ]
+                    }
+                }
+            ],
+            "themePreset": "userPreset",
+            "themeConfig": {
+                "preset": "userPreset",
+                "components": {
+                    "card": {
+                        "shadow": "none"
+                    },
+                    "button": {
+                        "variant": "solid"
+                    }
+                },
+                "hero": {
+                    "bgcr": "#0b0b0b",
+                    "tcr": "#f8fafc",
+                    "scr": "#e2e8f0",
+                    "ttse": "24px",
+                    "stse": "14px",
+                    "tatt": "end",
+                    "satt": "end",
+                    "tty": "system",
+                    "sty": "system",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                },
+                "productive": {
+                    "bgcr": "#0b0b0b",
+                    "tcr": "#f8fafc",
+                    "yyse": "18px",
+                    "itcr": "#f8fafc",
+                    "itxcr": "#e2e8f0",
+                    "itty": "system",
+                    "itxty": "system",
+                    "itatt": "start",
+                    "itxatt": "start",
+                    "tty": "system",
+                    "tatt": "start",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                },
+                "features": {
+                    "bgcr": "#0b0b0b",
+                    "tcr": "#f8fafc",
+                    "ttse": "18px",
+                    "tatt": "start",
+                    "ibgcr": "#111111",
+                    "itcr": "#f8fafc",
+                    "itxcr": "#e2e8f0",
+                    "itxtse": "13px",
+                    "tty": "system",
+                    "itty": "system",
+                    "itxty": "system",
+                    "itatt": "start",
+                    "itxatt": "start",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                },
+                "text": {
+                    "bgcr": "#0b0b0b",
+                    "tcr": "#f8fafc",
+                    "bycr": "#e2e8f0",
+                    "ttsc": "18px",
+                    "bytse": "14px",
+                    "tat": "start",
+                    "byatt": "start",
+                    "tty": "system",
+                    "byty": "system",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                },
+                "cta": {
+                    "bgcr": "#0b0b0b",
+                    "ticr": "#f8fafc",
+                    "tcr": "#e2e8f0",
+                    "titse": "18px",
+                    "ttse": "14px",
+                    "tity": "system",
+                    "tty": "system",
+                    "tatt": "start",
+                    "tiatt": "start",
+                    "btrs": "999px",
+                    "btbdcr": "#86efac",
+                    "btbdcrhv": "#bbf7d0",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                }
+            },
+            "showContactForm": true,
+            "contactEmailExists": false
+        },
+        "pages": [
+            {
+                "id": 1,
+                "slug": "productos",
+                "title": "Productos",
+                "content": [
+                    {
+                        "id": "text-p1",
+                        "kind": "text",
+                        "data": {
+                            "title": "Categorías",
+                            "body": "Remeras · Shorts · Calzas · Camperas · Accesorios"
+                        }
+                    }
+                ]
+            },
+            {
+                "id": 2,
+                "slug": "talles",
+                "title": "Talles",
+                "content": [
+                    {
+                        "id": "text-t1",
+                        "kind": "text",
+                        "data": {
+                            "title": "Guía de talles",
+                            "body": "Consultá la tabla y medidas.\nSi tenés dudas, escribinos."
+                        }
+                    }
+                ]
+            },
+            {
+                "id": 3,
+                "slug": "envios",
+                "title": "Envíos",
+                "content": [
+                    {
+                        "id": "text-e1",
+                        "kind": "text",
+                        "data": {
+                            "title": "Envíos",
+                            "body": "Envíos a todo el país.\nTiempos estimados y costos según zona."
+                        }
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": "desarrollador-web",
+        "label": "Desarrollador Web",
+        "previewImage": "/templates/dev/preview.jpg",
+        "business": {
+            "id": 0,
+            "slug": "desarrollador-web",
+            "name": "Survila Web Studio",
+            "headline": "Next.js · React · UX · Performance · SEO",
+            "category": "Desarrollo Web",
+            "surfaceBgColor": "#05060a",
+            "bgColor": "#070a12",
+            "width": "md",
+            "headerHeight": "md",
+            "headerBgColor": "#070a12",
+            "headerBgSize": "cover",
+            "headerBgPosition": "center",
+            "headerOpacityOverlay": 60,
+            "headerOverlayPosition": "center",
+            "titleColor": "#f8fafc",
+            "titleTypography": "Inter, system-ui, sans-serif",
+            "titleTextSize": 28,
+            "titleAlignText": "center",
+            "headlineColor": "#a5b4fc",
+            "headlineTypography": "Inter, system-ui, sans-serif",
+            "headlineTextSize": 14,
+            "headlineAlignText": "center",
+            "categoryColor": "#93c5fd",
+            "categoryTypography": "Inter, system-ui, sans-serif",
+            "categoryTextSize": 12,
+            "categoryAlignText": "center",
+            "ownerName": "Demo",
+            "headerBgImageUrl": "/templates/dev/header.jpg"
+        },
+        "site": {
+            "nav": [
+                {
+                    "kind": "home",
+                    "slug": "home",
+                    "title": "Inicio",
+                    "order": 0,
+                    "visible": true
+                },
+                {
+                    "kind": "page",
+                    "slug": "servicios",
+                    "title": "Servicios",
+                    "order": 1,
+                    "visible": true
+                },
+                {
+                    "kind": "page",
+                    "slug": "proyectos",
+                    "title": "Proyectos",
+                    "order": 2,
+                    "visible": true
+                },
+                {
+                    "kind": "page",
+                    "slug": "stack",
+                    "title": "Stack",
+                    "order": 3,
+                    "visible": true
+                },
+                {
+                    "kind": "contact",
+                    "slug": "contacto",
+                    "title": "Contacto",
+                    "order": 4,
+                    "visible": true
+                }
+            ],
+            "homeContent": [
+                {
+                    "id": "hero-1",
+                    "kind": "hero",
+                    "data": {
+                        "title": "Survila Web Studio",
+                        "subtitle": "Sitios rápidos, claros y listos para vender.",
+                        "align": "center"
+                    }
+                },
+                {
+                    "id": "features-1",
+                    "kind": "features",
+                    "data": {
+                        "title": "Lo que entrego",
+                        "columns": 3,
+                        "items": [
+                            {
+                                "title": "Performance",
+                                "text": "Core Web Vitals y buenas prácticas."
+                            },
+                            {
+                                "title": "UX",
+                                "text": "Flujo simple y contenido claro."
+                            },
+                            {
+                                "title": "SEO",
+                                "text": "Base técnica y estructura correcta."
+                            }
+                        ]
+                    }
+                },
+                {
+                    "id": "text-1",
+                    "kind": "text",
+                    "data": {
+                        "title": "Proceso",
+                        "body": "1) Brief\n2) Diseño\n3) Implementación\n4) Ajustes\n5) Publicación"
+                    }
+                },
+                {
+                    "id": "cta-1",
+                    "kind": "cta",
+                    "data": {
+                        "title": "¿Querés tu sitio?",
+                        "text": "Contame tu idea y armamos el plan.",
+                        "buttonText": "Pedir presupuesto",
+                        "href": "#"
+                    }
+                }
+            ],
+            "themePreset": "userPreset",
+            "themeConfig": {
+                "preset": "userPreset",
+                "components": {
+                    "card": {
+                        "shadow": "none"
+                    },
+                    "button": {
+                        "variant": "solid"
+                    }
+                },
+                "hero": {
+                    "bgcr": "#070a12",
+                    "tcr": "#f8fafc",
+                    "scr": "#a5b4fc",
+                    "ttse": "22px",
+                    "stse": "14px",
+                    "tatt": "center",
+                    "satt": "center",
+                    "tty": "system",
+                    "sty": "system",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                },
+                "features": {
+                    "bgcr": "#070a12",
+                    "tcr": "#f8fafc",
+                    "ttse": "18px",
+                    "tatt": "start",
+                    "ibgcr": "#0b1020",
+                    "itcr": "#f8fafc",
+                    "itxcr": "#c7d2fe",
+                    "itxtse": "13px",
+                    "tty": "system",
+                    "itty": "system",
+                    "itxty": "system",
+                    "itatt": "start",
+                    "itxatt": "start",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                },
+                "text": {
+                    "bgcr": "#070a12",
+                    "tcr": "#f8fafc",
+                    "bycr": "#c7d2fe",
+                    "ttsc": "18px",
+                    "bytse": "14px",
+                    "tat": "start",
+                    "byatt": "start",
+                    "tty": "system",
+                    "byty": "system",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                },
+                "cta": {
+                    "bgcr": "#070a12",
+                    "ticr": "#f8fafc",
+                    "tcr": "#c7d2fe",
+                    "titse": "18px",
+                    "ttse": "14px",
+                    "tity": "system",
+                    "tty": "system",
+                    "tatt": "start",
+                    "tiatt": "start",
+                    "btrs": "999px",
+                    "btbdcr": "#93c5fd",
+                    "btbdcrhv": "#bfdbfe",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                }
+            },
+            "showContactForm": true,
+            "contactEmailExists": false
+        },
+        "pages": [
+            {
+                "id": 1,
+                "slug": "servicios",
+                "title": "Servicios",
+                "content": [
+                    {
+                        "id": "features-s1",
+                        "kind": "features",
+                        "data": {
+                            "title": "Servicios",
+                            "columns": 2,
+                            "items": [
+                                {
+                                    "title": "Landing",
+                                    "text": "Una página que convierte."
+                                },
+                                {
+                                    "title": "Sitio completo",
+                                    "text": "Múltiples secciones y contenido."
+                                }
+                            ]
+                        }
+                    }
+                ]
+            },
+            {
+                "id": 2,
+                "slug": "proyectos",
+                "title": "Proyectos",
+                "content": [
+                    {
+                        "id": "text-p1",
+                        "kind": "text",
+                        "data": {
+                            "title": "Proyectos",
+                            "body": "E-commerce · Portfolios · Sitios de negocio · Apps internas.\n(Contenido demo)"
+                        }
+                    }
+                ]
+            },
+            {
+                "id": 3,
+                "slug": "stack",
+                "title": "Stack",
+                "content": [
+                    {
+                        "id": "text-st1",
+                        "kind": "text",
+                        "data": {
+                            "title": "Stack",
+                            "body": "Next.js · React · TypeScript · Prisma · Tailwind · Deploy"
+                        }
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": "odontologia",
+        "label": "Centro de odontología",
+        "previewImage": "/templates/odontologia/preview.jpg",
+        "business": {
+            "id": 0,
+            "slug": "odontologia",
+            "name": "Sonrisa Clínica",
+            "headline": "Ortodoncia · Implantes · Estética · Urgencias",
+            "category": "Odontología",
+            "surfaceBgColor": "#040a0f",
+            "bgColor": "#07131d",
+            "width": "md",
+            "headerHeight": "md",
+            "headerBgColor": "#07131d",
+            "headerBgSize": "cover",
+            "headerBgPosition": "center",
+            "headerOpacityOverlay": 60,
+            "headerOverlayPosition": "center",
+            "titleColor": "#f8fafc",
+            "titleTypography": "Inter, system-ui, sans-serif",
+            "titleTextSize": 28,
+            "titleAlignText": "center",
+            "headlineColor": "#a5f3fc",
+            "headlineTypography": "Inter, system-ui, sans-serif",
+            "headlineTextSize": 14,
+            "headlineAlignText": "center",
+            "categoryColor": "#93c5fd",
+            "categoryTypography": "Inter, system-ui, sans-serif",
+            "categoryTextSize": 12,
+            "categoryAlignText": "center",
+            "ownerName": "Demo",
+            "headerBgImageUrl": "/templates/odontologia/header.jpg"
+        },
+        "site": {
+            "nav": [
+                {
+                    "kind": "home",
+                    "slug": "home",
+                    "title": "Inicio",
+                    "order": 0,
+                    "visible": true
+                },
+                {
+                    "kind": "page",
+                    "slug": "tratamientos",
+                    "title": "Tratamientos",
+                    "order": 1,
+                    "visible": true
+                },
+                {
+                    "kind": "page",
+                    "slug": "turnos",
+                    "title": "Turnos",
+                    "order": 2,
+                    "visible": true
+                },
+                {
+                    "kind": "page",
+                    "slug": "equipo",
+                    "title": "Equipo",
+                    "order": 3,
+                    "visible": true
+                },
+                {
+                    "kind": "contact",
+                    "slug": "contacto",
+                    "title": "Contacto",
+                    "order": 4,
+                    "visible": true
+                }
+            ],
+            "homeContent": [
+                {
+                    "id": "hero-1",
+                    "kind": "hero",
+                    "data": {
+                        "title": "Sonrisa Clínica",
+                        "subtitle": "Cuidamos tu salud bucal con atención humana.",
+                        "align": "center"
+                    }
+                },
+                {
+                    "id": "features-1",
+                    "kind": "features",
+                    "data": {
+                        "title": "Tratamientos",
+                        "columns": 3,
+                        "items": [
+                            {
+                                "title": "Ortodoncia",
+                                "text": "Brackets y alineadores."
+                            },
+                            {
+                                "title": "Implantes",
+                                "text": "Soluciones duraderas."
+                            },
+                            {
+                                "title": "Estética",
+                                "text": "Blanqueamiento y carillas."
+                            }
+                        ]
+                    }
+                },
+                {
+                    "id": "cta-1",
+                    "kind": "cta",
+                    "data": {
+                        "title": "Reservá tu turno",
+                        "text": "Te respondemos con disponibilidad.",
+                        "buttonText": "Solicitar turno",
+                        "href": "#"
+                    }
+                }
+            ],
+            "themePreset": "userPreset",
+            "themeConfig": {
+                "preset": "userPreset",
+                "components": {
+                    "card": {
+                        "shadow": "none"
+                    },
+                    "button": {
+                        "variant": "solid"
+                    }
+                },
+                "hero": {
+                    "bgcr": "#07131d",
+                    "tcr": "#f8fafc",
+                    "scr": "#a5f3fc",
+                    "ttse": "22px",
+                    "stse": "14px",
+                    "tatt": "center",
+                    "satt": "center",
+                    "tty": "system",
+                    "sty": "system",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                },
+                "features": {
+                    "bgcr": "#07131d",
+                    "tcr": "#f8fafc",
+                    "ttse": "18px",
+                    "tatt": "start",
+                    "ibgcr": "#0b1c28",
+                    "itcr": "#f8fafc",
+                    "itxcr": "#bae6fd",
+                    "itxtse": "13px",
+                    "tty": "system",
+                    "itty": "system",
+                    "itxty": "system",
+                    "itatt": "start",
+                    "itxatt": "start",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                },
+                "text": {
+                    "bgcr": "#07131d",
+                    "tcr": "#f8fafc",
+                    "bycr": "#bae6fd",
+                    "ttsc": "18px",
+                    "bytse": "14px",
+                    "tat": "start",
+                    "byatt": "start",
+                    "tty": "system",
+                    "byty": "system",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                },
+                "cta": {
+                    "bgcr": "#07131d",
+                    "ticr": "#f8fafc",
+                    "tcr": "#bae6fd",
+                    "titse": "18px",
+                    "ttse": "14px",
+                    "tity": "system",
+                    "tty": "system",
+                    "tatt": "start",
+                    "tiatt": "start",
+                    "btrs": "999px",
+                    "btbdcr": "#93c5fd",
+                    "btbdcrhv": "#bfdbfe",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                }
+            },
+            "showContactForm": true,
+            "contactEmailExists": false
+        },
+        "pages": [
+            {
+                "id": 1,
+                "slug": "tratamientos",
+                "title": "Tratamientos",
+                "content": [
+                    {
+                        "id": "text-tr1",
+                        "kind": "text",
+                        "data": {
+                            "title": "Tratamientos",
+                            "body": "Ortodoncia · Implantes · Endodoncia · Limpieza · Estética\n(Contenido demo)"
+                        }
+                    }
+                ]
+            },
+            {
+                "id": 2,
+                "slug": "turnos",
+                "title": "Turnos",
+                "content": [
+                    {
+                        "id": "text-tu1",
+                        "kind": "text",
+                        "data": {
+                            "title": "Cómo reservar",
+                            "body": "Indicá: tratamiento/consulta · disponibilidad horaria · obra social (opcional)."
+                        }
+                    }
+                ]
+            },
+            {
+                "id": 3,
+                "slug": "equipo",
+                "title": "Equipo",
+                "content": [
+                    {
+                        "id": "text-e1",
+                        "kind": "text",
+                        "data": {
+                            "title": "Profesionales",
+                            "body": "Equipo de odontología general y especialistas.\n(Contenido demo)"
+                        }
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": "gimnasio-urbano",
+        "label": "Gimnasio / Entrenamiento",
+        "previewImage": "/templates/gym/preview.jpg",
+        "business": {
+            "id": 0,
+            "slug": "gimnasio-urbano",
+            "name": "UrbanFit Gym",
+            "headline": "Musculación · Funcional · Clases · Personal Trainer",
+            "category": "Fitness",
+            "surfaceBgColor": "#050505",
+            "bgColor": "#0b0b0b",
+            "width": "lg",
+            "headerHeight": "lg",
+            "headerBgColor": "#0b0b0b",
+            "headerBgSize": "cover",
+            "headerBgPosition": "center",
+            "headerOpacityOverlay": 75,
+            "headerOverlayPosition": "left",
+            "titleColor": "#f8fafc",
+            "titleTypography": "Inter, system-ui, sans-serif",
+            "titleTextSize": 32,
+            "titleAlignText": "start",
+            "headlineColor": "#e2e8f0",
+            "headlineTypography": "Inter, system-ui, sans-serif",
+            "headlineTextSize": 14,
+            "headlineAlignText": "start",
+            "categoryColor": "#86efac",
+            "categoryTypography": "Inter, system-ui, sans-serif",
+            "categoryTextSize": 12,
+            "categoryAlignText": "start",
+            "ownerName": "Demo",
+            "headerBgImageUrl": "/templates/gym/header.jpg"
+        },
+        "site": {
+            "nav": [
+                {
+                    "kind": "home",
+                    "slug": "home",
+                    "title": "Inicio",
+                    "order": 0,
+                    "visible": true
+                },
+                {
+                    "kind": "page",
+                    "slug": "planes",
+                    "title": "Planes",
+                    "order": 1,
+                    "visible": true
+                },
+                {
+                    "kind": "page",
+                    "slug": "horarios",
+                    "title": "Horarios",
+                    "order": 2,
+                    "visible": true
+                },
+                {
+                    "kind": "page",
+                    "slug": "clases",
+                    "title": "Clases",
+                    "order": 3,
+                    "visible": true
+                },
+                {
+                    "kind": "contact",
+                    "slug": "contacto",
+                    "title": "Contacto",
+                    "order": 4,
+                    "visible": true
+                }
+            ],
+            "homeContent": [
+                {
+                    "id": "hero-1",
+                    "kind": "hero",
+                    "data": {
+                        "title": "UrbanFit Gym",
+                        "subtitle": "Entrená fuerte. Progresá con plan. Resultados medibles.",
+                        "align": "left"
+                    }
+                },
+                {
+                    "id": "features-1",
+                    "kind": "features",
+                    "data": {
+                        "title": "Qué encontrás",
+                        "columns": 3,
+                        "items": [
+                            {
+                                "title": "Sala completa",
+                                "text": "Musculación + cardio."
+                            },
+                            {
+                                "title": "Clases",
+                                "text": "Funcional, HIIT, movilidad."
+                            },
+                            {
+                                "title": "Coaching",
+                                "text": "Plan y seguimiento."
+                            }
+                        ]
+                    }
+                },
+                {
+                    "id": "productive-1",
+                    "kind": "productive",
+                    "data": {
+                        "title": "Planes (demo)",
+                        "type": "service",
+                        "items": [
+                            {
+                                "listingId": 401,
+                                "title": "Mensual",
+                                "text": "Acceso libre",
+                                "thumbUrl": "/templates/gym/thumbs/mensual.jpg"
+                            },
+                            {
+                                "listingId": 402,
+                                "title": "Trimestral",
+                                "text": "Mejor precio",
+                                "thumbUrl": "/templates/gym/thumbs/trimestral.jpg"
+                            },
+                            {
+                                "listingId": 403,
+                                "title": "Personal",
+                                "text": "1 a 1",
+                                "thumbUrl": "/templates/gym/thumbs/personal.jpg"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "id": "gallery-1",
+                    "kind": "gallery",
+                    "data": {
+                        "title": "Instalaciones",
+                        "columns": 3,
+                        "swiper": "false",
+                        "width": "100%",
+                        "minWidth": "320px",
+                        "images": [
+                            {
+                                "url": "/templates/gym/gallery/1.jpg",
+                                "alt": "Sala"
+                            },
+                            {
+                                "url": "/templates/gym/gallery/2.jpg",
+                                "alt": "Clases"
+                            },
+                            {
+                                "url": "/templates/gym/gallery/3.jpg",
+                                "alt": "Equipamiento"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "id": "cta-1",
+                    "kind": "cta",
+                    "data": {
+                        "title": "Probá una clase",
+                        "text": "Contanos tu objetivo y te recomendamos el plan.",
+                        "buttonText": "Quiero entrenar",
+                        "href": "#"
+                    }
+                }
+            ],
+            "themePreset": "userPreset",
+            "themeConfig": {
+                "preset": "userPreset",
+                "components": {
+                    "card": {
+                        "shadow": "none"
+                    },
+                    "button": {
+                        "variant": "solid"
+                    }
+                },
+                "hero": {
+                    "bgcr": "#0b0b0b",
+                    "tcr": "#f8fafc",
+                    "scr": "#e2e8f0",
+                    "ttse": "24px",
+                    "stse": "14px",
+                    "tatt": "start",
+                    "satt": "start",
+                    "tty": "system",
+                    "sty": "system",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                },
+                "features": {
+                    "bgcr": "#0b0b0b",
+                    "tcr": "#f8fafc",
+                    "ttse": "18px",
+                    "tatt": "start",
+                    "ibgcr": "#111111",
+                    "itcr": "#f8fafc",
+                    "itxcr": "#e2e8f0",
+                    "itxtse": "13px",
+                    "tty": "system",
+                    "itty": "system",
+                    "itxty": "system",
+                    "itatt": "start",
+                    "itxatt": "start",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                },
+                "productive": {
+                    "bgcr": "#0b0b0b",
+                    "tcr": "#f8fafc",
+                    "yyse": "18px",
+                    "itcr": "#f8fafc",
+                    "itxcr": "#e2e8f0",
+                    "itty": "system",
+                    "itxty": "system",
+                    "itatt": "start",
+                    "itxatt": "start",
+                    "tty": "system",
+                    "tatt": "start",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                },
+                "gallery": {
+                    "bgcr": "#0b0b0b",
+                    "tcr": "#f8fafc",
+                    "ttse": "14px",
+                    "tatt": "start",
+                    "tty": "system",
+                    "cbcr": "#111111",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                },
+                "text": {
+                    "bgcr": "#0b0b0b",
+                    "tcr": "#f8fafc",
+                    "bycr": "#e2e8f0",
+                    "ttsc": "18px",
+                    "bytse": "14px",
+                    "tat": "start",
+                    "byatt": "start",
+                    "tty": "system",
+                    "byty": "system",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                },
+                "cta": {
+                    "bgcr": "#0b0b0b",
+                    "ticr": "#f8fafc",
+                    "tcr": "#e2e8f0",
+                    "titse": "18px",
+                    "ttse": "14px",
+                    "tity": "system",
+                    "tty": "system",
+                    "tatt": "start",
+                    "tiatt": "start",
+                    "btrs": "999px",
+                    "btbdcr": "#86efac",
+                    "btbdcrhv": "#bbf7d0",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                }
+            },
+            "showContactForm": true,
+            "contactEmailExists": false
+        },
+        "pages": [
+            {
+                "id": 1,
+                "slug": "planes",
+                "title": "Planes",
+                "content": [
+                    {
+                        "id": "text-pl1",
+                        "kind": "text",
+                        "data": {
+                            "title": "Planes",
+                            "body": "Mensual · Trimestral · Semestral · Personal Trainer\n(Contenido demo)"
+                        }
+                    },
+                    {
+                        "id": "features-pl2",
+                        "kind": "features",
+                        "data": {
+                            "title": "Incluye",
+                            "columns": 2,
+                            "items": [
+                                {
+                                    "title": "Evaluación inicial",
+                                    "text": "Objetivos y plan."
+                                },
+                                {
+                                    "title": "Progresión",
+                                    "text": "Ajustes mensuales."
+                                }
+                            ]
+                        }
+                    }
+                ]
+            },
+            {
+                "id": 2,
+                "slug": "horarios",
+                "title": "Horarios",
+                "content": [
+                    {
+                        "id": "text-ho1",
+                        "kind": "text",
+                        "data": {
+                            "title": "Horarios",
+                            "body": "Lun a Vie: 7:00–22:00\nSáb: 9:00–14:00\nDom: cerrado\n(Contenido demo)"
+                        }
+                    }
+                ]
+            },
+            {
+                "id": 3,
+                "slug": "clases",
+                "title": "Clases",
+                "content": [
+                    {
+                        "id": "features-cl1",
+                        "kind": "features",
+                        "data": {
+                            "title": "Clases",
+                            "columns": 2,
+                            "items": [
+                                {
+                                    "title": "Funcional",
+                                    "text": "Fuerza y resistencia."
+                                },
+                                {
+                                    "title": "Movilidad",
+                                    "text": "Recuperación y postura."
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": "inmobiliaria-urbana",
+        "label": "Inmobiliaria",
+        "previewImage": "/templates/inmobiliaria/preview.jpg",
+        "business": {
+            "id": 0,
+            "slug": "inmobiliaria-urbana",
+            "name": "Urbana Propiedades",
+            "headline": "Venta · Alquiler · Tasaciones · Administración",
+            "category": "Inmobiliaria",
+            "surfaceBgColor": "#05060a",
+            "bgColor": "#0b1020",
+            "width": "lg",
+            "headerHeight": "lg",
+            "headerBgColor": "#0b1020",
+            "headerBgSize": "cover",
+            "headerBgPosition": "center",
+            "headerOpacityOverlay": 70,
+            "headerOverlayPosition": "left",
+            "titleColor": "#f8fafc",
+            "titleTypography": "Inter, system-ui, sans-serif",
+            "titleTextSize": 32,
+            "titleAlignText": "start",
+            "headlineColor": "#cbd5e1",
+            "headlineTypography": "Inter, system-ui, sans-serif",
+            "headlineTextSize": 14,
+            "headlineAlignText": "start",
+            "categoryColor": "#93c5fd",
+            "categoryTypography": "Inter, system-ui, sans-serif",
+            "categoryTextSize": 12,
+            "categoryAlignText": "start",
+            "ownerName": "Demo",
+            "headerBgImageUrl": "/templates/inmobiliaria/header.jpg"
+        },
+        "site": {
+            "nav": [
+                {
+                    "kind": "home",
+                    "slug": "home",
+                    "title": "Inicio",
+                    "order": 0,
+                    "visible": true
+                },
+                {
+                    "kind": "page",
+                    "slug": "propiedades",
+                    "title": "Propiedades",
+                    "order": 1,
+                    "visible": true
+                },
+                {
+                    "kind": "page",
+                    "slug": "tasaciones",
+                    "title": "Tasaciones",
+                    "order": 2,
+                    "visible": true
+                },
+                {
+                    "kind": "page",
+                    "slug": "servicios",
+                    "title": "Servicios",
+                    "order": 3,
+                    "visible": true
+                },
+                {
+                    "kind": "contact",
+                    "slug": "contacto",
+                    "title": "Contacto",
+                    "order": 4,
+                    "visible": true
+                }
+            ],
+            "homeContent": [
+                {
+                    "id": "hero-1",
+                    "kind": "hero",
+                    "data": {
+                        "title": "Urbana Propiedades",
+                        "subtitle": "Acompañamiento claro para vender, alquilar o invertir.",
+                        "align": "left"
+                    }
+                },
+                {
+                    "id": "productive-1",
+                    "kind": "productive",
+                    "data": {
+                        "title": "Destacadas (demo)",
+                        "type": "product",
+                        "items": [
+                            {
+                                "listingId": 501,
+                                "title": "Depto 2 amb",
+                                "text": "Zona centro",
+                                "thumbUrl": "/templates/inmobiliaria/thumbs/depto.jpg"
+                            },
+                            {
+                                "listingId": 502,
+                                "title": "Casa 3 dorm",
+                                "text": "Patio + cochera",
+                                "thumbUrl": "/templates/inmobiliaria/thumbs/casa.jpg"
+                            },
+                            {
+                                "listingId": 503,
+                                "title": "Local comercial",
+                                "text": "A la calle",
+                                "thumbUrl": "/templates/inmobiliaria/thumbs/local.jpg"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "id": "features-1",
+                    "kind": "features",
+                    "data": {
+                        "title": "Servicios",
+                        "columns": 3,
+                        "items": [
+                            {
+                                "title": "Tasaciones",
+                                "text": "Precio real de mercado."
+                            },
+                            {
+                                "title": "Publicación",
+                                "text": "Fotos + difusión."
+                            },
+                            {
+                                "title": "Gestión",
+                                "text": "Acompañamiento legal."
+                            }
+                        ]
+                    }
+                },
+                {
+                    "id": "cta-1",
+                    "kind": "cta",
+                    "data": {
+                        "title": "Pedí una tasación",
+                        "text": "Respondemos con pasos y documentación.",
+                        "buttonText": "Quiero tasar",
+                        "href": "#"
+                    }
+                }
+            ],
+            "themePreset": "userPreset",
+            "themeConfig": {
+                "preset": "userPreset",
+                "components": {
+                    "card": {
+                        "shadow": "none"
+                    },
+                    "button": {
+                        "variant": "solid"
+                    }
+                },
+                "hero": {
+                    "bgcr": "#0b1020",
+                    "tcr": "#f8fafc",
+                    "scr": "#cbd5e1",
+                    "ttse": "22px",
+                    "stse": "14px",
+                    "tatt": "start",
+                    "satt": "start",
+                    "tty": "system",
+                    "sty": "system",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                },
+                "productive": {
+                    "bgcr": "#0b1020",
+                    "tcr": "#f8fafc",
+                    "yyse": "18px",
+                    "itcr": "#f8fafc",
+                    "itxcr": "#cbd5e1",
+                    "itty": "system",
+                    "itxty": "system",
+                    "itatt": "start",
+                    "itxatt": "start",
+                    "tty": "system",
+                    "tatt": "start",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                },
+                "features": {
+                    "bgcr": "#0b1020",
+                    "tcr": "#f8fafc",
+                    "ttse": "18px",
+                    "tatt": "start",
+                    "ibgcr": "#101a33",
+                    "itcr": "#f8fafc",
+                    "itxcr": "#cbd5e1",
+                    "itxtse": "13px",
+                    "tty": "system",
+                    "itty": "system",
+                    "itxty": "system",
+                    "itatt": "start",
+                    "itxatt": "start",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                },
+                "text": {
+                    "bgcr": "#0b1020",
+                    "tcr": "#f8fafc",
+                    "bycr": "#cbd5e1",
+                    "ttsc": "18px",
+                    "bytse": "14px",
+                    "tat": "start",
+                    "byatt": "start",
+                    "tty": "system",
+                    "byty": "system",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                },
+                "gallery": {
+                    "bgcr": "#0b1020",
+                    "tcr": "#f8fafc",
+                    "ttse": "14px",
+                    "tatt": "start",
+                    "tty": "system",
+                    "cbcr": "#101a33",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                },
+                "cta": {
+                    "bgcr": "#0b1020",
+                    "ticr": "#f8fafc",
+                    "tcr": "#cbd5e1",
+                    "titse": "18px",
+                    "ttse": "14px",
+                    "tity": "system",
+                    "tty": "system",
+                    "tatt": "start",
+                    "tiatt": "start",
+                    "btrs": "999px",
+                    "btbdcr": "#93c5fd",
+                    "btbdcrhv": "#bfdbfe",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                }
+            },
+            "showContactForm": true,
+            "contactEmailExists": false
+        },
+        "pages": [
+            {
+                "id": 1,
+                "slug": "propiedades",
+                "title": "Propiedades",
+                "content": [
+                    {
+                        "id": "text-pr1",
+                        "kind": "text",
+                        "data": {
+                            "title": "Propiedades",
+                            "body": "Departamentos · Casas · Locales · Terrenos\n(Contenido demo)"
+                        }
+                    },
+                    {
+                        "id": "productive-pr2",
+                        "kind": "productive",
+                        "data": {
+                            "title": "Listado (demo)",
+                            "type": "product",
+                            "items": [
+                                {
+                                    "listingId": 504,
+                                    "title": "Monoambiente",
+                                    "text": "A estrenar",
+                                    "thumbUrl": "/templates/inmobiliaria/thumbs/mono.jpg"
+                                },
+                                {
+                                    "listingId": 505,
+                                    "title": "PH 3 amb",
+                                    "text": "Sin expensas",
+                                    "thumbUrl": "/templates/inmobiliaria/thumbs/ph.jpg"
+                                }
+                            ]
+                        }
+                    }
+                ]
+            },
+            {
+                "id": 2,
+                "slug": "tasaciones",
+                "title": "Tasaciones",
+                "content": [
+                    {
+                        "id": "text-ta1",
+                        "kind": "text",
+                        "data": {
+                            "title": "Tasaciones",
+                            "body": "Relevamiento · comparables · informe.\nTe decimos un rango de precio realista."
+                        }
+                    },
+                    {
+                        "id": "cta-ta2",
+                        "kind": "cta",
+                        "data": {
+                            "title": "Solicitar tasación",
+                            "text": "Dejanos dirección y tipo de inmueble.",
+                            "buttonText": "Enviar datos",
+                            "href": "#"
+                        }
+                    }
+                ]
+            },
+            {
+                "id": 3,
+                "slug": "servicios",
+                "title": "Servicios",
+                "content": [
+                    {
+                        "id": "features-se1",
+                        "kind": "features",
+                        "data": {
+                            "title": "Servicios",
+                            "columns": 2,
+                            "items": [
+                                {
+                                    "title": "Venta",
+                                    "text": "Publicación y negociación."
+                                },
+                                {
+                                    "title": "Alquiler",
+                                    "text": "Administración y contratos."
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": "fotografo-portfolio",
+        "label": "Fotógrafo / Videógrafo",
+        "previewImage": "/templates/foto/preview.jpg",
+        "business": {
+            "id": 0,
+            "slug": "fotografo-portfolio",
+            "name": "Luz & Enfoque",
+            "headline": "Retratos · Eventos · Producto · Video",
+            "category": "Fotografía",
+            "surfaceBgColor": "#050505",
+            "bgColor": "#0b0b0f",
+            "width": "lg",
+            "headerHeight": "lg",
+            "headerBgColor": "#0b0b0f",
+            "headerBgSize": "cover",
+            "headerBgPosition": "center",
+            "headerOpacityOverlay": 70,
+            "headerOverlayPosition": "center",
+            "titleColor": "#f8fafc",
+            "titleTypography": "Inter, system-ui, sans-serif",
+            "titleTextSize": 32,
+            "titleAlignText": "center",
+            "headlineColor": "#e2e8f0",
+            "headlineTypography": "Inter, system-ui, sans-serif",
+            "headlineTextSize": 14,
+            "headlineAlignText": "center",
+            "categoryColor": "#a5b4fc",
+            "categoryTypography": "Inter, system-ui, sans-serif",
+            "categoryTextSize": 12,
+            "categoryAlignText": "center",
+            "ownerName": "Demo",
+            "headerBgImageUrl": "/templates/foto/header.jpg"
+        },
+        "site": {
+            "nav": [
+                {
+                    "kind": "home",
+                    "slug": "home",
+                    "title": "Inicio",
+                    "order": 0,
+                    "visible": true
+                },
+                {
+                    "kind": "page",
+                    "slug": "portfolio",
+                    "title": "Portfolio",
+                    "order": 1,
+                    "visible": true
+                },
+                {
+                    "kind": "page",
+                    "slug": "servicios",
+                    "title": "Servicios",
+                    "order": 2,
+                    "visible": true
+                },
+                {
+                    "kind": "page",
+                    "slug": "paquetes",
+                    "title": "Paquetes",
+                    "order": 3,
+                    "visible": true
+                },
+                {
+                    "kind": "contact",
+                    "slug": "contacto",
+                    "title": "Contacto",
+                    "order": 4,
+                    "visible": true
+                }
+            ],
+            "homeContent": [
+                {
+                    "id": "hero-1",
+                    "kind": "hero",
+                    "data": {
+                        "title": "Luz & Enfoque",
+                        "subtitle": "Imágenes que cuentan historias. Entrega rápida y prolija.",
+                        "align": "center"
+                    }
+                },
+                {
+                    "id": "gallery-1",
+                    "kind": "gallery",
+                    "data": {
+                        "title": "Portfolio",
+                        "columns": 3,
+                        "swiper": "false",
+                        "width": "100%",
+                        "minWidth": "320px",
+                        "images": [
+                            {
+                                "url": "/templates/foto/gallery/1.jpg",
+                                "alt": "Foto 1"
+                            },
+                            {
+                                "url": "/templates/foto/gallery/2.jpg",
+                                "alt": "Foto 2"
+                            },
+                            {
+                                "url": "/templates/foto/gallery/3.jpg",
+                                "alt": "Foto 3"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "id": "features-1",
+                    "kind": "features",
+                    "data": {
+                        "title": "Servicios",
+                        "columns": 3,
+                        "items": [
+                            {
+                                "title": "Retratos",
+                                "text": "Sesión en estudio o exterior."
+                            },
+                            {
+                                "title": "Eventos",
+                                "text": "Cobertura completa."
+                            },
+                            {
+                                "title": "Producto",
+                                "text": "E-commerce y catálogos."
+                            }
+                        ]
+                    }
+                },
+                {
+                    "id": "cta-1",
+                    "kind": "cta",
+                    "data": {
+                        "title": "Reservá fecha",
+                        "text": "Contame qué necesitás y te paso propuesta.",
+                        "buttonText": "Consultar",
+                        "href": "#"
+                    }
+                }
+            ],
+            "themePreset": "userPreset",
+            "themeConfig": {
+                "preset": "userPreset",
+                "components": {
+                    "card": {
+                        "shadow": "none"
+                    },
+                    "button": {
+                        "variant": "solid"
+                    }
+                },
+                "hero": {
+                    "bgcr": "#0b0b0f",
+                    "tcr": "#f8fafc",
+                    "scr": "#e2e8f0",
+                    "ttse": "22px",
+                    "stse": "14px",
+                    "tatt": "center",
+                    "satt": "center",
+                    "tty": "system",
+                    "sty": "system",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                },
+                "gallery": {
+                    "bgcr": "#0b0b0f",
+                    "tcr": "#f8fafc",
+                    "ttse": "14px",
+                    "tatt": "start",
+                    "tty": "system",
+                    "cbcr": "#111118",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                },
+                "features": {
+                    "bgcr": "#0b0b0f",
+                    "tcr": "#f8fafc",
+                    "ttse": "18px",
+                    "tatt": "start",
+                    "ibgcr": "#111118",
+                    "itcr": "#f8fafc",
+                    "itxcr": "#e2e8f0",
+                    "itxtse": "13px",
+                    "tty": "system",
+                    "itty": "system",
+                    "itxty": "system",
+                    "itatt": "start",
+                    "itxatt": "start",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                },
+                "text": {
+                    "bgcr": "#0b0b0f",
+                    "tcr": "#f8fafc",
+                    "bycr": "#e2e8f0",
+                    "ttsc": "18px",
+                    "bytse": "14px",
+                    "tat": "start",
+                    "byatt": "start",
+                    "tty": "system",
+                    "byty": "system",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                },
+                "productive": {
+                    "bgcr": "#0b0b0f",
+                    "tcr": "#f8fafc",
+                    "yyse": "18px",
+                    "itcr": "#f8fafc",
+                    "itxcr": "#e2e8f0",
+                    "itty": "system",
+                    "itxty": "system",
+                    "itatt": "start",
+                    "itxatt": "start",
+                    "tty": "system",
+                    "tatt": "start",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                },
+                "cta": {
+                    "bgcr": "#0b0b0f",
+                    "ticr": "#f8fafc",
+                    "tcr": "#e2e8f0",
+                    "titse": "18px",
+                    "ttse": "14px",
+                    "tity": "system",
+                    "tty": "system",
+                    "tatt": "start",
+                    "tiatt": "start",
+                    "btrs": "999px",
+                    "btbdcr": "#a5b4fc",
+                    "btbdcrhv": "#c7d2fe",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                }
+            },
+            "showContactForm": true,
+            "contactEmailExists": false
+        },
+        "pages": [
+            {
+                "id": 1,
+                "slug": "portfolio",
+                "title": "Portfolio",
+                "content": [
+                    {
+                        "id": "gallery-p1",
+                        "kind": "gallery",
+                        "data": {
+                            "title": "Selección",
+                            "columns": 3,
+                            "swiper": "false",
+                            "width": "100%",
+                            "minWidth": "320px",
+                            "images": [
+                                {
+                                    "url": "/templates/foto/gallery/4.jpg",
+                                    "alt": "Foto 4"
+                                },
+                                {
+                                    "url": "/templates/foto/gallery/5.jpg",
+                                    "alt": "Foto 5"
+                                },
+                                {
+                                    "url": "/templates/foto/gallery/6.jpg",
+                                    "alt": "Foto 6"
+                                }
+                            ]
+                        }
+                    }
+                ]
+            },
+            {
+                "id": 2,
+                "slug": "servicios",
+                "title": "Servicios",
+                "content": [
+                    {
+                        "id": "features-s1",
+                        "kind": "features",
+                        "data": {
+                            "title": "Servicios",
+                            "columns": 2,
+                            "items": [
+                                {
+                                    "title": "Cobertura de eventos",
+                                    "text": "Cumpleaños, corporativo, recitales."
+                                },
+                                {
+                                    "title": "Foto de producto",
+                                    "text": "Fondo neutro o lifestyle."
+                                }
+                            ]
+                        }
+                    }
+                ]
+            },
+            {
+                "id": 3,
+                "slug": "paquetes",
+                "title": "Paquetes",
+                "content": [
+                    {
+                        "id": "productive-pa1",
+                        "kind": "productive",
+                        "data": {
+                            "title": "Paquetes (demo)",
+                            "type": "service",
+                            "items": [
+                                {
+                                    "listingId": 601,
+                                    "title": "Básico",
+                                    "text": "1 hora · entrega digital",
+                                    "thumbUrl": "/templates/foto/thumbs/basico.jpg"
+                                },
+                                {
+                                    "listingId": 602,
+                                    "title": "Pro",
+                                    "text": "3 horas · edición",
+                                    "thumbUrl": "/templates/foto/thumbs/pro.jpg"
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": "psicologia-terapia",
+        "label": "Psicología / Terapia",
+        "previewImage": "/templates/psico/preview.jpg",
+        "business": {
+            "id": 0,
+            "slug": "psicologia-terapia",
+            "name": "Espacio Calma",
+            "headline": "Terapia individual · Ansiedad · Estrés · Acompañamiento",
+            "category": "Psicología",
+            "surfaceBgColor": "#07070a",
+            "bgColor": "#0b0b0f",
+            "width": "md",
+            "headerHeight": "md",
+            "headerBgColor": "#0b0b0f",
+            "headerBgSize": "cover",
+            "headerBgPosition": "center",
+            "headerOpacityOverlay": 55,
+            "headerOverlayPosition": "center",
+            "titleColor": "#f8fafc",
+            "titleTypography": "Inter, system-ui, sans-serif",
+            "titleTextSize": 28,
+            "titleAlignText": "center",
+            "headlineColor": "#c7d2fe",
+            "headlineTypography": "Inter, system-ui, sans-serif",
+            "headlineTextSize": 14,
+            "headlineAlignText": "center",
+            "categoryColor": "#a5b4fc",
+            "categoryTypography": "Inter, system-ui, sans-serif",
+            "categoryTextSize": 12,
+            "categoryAlignText": "center",
+            "ownerName": "Demo",
+            "headerBgImageUrl": "/templates/psico/header.jpg"
+        },
+        "site": {
+            "nav": [
+                {
+                    "kind": "home",
+                    "slug": "home",
+                    "title": "Inicio",
+                    "order": 0,
+                    "visible": true
+                },
+                {
+                    "kind": "page",
+                    "slug": "enfoque",
+                    "title": "Enfoque",
+                    "order": 1,
+                    "visible": true
+                },
+                {
+                    "kind": "page",
+                    "slug": "preguntas",
+                    "title": "Preguntas",
+                    "order": 2,
+                    "visible": true
+                },
+                {
+                    "kind": "page",
+                    "slug": "modalidad",
+                    "title": "Modalidad",
+                    "order": 3,
+                    "visible": true
+                },
+                {
+                    "kind": "contact",
+                    "slug": "contacto",
+                    "title": "Contacto",
+                    "order": 4,
+                    "visible": true
+                }
+            ],
+            "homeContent": [
+                {
+                    "id": "hero-1",
+                    "kind": "hero",
+                    "data": {
+                        "title": "Espacio Calma",
+                        "subtitle": "Un lugar seguro para trabajar lo que te pasa.",
+                        "align": "center"
+                    }
+                },
+                {
+                    "id": "text-1",
+                    "kind": "text",
+                    "data": {
+                        "title": "Acompañamiento",
+                        "body": "Terapia centrada en objetivos.\nHerramientas prácticas.\nUn proceso a tu ritmo."
+                    }
+                },
+                {
+                    "id": "features-1",
+                    "kind": "features",
+                    "data": {
+                        "title": "Motivos frecuentes",
+                        "columns": 3,
+                        "items": [
+                            {
+                                "title": "Ansiedad",
+                                "text": "Estrategias y regulación."
+                            },
+                            {
+                                "title": "Estrés",
+                                "text": "Ordenar y priorizar."
+                            },
+                            {
+                                "title": "Vínculos",
+                                "text": "Comunicación y límites."
+                            }
+                        ]
+                    }
+                },
+                {
+                    "id": "cta-1",
+                    "kind": "cta",
+                    "data": {
+                        "title": "Primera consulta",
+                        "text": "Contame brevemente tu situación y coordinamos.",
+                        "buttonText": "Agendar",
+                        "href": "#"
+                    }
+                }
+            ],
+            "themePreset": "userPreset",
+            "themeConfig": {
+                "preset": "userPreset",
+                "components": {
+                    "card": {
+                        "shadow": "none"
+                    },
+                    "button": {
+                        "variant": "solid"
+                    }
+                },
+                "hero": {
+                    "bgcr": "#0b0b0f",
+                    "tcr": "#f8fafc",
+                    "scr": "#c7d2fe",
+                    "ttse": "22px",
+                    "stse": "14px",
+                    "tatt": "center",
+                    "satt": "center",
+                    "tty": "system",
+                    "sty": "system",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                },
+                "text": {
+                    "bgcr": "#0b0b0f",
+                    "tcr": "#f8fafc",
+                    "bycr": "#c7d2fe",
+                    "ttsc": "18px",
+                    "bytse": "14px",
+                    "tat": "start",
+                    "byatt": "start",
+                    "tty": "system",
+                    "byty": "system",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                },
+                "features": {
+                    "bgcr": "#0b0b0f",
+                    "tcr": "#f8fafc",
+                    "ttse": "18px",
+                    "tatt": "start",
+                    "ibgcr": "#111118",
+                    "itcr": "#f8fafc",
+                    "itxcr": "#c7d2fe",
+                    "itxtse": "13px",
+                    "tty": "system",
+                    "itty": "system",
+                    "itxty": "system",
+                    "itatt": "start",
+                    "itxatt": "start",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                },
+                "cta": {
+                    "bgcr": "#0b0b0f",
+                    "ticr": "#f8fafc",
+                    "tcr": "#c7d2fe",
+                    "titse": "18px",
+                    "ttse": "14px",
+                    "tity": "system",
+                    "tty": "system",
+                    "tatt": "start",
+                    "tiatt": "start",
+                    "btrs": "999px",
+                    "btbdcr": "#a5b4fc",
+                    "btbdcrhv": "#c7d2fe",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                },
+                "gallery": {
+                    "bgcr": "#0b0b0f",
+                    "tcr": "#f8fafc",
+                    "ttse": "14px",
+                    "tatt": "start",
+                    "tty": "system",
+                    "cbcr": "#111118",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                },
+                "productive": {
+                    "bgcr": "#0b0b0f",
+                    "tcr": "#f8fafc",
+                    "yyse": "18px",
+                    "itcr": "#f8fafc",
+                    "itxcr": "#c7d2fe",
+                    "itty": "system",
+                    "itxty": "system",
+                    "itatt": "start",
+                    "itxatt": "start",
+                    "tty": "system",
+                    "tatt": "start",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                }
+            },
+            "showContactForm": true,
+            "contactEmailExists": false
+        },
+        "pages": [
+            {
+                "id": 1,
+                "slug": "enfoque",
+                "title": "Enfoque",
+                "content": [
+                    {
+                        "id": "text-en1",
+                        "kind": "text",
+                        "data": {
+                            "title": "Enfoque",
+                            "body": "Trabajo con objetivos y herramientas.\nSesiones confidenciales.\nProceso gradual y acompañado.\n(Contenido demo)"
+                        }
+                    }
+                ]
+            },
+            {
+                "id": 2,
+                "slug": "preguntas",
+                "title": "Preguntas",
+                "content": [
+                    {
+                        "id": "text-pr1",
+                        "kind": "text",
+                        "data": {
+                            "title": "Preguntas frecuentes",
+                            "body": "¿Cómo es la primera sesión?\n¿Cada cuánto se recomienda?\n¿Online o presencial?\n(Contenido demo)"
+                        }
+                    }
+                ]
+            },
+            {
+                "id": 3,
+                "slug": "modalidad",
+                "title": "Modalidad",
+                "content": [
+                    {
+                        "id": "text-mo1",
+                        "kind": "text",
+                        "data": {
+                            "title": "Modalidad",
+                            "body": "Online o presencial.\nDuración: 45–60 min.\nHorarios a coordinar.\n(Contenido demo)"
+                        }
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": "constructora-obras",
+        "label": "Constructora / Obras",
+        "previewImage": "/templates/constructora/preview.jpg",
+        "business": {
+            "id": 0,
+            "slug": "constructora-obras",
+            "name": "ObraFirme",
+            "headline": "Construcción · Refacciones · Dirección de obra · Presupuestos",
+            "category": "Construcción",
+            "surfaceBgColor": "#070707",
+            "bgColor": "#120d08",
+            "width": "lg",
+            "headerHeight": "lg",
+            "headerBgColor": "#1a120b",
+            "headerBgSize": "cover",
+            "headerBgPosition": "center",
+            "headerOpacityOverlay": 70,
+            "headerOverlayPosition": "left",
+            "titleColor": "#fff7ed",
+            "titleTypography": "Inter, system-ui, sans-serif",
+            "titleTextSize": 32,
+            "titleAlignText": "start",
+            "headlineColor": "#fed7aa",
+            "headlineTypography": "Inter, system-ui, sans-serif",
+            "headlineTextSize": 14,
+            "headlineAlignText": "start",
+            "categoryColor": "#fdba74",
+            "categoryTypography": "Inter, system-ui, sans-serif",
+            "categoryTextSize": 12,
+            "categoryAlignText": "start",
+            "ownerName": "Demo",
+            "headerBgImageUrl": "/templates/constructora/header.jpg"
+        },
+        "site": {
+            "nav": [
+                {
+                    "kind": "home",
+                    "slug": "home",
+                    "title": "Inicio",
+                    "order": 0,
+                    "visible": true
+                },
+                {
+                    "kind": "page",
+                    "slug": "proyectos",
+                    "title": "Proyectos",
+                    "order": 1,
+                    "visible": true
+                },
+                {
+                    "kind": "page",
+                    "slug": "servicios",
+                    "title": "Servicios",
+                    "order": 2,
+                    "visible": true
+                },
+                {
+                    "kind": "page",
+                    "slug": "proceso",
+                    "title": "Proceso",
+                    "order": 3,
+                    "visible": true
+                },
+                {
+                    "kind": "contact",
+                    "slug": "contacto",
+                    "title": "Contacto",
+                    "order": 4,
+                    "visible": true
+                }
+            ],
+            "homeContent": [
+                {
+                    "id": "hero-1",
+                    "kind": "hero",
+                    "data": {
+                        "title": "ObraFirme",
+                        "subtitle": "Obras prolijas, plazos claros y comunicación constante.",
+                        "align": "left"
+                    }
+                },
+                {
+                    "id": "features-1",
+                    "kind": "features",
+                    "data": {
+                        "title": "Servicios",
+                        "columns": 3,
+                        "items": [
+                            {
+                                "title": "Refacciones",
+                                "text": "Baños, cocinas, interiores."
+                            },
+                            {
+                                "title": "Construcción",
+                                "text": "De 0 a llave en mano."
+                            },
+                            {
+                                "title": "Dirección",
+                                "text": "Control técnico y avances."
+                            }
+                        ]
+                    }
+                },
+                {
+                    "id": "gallery-1",
+                    "kind": "gallery",
+                    "data": {
+                        "title": "Proyectos",
+                        "columns": 3,
+                        "swiper": "false",
+                        "width": "100%",
+                        "minWidth": "320px",
+                        "images": [
+                            {
+                                "url": "/templates/constructora/gallery/1.jpg",
+                                "alt": "Proyecto 1"
+                            },
+                            {
+                                "url": "/templates/constructora/gallery/2.jpg",
+                                "alt": "Proyecto 2"
+                            },
+                            {
+                                "url": "/templates/constructora/gallery/3.jpg",
+                                "alt": "Proyecto 3"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "id": "text-1",
+                    "kind": "text",
+                    "data": {
+                        "title": "Cómo trabajamos",
+                        "body": "Relevamiento · Presupuesto · Planificación · Ejecución · Entrega.\nRegistro de avances y comunicación."
+                    }
+                },
+                {
+                    "id": "cta-1",
+                    "kind": "cta",
+                    "data": {
+                        "title": "Pedí presupuesto",
+                        "text": "Contanos qué querés hacer y te proponemos un plan.",
+                        "buttonText": "Solicitar",
+                        "href": "#"
+                    }
+                }
+            ],
+            "themePreset": "userPreset",
+            "themeConfig": {
+                "preset": "userPreset",
+                "components": {
+                    "card": {
+                        "shadow": "none"
+                    },
+                    "button": {
+                        "variant": "solid"
+                    }
+                },
+                "hero": {
+                    "bgcr": "#1a120b",
+                    "tcr": "#fff7ed",
+                    "scr": "#fed7aa",
+                    "ttse": "22px",
+                    "stse": "14px",
+                    "tatt": "start",
+                    "satt": "start",
+                    "tty": "system",
+                    "sty": "system",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                },
+                "features": {
+                    "bgcr": "#120d08",
+                    "tcr": "#fff7ed",
+                    "ttse": "18px",
+                    "tatt": "start",
+                    "ibgcr": "#22170e",
+                    "itcr": "#fff7ed",
+                    "itxcr": "#fed7aa",
+                    "itxtse": "13px",
+                    "tty": "system",
+                    "itty": "system",
+                    "itxty": "system",
+                    "itatt": "start",
+                    "itxatt": "start",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                },
+                "gallery": {
+                    "bgcr": "#120d08",
+                    "tcr": "#fff7ed",
+                    "ttse": "14px",
+                    "tatt": "start",
+                    "tty": "system",
+                    "cbcr": "#22170e",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                },
+                "text": {
+                    "bgcr": "#120d08",
+                    "tcr": "#fff7ed",
+                    "bycr": "#fed7aa",
+                    "ttsc": "18px",
+                    "bytse": "14px",
+                    "tat": "start",
+                    "byatt": "start",
+                    "tty": "system",
+                    "byty": "system",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                },
+                "productive": {
+                    "bgcr": "#120d08",
+                    "tcr": "#fff7ed",
+                    "yyse": "18px",
+                    "itcr": "#fff7ed",
+                    "itxcr": "#fed7aa",
+                    "itty": "system",
+                    "itxty": "system",
+                    "itatt": "start",
+                    "itxatt": "start",
+                    "tty": "system",
+                    "tatt": "start",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                },
+                "cta": {
+                    "bgcr": "#120d08",
+                    "ticr": "#fff7ed",
+                    "tcr": "#fed7aa",
+                    "titse": "18px",
+                    "ttse": "14px",
+                    "tity": "system",
+                    "tty": "system",
+                    "tatt": "start",
+                    "tiatt": "start",
+                    "btrs": "999px",
+                    "btbdcr": "#fdba74",
+                    "btbdcrhv": "#fed7aa",
+                    "rs": "18px",
+                    "br": "0px",
+                    "bcr": "#000000"
+                }
+            },
+            "showContactForm": true,
+            "contactEmailExists": false
+        },
+        "pages": [
+            {
+                "id": 1,
+                "slug": "proyectos",
+                "title": "Proyectos",
+                "content": [
+                    {
+                        "id": "gallery-pr1",
+                        "kind": "gallery",
+                        "data": {
+                            "title": "Obras recientes",
+                            "columns": 3,
+                            "swiper": "false",
+                            "width": "100%",
+                            "minWidth": "320px",
+                            "images": [
+                                {
+                                    "url": "/templates/constructora/gallery/4.jpg",
+                                    "alt": "Obra 4"
+                                },
+                                {
+                                    "url": "/templates/constructora/gallery/5.jpg",
+                                    "alt": "Obra 5"
+                                },
+                                {
+                                    "url": "/templates/constructora/gallery/6.jpg",
+                                    "alt": "Obra 6"
+                                }
+                            ]
+                        }
+                    }
+                ]
+            },
+            {
+                "id": 2,
+                "slug": "servicios",
+                "title": "Servicios",
+                "content": [
+                    {
+                        "id": "features-se1",
+                        "kind": "features",
+                        "data": {
+                            "title": "Servicios",
+                            "columns": 2,
+                            "items": [
+                                {
+                                    "title": "Refacción integral",
+                                    "text": "Planificación + ejecución."
+                                },
+                                {
+                                    "title": "Dirección de obra",
+                                    "text": "Control técnico y proveedores."
+                                }
+                            ]
+                        }
+                    }
+                ]
+            },
+            {
+                "id": 3,
+                "slug": "proceso",
+                "title": "Proceso",
+                "content": [
+                    {
+                        "id": "text-prc1",
+                        "kind": "text",
+                        "data": {
+                            "title": "Proceso",
+                            "body": "1) Relevamiento\n2) Presupuesto\n3) Plan de obra\n4) Ejecución\n5) Entrega\n(Contenido demo)"
+                        }
+                    }
+                ]
+            }
+        ]
+    }
+]

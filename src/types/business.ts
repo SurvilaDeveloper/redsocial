@@ -2,6 +2,7 @@
 import type { BusinessPageContent } from "@/types/business-sections";
 
 export type BusinessNavKind = "home" | "page" | "contact";
+export type HeaderOverlayPosition = "left" | "center" | "right" | "none";
 
 /**
  * Regla: tab === navItem.slug SIEMPRE.
@@ -33,6 +34,9 @@ export type BusinessDTO = {
 
     headerHeight: string;
     headerBgColor: string;
+
+    headerOpacityOverlay: number;
+    headerOverlayPosition: HeaderOverlayPosition;
 
     headerBgSize: string;
     headerBgPosition: string;

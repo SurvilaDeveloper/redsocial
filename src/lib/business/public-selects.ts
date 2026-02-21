@@ -41,6 +41,9 @@ export const PUBLIC_BUSINESS_TAB_PAGE_SELECT = {
     headerHeight: true,
     headerBgColor: true,
 
+    headerOpacityOverlay: true,
+    headerOverlayPosition: true,
+
     headerBgSize: true,
     headerBgPosition: true,
 
@@ -104,6 +107,9 @@ export const PUBLIC_BUSINESS_CHROME_SELECT = {
 
     headerHeight: true,
     headerBgColor: true,
+
+    headerOpacityOverlay: true,
+    headerOverlayPosition: true,
 
     headerBgSize: true,
     headerBgPosition: true,

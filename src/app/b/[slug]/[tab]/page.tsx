@@ -59,6 +59,9 @@ export default async function BusinessTabPage({
                 headerHeight: business.headerHeight,
                 headerBgColor: business.headerBgColor,
 
+                headerOpacityOverlay: business.headerOpacityOverlay,
+                headerOverlayPosition: business.headerOverlayPosition,
+
                 headerBgSize: business.headerBgSize,
                 headerBgPosition: business.headerBgPosition,
 

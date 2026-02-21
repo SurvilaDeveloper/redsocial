@@ -881,6 +881,13 @@ enum BusinessAlignText {
   end
 }
 
+enum HeaderOverlayPosition {
+  left
+  center
+  right
+  none
+}
+
 model Business {
   id       Int     @id @default(autoincrement())
   ownerId  Int
@@ -902,6 +909,11 @@ model Business {
 
   headerHeight  BusinessHeaderHeight @default(md)
   headerBgColor String               @default("#222222") @db.VarChar(20)
+
+  // ✅ NUEVO: overlay del header (0..100). Si es 0, es como si no existiera.
+  headerOpacityOverlay  Int                   @default(0) @db.TinyInt
+  // ✅ NUEVO: posición del overlay (gradiente horizontal) o none para overlay parejo
+  headerOverlayPosition HeaderOverlayPosition @default(none)
 
   titleColor      String            @default("#cccccc") @db.VarChar(20)
   titleTypography String            @default("system") @db.VarChar(100)

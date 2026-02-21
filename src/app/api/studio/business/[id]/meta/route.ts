@@ -8,6 +8,17 @@ function safeStr(v: unknown, max: number) {
     return s ? s.slice(0, max) : "";
 }
 
+function clampInt(v: unknown, min: number, max: number, fallback: number) {
+    const n = typeof v === "number" ? v : Number(v);
+    if (!Number.isFinite(n)) return fallback;
+    return Math.max(min, Math.min(max, Math.trunc(n)));
+}
+
+function clampOverlayPosition(v: unknown): "left" | "center" | "right" | "none" {
+    const s = typeof v === "string" ? v.trim() : "";
+    return s === "left" || s === "center" || s === "right" || s === "none" ? s : "none";
+}
+
 export async function PATCH(
     req: NextRequest,
     { params }: { params: Promise<{ id: string }> }
@@ -72,6 +83,10 @@ export async function PATCH(
             headerBgColor: safeStr(body?.headerBgColor, 20) || "#222222",
             headerBgSize: body?.headerBgSize ?? "cover",
             headerBgPosition: body?.headerBgPosition ?? "left",
+
+            // ✅ overlay
+            headerOpacityOverlay: clampInt(body?.headerOpacityOverlay, 0, 100, 0),
+            headerOverlayPosition: clampOverlayPosition(body?.headerOverlayPosition),
 
             // title
             titleColor: safeStr(body?.titleColor, 20) || "#cccccc",

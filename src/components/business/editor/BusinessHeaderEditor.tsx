@@ -14,7 +14,6 @@ import {
     ExternalLink,
     Image as ImageIcon,
     Trash2,
-    ArrowLeft,
     Loader2,
     Save,
 } from "lucide-react";
@@ -43,6 +42,19 @@ type CloudinaryImageItem = {
 type Align = "start" | "center" | "end";
 function toAlign(v: string): Align {
     return v === "start" || v === "center" || v === "end" ? v : "center";
+}
+
+type HeaderOverlayPosition = "left" | "center" | "right" | "none";
+function toOverlayPosition(v: unknown): HeaderOverlayPosition {
+    return v === "left" || v === "center" || v === "right" || v === "none" ? v : "none";
+}
+
+function toOverlayPct(v: unknown): number {
+    const n = typeof v === "number" ? v : Number(v);
+    if (!Number.isFinite(n)) return 0;
+    // pasos de 10: 0,10,...,100
+    const stepped = Math.round(n / 10) * 10;
+    return Math.max(0, Math.min(100, stepped));
 }
 
 function clampText(v: unknown, max: number) {
@@ -74,6 +86,10 @@ export function BusinessHeaderEditor({
     initialWidth,
     initialHeaderHeight,
     initialHeaderBgColor,
+
+    // ✅ overlay
+    initialHeaderOpacityOverlay,
+    initialHeaderOverlayPosition,
 
     // title
     initialTitleColor,
@@ -112,6 +128,10 @@ export function BusinessHeaderEditor({
 
     initialHeaderHeight?: string;
     initialHeaderBgColor?: string;
+
+    // ✅ overlay
+    initialHeaderOpacityOverlay?: number; // 0..100
+    initialHeaderOverlayPosition?: HeaderOverlayPosition;
 
     initialTitleColor?: string;
     initialTitleTypography: string;
@@ -157,6 +177,14 @@ export function BusinessHeaderEditor({
     const [bgPosition, setBgPosition] = useState(initialBgPosition ?? "center");
     const [bgSize, setBgSize] = useState(initialBgSize ?? "cover");
 
+    // ✅ overlay
+    const [headerOpacityOverlay, setHeaderOpacityOverlay] = useState<number>(
+        toOverlayPct(initialHeaderOpacityOverlay ?? 0)
+    );
+    const [headerOverlayPosition, setHeaderOverlayPosition] = useState<HeaderOverlayPosition>(
+        toOverlayPosition(initialHeaderOverlayPosition ?? "none")
+    );
+
     // title style
     const [titleColor, setTitleColor] = useState(clampHex(initialTitleColor ?? "#ffffff", "#ffffff"));
     const [titleTypography, setTitleTypography] = useState(initialTitleTypography ?? "system");
@@ -191,7 +219,6 @@ export function BusinessHeaderEditor({
 
     const fileRef = useRef<HTMLInputElement | null>(null);
 
-    //const backHref = useMemo(() => `/studio/business/${businessId}`, [businessId]);
     const publicHref = useMemo(() => `/b/${businessSlug}`, [businessSlug]);
 
     const anyPending = pendingImg || pendingMeta;
@@ -212,11 +239,9 @@ export function BusinessHeaderEditor({
         const measure = () => setPreviewH(el.offsetHeight || 0);
         measure();
 
-        // ResizeObserver: por cambios de contenido/altura
         const ro = new ResizeObserver(() => measure());
         ro.observe(el);
 
-        // y también window resize
         window.addEventListener("resize", measure);
 
         return () => {
@@ -308,10 +333,8 @@ export function BusinessHeaderEditor({
 
         startImg(async () => {
             try {
-                // ✅ MISMA lógica de siempre: cliente -> /api/upload-site-image
                 const up = await uploadSiteImage(file);
 
-                // ✅ luego: server -> prisma (crear CloudinaryImage + setear headerBgImageId)
                 const res = await fetch(`/api/studio/business/${businessId}/header-bg`, {
                     method: "PATCH",
                     headers: { "Content-Type": "application/json" },
@@ -354,6 +377,10 @@ export function BusinessHeaderEditor({
             headerBgSize: bgSize,
             headerBgPosition: bgPosition,
 
+            // ✅ overlay
+            headerOpacityOverlay,
+            headerOverlayPosition,
+
             // title
             titleColor,
             titleTypography,
@@ -372,7 +399,6 @@ export function BusinessHeaderEditor({
             categoryTextSize,
             categoryAlignText,
         };
-
 
         if (!payload.name) {
             setStatusMeta({ ok: false, msg: "El nombre es requerido." });
@@ -406,7 +432,7 @@ export function BusinessHeaderEditor({
             <div
                 className={cn(
                     "fixed left-0 right-0 z-50 w-[calc(100vw-14px)]",
-                    "top-12", // mantenemos tu offset
+                    "top-12",
                     !openPreview && "pointer-events-none"
                 )}
             >
@@ -415,10 +441,8 @@ export function BusinessHeaderEditor({
                     className={cn("w-screen", openPreview ? "flex flex-row items-center justify-center w-full" : "hidden")}
                     style={{ backgroundColor: surfaceBgColor }}
                 >
-
                     <div className="flex flex-row items-center justify-center w-full">
                         <div className="flex items-center justify-between gap-2">
-
                             <button
                                 type="button"
                                 className="absolute top-4 right-4 rounded-lg bg-slate-900/70 px-3 py-1 text-xs hover:bg-slate-800"
@@ -434,7 +458,6 @@ export function BusinessHeaderEditor({
                                     backgroundColor: bgColor,
                                     width: widthState,
                                 }}
-
                             >
                                 <Card className="p-4 w-full border border-slate-700">
                                     <div
@@ -448,50 +471,71 @@ export function BusinessHeaderEditor({
                                             backgroundRepeat: "no-repeat",
                                         }}
                                     >
-                                        <div className="backdrop-blur-[0px] bg-black/20 p-6 flex flex-col gap-2 h-full">
-                                            {/* Title */}
-                                            <div
-                                                className="flex w-full font-semibold"
-                                                style={{
-                                                    color: titleColor,
-                                                    fontFamily: titleTypoFamily,
-                                                    fontSize: titleTextSizeState,
-                                                    justifyContent: titleAlignText,
-                                                }}
-                                            >
-                                                {name}
+                                        <div className="relative p-6 flex flex-col gap-2 h-full">
+                                            {/* ✅ Overlay (según criterio final) */}
+                                            {img?.url && headerOpacityOverlay > 0 && (
+                                                <div
+                                                    className="absolute inset-0 pointer-events-none"
+                                                    style={{
+                                                        opacity: headerOpacityOverlay / 100,
+                                                        backgroundColor:
+                                                            headerOverlayPosition === "none" ? "#000" : undefined,
+                                                        backgroundImage:
+                                                            headerOverlayPosition === "left"
+                                                                ? "linear-gradient(to right, #000 0%, #000 55%, transparent 100%)"
+                                                                : headerOverlayPosition === "center"
+                                                                    ? "linear-gradient(to right, transparent 0%, #000 50%, transparent 100%)"
+                                                                    : headerOverlayPosition === "right"
+                                                                        ? "linear-gradient(to right, transparent 0%, #000 45%, #000 100%)"
+                                                                        : undefined,
+                                                    }}
+                                                />
+                                            )}
+
+                                            <div className="relative z-10 flex flex-col gap-2 h-full">
+                                                {/* Title */}
+                                                <div
+                                                    className="flex w-full font-semibold"
+                                                    style={{
+                                                        color: titleColor,
+                                                        fontFamily: titleTypoFamily,
+                                                        fontSize: titleTextSizeState,
+                                                        justifyContent: titleAlignText,
+                                                    }}
+                                                >
+                                                    {name}
+                                                </div>
+
+                                                {/* Headline */}
+                                                {headline ? (
+                                                    <div
+                                                        className="flex w-full"
+                                                        style={{
+                                                            color: headlineColor,
+                                                            fontFamily: headlineTypoFamily,
+                                                            fontSize: headlineTextSizeState,
+                                                            justifyContent: headlineAlignText,
+                                                        }}
+                                                    >
+                                                        {headline}
+                                                    </div>
+                                                ) : null}
+
+                                                {/* Category */}
+                                                {category ? (
+                                                    <div
+                                                        className="flex w-full"
+                                                        style={{
+                                                            color: categoryColor,
+                                                            fontFamily: categoryTypoFamily,
+                                                            fontSize: categoryTextSizeState,
+                                                            justifyContent: categoryAlignText,
+                                                        }}
+                                                    >
+                                                        {category}
+                                                    </div>
+                                                ) : null}
                                             </div>
-
-                                            {/* Headline */}
-                                            {headline ? (
-                                                <div
-                                                    className="flex w-full"
-                                                    style={{
-                                                        color: headlineColor,
-                                                        fontFamily: headlineTypoFamily,
-                                                        fontSize: headlineTextSizeState,
-                                                        justifyContent: headlineAlignText,
-                                                    }}
-                                                >
-                                                    {headline}
-                                                </div>
-                                            ) : null}
-
-                                            {/* Category */}
-                                            {category ? (
-                                                <div
-                                                    className="flex w-full"
-                                                    style={{
-                                                        color: categoryColor,
-                                                        fontFamily: categoryTypoFamily,
-                                                        fontSize: categoryTextSizeState,
-                                                        justifyContent: categoryAlignText,
-                                                    }}
-                                                >
-                                                    {category}
-                                                </div>
-                                            ) : null}
-
                                         </div>
                                     </div>
                                 </Card>
@@ -540,6 +584,7 @@ export function BusinessHeaderEditor({
                                 if (f) uploadNewHeaderImage(f);
                             }}
                         />
+
                         <button
                             type="button"
                             disabled={anyPending}
@@ -606,7 +651,7 @@ export function BusinessHeaderEditor({
             <div
                 className="mx-auto w-full max-w-4xl px-3 py-6 flex flex-col gap-4"
                 style={{
-                    paddingTop: openPreview ? previewH - 240 : 10, // +gap
+                    paddingTop: openPreview ? previewH - 240 : 10,
                 }}
             >
                 <Card className="bg-slate-950 border-slate-800 p-4 rounded-2xl">
@@ -648,7 +693,8 @@ export function BusinessHeaderEditor({
                         </label>
 
                         <hr className="lg:col-span-2 border-slate-800" />
-                        {/* ✅ SITE BG*/}
+
+                        {/* ✅ SITE BG */}
                         <label className="flex flex-col text-xs text-slate-400 gap-2">
                             Background del sitio
                             <input
@@ -713,6 +759,42 @@ export function BusinessHeaderEditor({
 
                         <hr className="lg:col-span-2 border-slate-800" />
 
+                        {/* ✅ OVERLAY */}
+                        <div className="lg:col-span-2 text-xs text-slate-300 font-semibold">
+                            Overlay (imagen del header)
+                        </div>
+
+                        <label className="text-xs text-slate-400">
+                            Overlay position
+                            <select
+                                value={headerOverlayPosition}
+                                onChange={(e) => setHeaderOverlayPosition(toOverlayPosition(e.target.value))}
+                                className="mt-1 w-full rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-slate-600"
+                            >
+                                <option value="none">Parejo (sin gradiente)</option>
+                                <option value="left">Izquierda</option>
+                                <option value="center">Centro</option>
+                                <option value="right">Derecha</option>
+                            </select>
+                        </label>
+
+                        <label className="text-xs text-slate-400">
+                            Overlay intensity
+                            <select
+                                value={headerOpacityOverlay}
+                                onChange={(e) => setHeaderOpacityOverlay(toOverlayPct(e.target.value))}
+                                className="mt-1 w-full rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-slate-600"
+                            >
+                                {[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map((v) => (
+                                    <option key={v} value={v}>
+                                        {v}%
+                                    </option>
+                                ))}
+                            </select>
+                        </label>
+
+                        <hr className="lg:col-span-2 border-slate-800" />
+
                         {/* ✅ TITLE STYLE */}
                         <div className="lg:col-span-2 text-xs text-slate-300 font-semibold">Título (name)</div>
 
@@ -735,12 +817,14 @@ export function BusinessHeaderEditor({
                                 onChange={(e) => setTitleTypography(e.target.value)}
                             >
                                 {TYPO_OPTIONS.map((opt) => (
-                                    <option key={opt} value={opt} style={{ fontFamily: opt }}>
+                                    <option key={opt} value={opt} style={{ fontFamily: previewFontFamily(opt) }}>
                                         {opt}
                                     </option>
                                 ))}
                             </select>
                         </label>
+
+
 
                         <label className="text-xs text-slate-400">
                             Title font size
@@ -798,12 +882,14 @@ export function BusinessHeaderEditor({
                                 onChange={(e) => setHeadlineTypography(e.target.value)}
                             >
                                 {TYPO_OPTIONS.map((opt) => (
-                                    <option key={opt} value={opt} style={{ fontFamily: opt }}>
+                                    <option key={opt} value={opt} style={{ fontFamily: previewFontFamily(opt) }}>
                                         {opt}
                                     </option>
                                 ))}
                             </select>
                         </label>
+
+
 
                         <label className="text-xs text-slate-400">
                             Headline font size
@@ -861,12 +947,14 @@ export function BusinessHeaderEditor({
                                 onChange={(e) => setCategoryTypography(e.target.value)}
                             >
                                 {TYPO_OPTIONS.map((opt) => (
-                                    <option key={opt} value={opt} style={{ fontFamily: opt }}>
+                                    <option key={opt} value={opt} style={{ fontFamily: previewFontFamily(opt) }}>
                                         {opt}
                                     </option>
                                 ))}
                             </select>
                         </label>
+
+
 
                         <label className="text-xs text-slate-400">
                             Category font size

@@ -49,6 +49,9 @@ type Chrome = {
     businessHeaderHeight: string;
     businessHeaderBgColor: string;
 
+    businessHeaderOpacityOverlay: number;
+    businessHeaderOverlayPosition: string;
+
     businessHeaderBgSize: string;
     businessHeaderBgPosition: string;
 
@@ -93,6 +96,9 @@ async function fetchBusinessChrome(slug: string): Promise<Chrome | null> {
 
         businessHeaderHeight: business.headerHeight,
         businessHeaderBgColor: business.headerBgColor,
+
+        businessHeaderOpacityOverlay: business.headerOpacityOverlay,
+        businessHeaderOverlayPosition: business.headerOverlayPosition,
 
         businessHeaderBgSize: business.headerBgSize,
         businessHeaderBgPosition: business.headerBgPosition,
@@ -205,6 +211,8 @@ export default async function ListingDetailPage({
                         bgImageUrl={chrome.headerBgImageUrl}
                         headerHeight={chrome.businessHeaderHeight}
                         headerBgColor={chrome.businessHeaderBgColor}
+                        headerOpacityOverlay={chrome.businessHeaderOpacityOverlay}
+                        headerOverlayPosition={chrome.businessHeaderOverlayPosition as any}
                         headerBgSize={chrome.businessHeaderBgSize}
                         headerBgPosition={chrome.businessHeaderBgPosition}
                         titleColor={chrome.businessTitleColor}
@@ -231,7 +239,7 @@ export default async function ListingDetailPage({
                     </div>
 
                     <div className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
-                        <div className="flex flex-row items-center justify-center rounded-2xl border border-slate-800 bg-slate-950 p-3">
+                        <div className="flex flex-row items-center justify-center rounded-2xl bg-black border border-slate-800 p-3">
                             {Object.keys(mediaMap).length > 0 ? (
                                 <div className="max-w-[320px] w-full h-auto">
                                     <ImagesSwiperSites mediaMap={mediaMap} />
@@ -243,7 +251,7 @@ export default async function ListingDetailPage({
                             )}
                         </div>
 
-                        <div className="rounded-2xl border border-slate-800 bg-slate-950 p-5">
+                        <div className="rounded-2xl border border-slate-800 bg-black p-5">
                             <div className="text-xl font-semibold">{title}</div>
 
                             <div className="mt-4 grid gap-2 text-sm">
@@ -257,7 +265,7 @@ export default async function ListingDetailPage({
                                 )}
 
                                 {!!safeStr(listing.clarifications, 5000) && (
-                                    <div className="mt-3 rounded-xl border border-slate-800 bg-slate-900 p-3">
+                                    <div className="mt-3 rounded-xl border border-slate-800 bg-gray-950 p-3">
                                         <div className="text-xs text-slate-400">Aclaraciones</div>
                                         <div className="mt-1 text-sm text-slate-200 whitespace-pre-wrap">
                                             {String(listing.clarifications)}
@@ -269,7 +277,7 @@ export default async function ListingDetailPage({
                     </div>
 
                     {!!safeStr(listing.description, 5000) && (
-                        <div className="mt-3 rounded-xl border border-slate-800 bg-slate-950 p-3 whitespace-pre-wrap flex flex-col gap-4">
+                        <div className="mt-3 rounded-xl border border-slate-800 bg-black p-3 whitespace-pre-wrap flex flex-col gap-4">
                             <div className="text-slate-400 text-sm">Descripción</div>
                             {String(listing.description)}
                         </div>

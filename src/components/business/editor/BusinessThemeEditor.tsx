@@ -1029,16 +1029,36 @@ export function BusinessThemeEditor({
                                     title={s.title}
                                     subtitle={compactMode ? `${s.subtitle ?? ""} (compacto)` : s.subtitle}
                                     right={
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            className="rounded-xl border-slate-800 bg-slate-900 hover:bg-slate-800"
-                                            onClick={() => resetSectionToPreset(sectionKey as any)}
-                                            title="Resetear esta sección al preset actual"
-                                        >
-                                            <RotateCcw size={16} className="mr-2 opacity-80" />
-                                            Reset sección
-                                        </Button>
+                                        <>
+                                            <Button
+                                                onClick={save}
+                                                disabled={pending}
+                                                className="rounded-xl bg-emerald-600/15 border border-emerald-500/40 text-emerald-200 hover:bg-emerald-600/20"
+                                            >
+                                                {pending ? (
+                                                    <>
+                                                        <Loader2 size={16} className="mr-2 animate-spin" />
+                                                        Guardando...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Save size={16} className="mr-2" />
+                                                        Guardar
+                                                    </>
+                                                )}
+                                            </Button>
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                className="rounded-xl border-slate-800 bg-slate-900 hover:bg-slate-800"
+                                                onClick={() => resetSectionToPreset(sectionKey as any)}
+                                                title="Resetear esta sección al preset actual"
+                                            >
+                                                <RotateCcw size={16} className="mr-2 opacity-80" />
+                                                Reset sección
+                                            </Button>
+                                        </>
+
                                     }
                                 >
                                     {!compactMode && (

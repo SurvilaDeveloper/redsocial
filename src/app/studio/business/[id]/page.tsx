@@ -67,6 +67,17 @@ export default async function BusinessStudioBusinessIndexPage({
                     </div>
 
                     <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                        <a
+                            href={`/studio/business/${business.id}/templates`}
+                            className="rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-800 px-4 py-3"
+                            title="Elegir un template de ejemplo"
+                        >
+                            <div className="font-medium text-slate-100">Templates</div>
+                            <div className="text-xs text-slate-400 mt-1">
+                                Elegí un sitio de ejemplo y aplicalo al negocio
+                            </div>
+                        </a>
+
 
                         <a
                             href={`/studio/business/${business.id}/header`}

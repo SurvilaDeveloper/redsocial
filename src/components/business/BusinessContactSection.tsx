@@ -68,7 +68,7 @@ export function BusinessContactSection({ businessSlug }: { businessSlug: string 
     }
 
     return (
-        <Card className="bg-slate-950 border-slate-800 p-5 rounded-2xl">
+        <Card className="bg-black border-slate-800 p-5 rounded-2xl">
             <form onSubmit={onSubmit} className="flex flex-col gap-3">
                 {/* Honeypot invisible */}
                 <input
@@ -86,7 +86,7 @@ export function BusinessContactSection({ businessSlug }: { businessSlug: string 
                         <input
                             value={name}
                             onChange={(e) => setName(e.target.value)}
-                            className="h-10 rounded-xl bg-slate-900 border border-slate-800 px-3 text-sm outline-none focus:border-slate-600"
+                            className="h-10 rounded-xl bg-black border border-slate-800 px-3 text-sm outline-none focus:border-slate-600"
                             placeholder="Tu nombre"
                         />
                     </div>
@@ -96,7 +96,7 @@ export function BusinessContactSection({ businessSlug }: { businessSlug: string 
                         <input
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            className="h-10 rounded-xl bg-slate-900 border border-slate-800 px-3 text-sm outline-none focus:border-slate-600"
+                            className="h-10 rounded-xl bg-black border border-slate-800 px-3 text-sm outline-none focus:border-slate-600"
                             placeholder="tu@email.com"
                         />
                     </div>
@@ -107,7 +107,7 @@ export function BusinessContactSection({ businessSlug }: { businessSlug: string 
                     <input
                         value={subject}
                         onChange={(e) => setSubject(e.target.value)}
-                        className="h-10 rounded-xl bg-slate-900 border border-slate-800 px-3 text-sm outline-none focus:border-slate-600"
+                        className="h-10 rounded-xl bg-black border border-slate-800 px-3 text-sm outline-none focus:border-slate-600"
                         placeholder="Consulta"
                     />
                 </div>
@@ -118,7 +118,7 @@ export function BusinessContactSection({ businessSlug }: { businessSlug: string 
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
                         rows={6}
-                        className="rounded-xl bg-slate-900 border border-slate-800 px-3 py-2 text-sm outline-none focus:border-slate-600 resize-none"
+                        className="rounded-xl bg-black border border-slate-800 px-3 py-2 text-sm outline-none focus:border-slate-600 resize-none"
                         placeholder="Escribí tu mensaje..."
                     />
                 </div>

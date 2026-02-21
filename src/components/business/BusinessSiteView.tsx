@@ -78,6 +78,9 @@ export function BusinessSiteView({
                         headerHeight={business.headerHeight}
                         headerBgColor={business.headerBgColor}
 
+                        headerOpacityOverlay={business.headerOpacityOverlay}
+                        headerOverlayPosition={business.headerOverlayPosition}
+
                         headerBgSize={business.headerBgSize}
                         headerBgPosition={business.headerBgPosition}
 
@@ -118,8 +121,11 @@ export function BusinessSiteView({
                     )}
 
                     {current.kind === "page" && (
-                        <Card className="bg-slate-950 border-slate-800 p-5 rounded-2xl">
-                            <div className="text-lg font-semibold">{current.page.title}</div>
+                        <Card
+                            className="p-5 border-none"
+                            style={{ backgroundColor: business.bgColor }}
+                        >
+                            {/*<div className="text-lg font-semibold">{current.page.title}</div>*/}
                             <div className="mt-4">
                                 <BusinessSectionRenderer sections={current.page.content} businessSlug={business.slug} />
                             </div>
@@ -128,7 +134,7 @@ export function BusinessSiteView({
 
                     {current.kind === "contact" && (
                         <div className="flex flex-col gap-4">
-                            <Card className="bg-slate-950 border-slate-800 p-5 rounded-2xl">
+                            <Card className="bg-black border-slate-800 p-5 rounded-2xl">
                                 <div className="text-lg font-semibold">Contacto</div>
                                 <p className="mt-2 text-sm text-slate-400">
                                     Completá el formulario y el dueño del negocio recibirá un email para responderte.

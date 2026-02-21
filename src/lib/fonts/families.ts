@@ -1,27 +1,44 @@
-//src/lib/fonts/families.ts
-const FONT_PREVIEW_FAMILY: Record<string, string> = {
+// src/lib/fonts/families.ts
+
+/**
+ * Fuente única de verdad para:
+ * - resolver font-family real desde una key (system, inter, etc.)
+ * - renderizar previews en el editor
+ * - lista de opciones TYPO_OPTIONS
+ *
+ * IMPORTANTE: las keys guardadas en DB / JSON deben coincidir con estas keys.
+ */
+
+export const FONT_FAMILY: Record<string, string> = {
+    // genéricas / sistema
     system: "ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial",
     sans: "ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial",
     serif: "ui-serif, Georgia, Cambria, Times New Roman, Times, serif",
-    mono: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+    mono: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace",
 
+    // Sans (next/font/google variables)
     inter: "var(--font-inter), ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial",
     manrope: "var(--font-manrope), ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial",
-    "plus-jakarta-sans": "var(--font-plus-jakarta-sans), ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial",
-    "space-grotesk": "var(--font-space-grotesk), ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial",
+    "plus-jakarta-sans":
+        "var(--font-plus-jakarta-sans), ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial",
+    "space-grotesk":
+        "var(--font-space-grotesk), ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial",
     "dm-sans": "var(--font-dm-sans), ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial",
     urbanist: "var(--font-urbanist), ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial",
     poppins: "var(--font-poppins), ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial",
     montserrat: "var(--font-montserrat), ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial",
     rubik: "var(--font-rubik), ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial",
     outfit: "var(--font-outfit), ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial",
-    "nunito-sans": "var(--font-nunito-sans), ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial",
+    "nunito-sans":
+        "var(--font-nunito-sans), ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial",
     lato: "var(--font-lato), ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial",
     "work-sans": "var(--font-work-sans), ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial",
-    "source-sans-3": "var(--font-source-sans-3), ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial",
+    "source-sans-3":
+        "var(--font-source-sans-3), ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial",
     "open-sans": "var(--font-open-sans), ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial",
     raleway: "var(--font-raleway), ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial",
 
+    // Serif (next/font/google variables)
     merriweather: "var(--font-merriweather), ui-serif, Georgia, Cambria, serif",
     "playfair-display": "var(--font-playfair-display), ui-serif, Georgia, Cambria, serif",
     lora: "var(--font-lora), ui-serif, Georgia, Cambria, serif",
@@ -29,30 +46,41 @@ const FONT_PREVIEW_FAMILY: Record<string, string> = {
     "eb-garamond": "var(--font-eb-garamond), ui-serif, Georgia, Cambria, serif",
     spectral: "var(--font-spectral), ui-serif, Georgia, Cambria, serif",
 
-    "jetbrains-mono": "var(--font-jetbrains-mono), ui-monospace, Menlo, Monaco, Consolas, monospace",
-    "fira-code": "var(--font-fira-code), ui-monospace, Menlo, Monaco, Consolas, monospace",
-    "source-code-pro": "var(--font-source-code-pro), ui-monospace, Menlo, Monaco, Consolas, monospace",
-    "ibm-plex-mono": "var(--font-ibm-plex-mono), ui-monospace, Menlo, Monaco, Consolas, monospace",
+    // Mono (next/font/google variables)
+    "jetbrains-mono":
+        "var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+    "fira-code":
+        "var(--font-fira-code), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+    "source-code-pro":
+        "var(--font-source-code-pro), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+    "ibm-plex-mono":
+        "var(--font-ibm-plex-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
 
+    // extras sin next/font
     georgia: "Georgia, ui-serif, serif",
     roboto: "Roboto, ui-sans-serif, system-ui, -apple-system, Segoe UI, Arial",
     ubuntu: "Ubuntu, ui-sans-serif, system-ui, -apple-system, Segoe UI, Arial",
-    "ui-monospace": "ui-monospace, Menlo, Monaco, Consolas, monospace",
+    "ui-monospace": "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
 
     "system-rounded": "ui-rounded, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial",
 };
 
+export function resolveFontFamily(key: string) {
+    const k = String(key || "").trim();
+    return FONT_FAMILY[k] ?? FONT_FAMILY.system;
+}
+
+// alias legacy (ya lo usás en editores)
 export function previewFontFamily(key: string) {
-    return FONT_PREVIEW_FAMILY[key] ?? FONT_PREVIEW_FAMILY.system;
+    return resolveFontFamily(key);
 }
 
 export const TYPO_OPTIONS = [
-    "system",          // system UI sans
-    "sans",            // generic sans
-    "serif",           // generic serif
-    "mono",            // generic monospace
+    "system",
+    "sans",
+    "serif",
+    "mono",
 
-    // UI / modern sans (cuando las cargues, quedan perfectas)
     "inter",
     "manrope",
     "plus-jakarta-sans",
@@ -71,7 +99,7 @@ export const TYPO_OPTIONS = [
     "raleway",
     "roboto",
     "ubuntu",
-    "system-rounded",  // para mapear a ui-rounded si querés
+    "system-rounded",
 
     // Serif
     "georgia",
@@ -82,7 +110,7 @@ export const TYPO_OPTIONS = [
     "eb-garamond",
     "spectral",
 
-    // Mono / dev vibes
+    // Mono
     "jetbrains-mono",
     "fira-code",
     "source-code-pro",

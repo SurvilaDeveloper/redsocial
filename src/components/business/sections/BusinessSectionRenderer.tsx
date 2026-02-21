@@ -377,8 +377,22 @@ function SectionView({
         const base = businessSlug ? `/b/${businessSlug}` : "";
 
         return (
-            <Card className="bg-slate-950 border border-slate-800 p-5 rounded-2xl">
-                {!!title && <div className="text-base font-semibold text-slate-100">{title}</div>}
+            <Card
+                className="bg-[var(--b-pe-bgcr)] border border-slate-800 p-5 rounded-2xl"
+                style={{ border: "var(--b-pe-br) solid var(--b-pe-bcr)", borderRadius: "var(--b-pe-rs)" }}
+            >
+                {!!title && (
+                    <div
+                        className="flex flex-row items-center font-semibold w-full"
+                        style={{
+                            color: "var(--b-pe-tcr)",
+                            fontSize: "var(--b-pe-yyse)",
+                            fontFamily: "var(--b-pe-tty)",
+                            justifyContent: "var(--b-pe-tatt)",
+                        }}
+                    >
+                        {title}
+                    </div>)}
 
                 <div className="mt-2 text-[11px] text-slate-400">
                     {type === "product" ? "Productos" : "Servicios"} · {items?.length ?? 0}
@@ -400,9 +414,10 @@ function SectionView({
                                 key={`${it.listingId}-${idx}`}
                                 href={href}
                                 className={cn(
-                                    "block rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-800 overflow-hidden",
+                                    "block rounded-xl border border-slate-800 overflow-hidden",
                                     !canOpen && "opacity-60 pointer-events-none"
                                 )}
+                                style={{ backgroundColor: "var(--b-pe-bgcr)" }}
                                 title={canOpen ? "Abrir" : "listingId inválido o falta businessSlug"}
                             >
                                 {/* thumb */}
@@ -415,14 +430,33 @@ function SectionView({
                                     )}
                                 </div>
 
-                                <div className="p-4">
-                                    <div className="text-sm font-semibold text-slate-100 truncate">
+                                <div className="p-4 w-full">
+                                    <div
+                                        className="font-semibold truncate"
+                                        style={{
+                                            color: "var(--b-pe-itcr)",
+                                            fontSize: "var(--b-pe-itse)",
+                                            fontFamily: "var(--b-pe-itty)",
+                                            justifyContent: "var(--b-pe-itatt)",
+                                        }}
+                                    >
                                         {it.title?.trim() ? it.title : "Sin título"}
                                     </div>
 
-                                    {!!it.text?.trim() && <div className="mt-1 text-xs text-slate-400">{it.text}</div>}
+                                    {!!it.text?.trim() &&
+                                        <div
+                                            className="mt-1 text-xs text-slate-400"
+                                            style={{
+                                                color: "var(--b-pe-itxcr)",
+                                                fontSize: "var(--b-pe-itxtse)",
+                                                fontFamily: "var(--b-pe-itxty)",
+                                                justifyContent: "var(--b-pe-itxatt)",
+                                            }}
+                                        >
+                                            {it.text}
+                                        </div>}
 
-                                    <div className="mt-3 text-[11px] text-slate-500">#{it.listingId}</div>
+                                    {/*<div className="mt-3 text-[11px] text-slate-500">#{it.listingId}</div>*/}
                                 </div>
                             </Link>
                         );
@@ -487,6 +521,3 @@ function SectionView({
 
     return null;
 }
-
-
-
