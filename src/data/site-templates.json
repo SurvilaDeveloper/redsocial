@@ -1,14 +1,14 @@
 [
     {
-        "id": "pizzeria-clasica",
-        "label": "Pizzería clásica",
+        "id": "template-prueba",
+        "label": "Template de Prueba",
         "previewImage": "/templates/pizzeria/preview.jpg",
         "business": {
             "id": 0,
-            "slug": "pizzeria-clasica",
-            "name": "Pizzería Don Luigi",
-            "headline": "Pizza a la piedra · Empanadas · Delivery",
-            "category": "Gastronomía",
+            "slug": "prueba",
+            "name": "Prueba Nombre",
+            "headline": "Es un template para hacer pruebas",
+            "category": "desarrollo",
             "surfaceBgColor": "#000000",
             "bgColor": "#000022",
             "width": "lg",
@@ -19,15 +19,15 @@
             "headerOpacityOverlay": 80,
             "headerOverlayPosition": "left",
             "titleColor": "#ffffff",
-            "titleTypography": "Inter, system-ui, sans-serif",
+            "titleTypography": "inter",
             "titleTextSize": 30,
             "titleAlignText": "center",
             "headlineColor": "#cbd5e1",
-            "headlineTypography": "Inter, system-ui, sans-serif",
+            "headlineTypography": "inter",
             "headlineTextSize": 16,
             "headlineAlignText": "center",
             "categoryColor": "#94a3b8",
-            "categoryTypography": "Inter, system-ui, sans-serif",
+            "categoryTypography": "inter",
             "categoryTextSize": 12,
             "categoryAlignText": "center",
             "ownerName": "Demo",
@@ -57,7 +57,7 @@
                     "visible": true
                 },
                 {
-                    "kind": "contact",
+                    "kind": "page",
                     "slug": "contacto",
                     "title": "Contacto",
                     "order": 3,
@@ -152,7 +152,108 @@
             ],
             "themePreset": "userPreset",
             "themeConfig": {
+                "cta": {
+                    "br": "0px",
+                    "rs": "18px",
+                    "bcr": "#000000",
+                    "tcr": "#d1d5db",
+                    "tty": "system",
+                    "bgcr": "#0b0b0b",
+                    "btan": "start",
+                    "btbr": "1px",
+                    "btcr": "#dddddd",
+                    "btrs": "999px",
+                    "btse": "16px",
+                    "btty": "system",
+                    "tatt": "start",
+                    "ticr": "#f9fafb",
+                    "tity": "system",
+                    "ttse": "14px",
+                    "bttse": "16px",
+                    "tiatt": "start",
+                    "titse": "20px",
+                    "btbdcr": "#f9fafb",
+                    "btbrcr": "#33ff33",
+                    "btbdcrhv": "#e5e7eb"
+                },
+                "hero": {
+                    "br": "0px",
+                    "rs": "18px",
+                    "bcr": "#000000",
+                    "scr": "#9ca3af",
+                    "sty": "system",
+                    "tcr": "#f9fafb",
+                    "tty": "system",
+                    "bgcr": "#0b0b0b",
+                    "satt": "start",
+                    "stse": "16px",
+                    "tatt": "start",
+                    "ttse": "22px"
+                },
+                "text": {
+                    "br": "1px",
+                    "rs": "8px",
+                    "bcr": "#dddddd",
+                    "tat": "start",
+                    "tcr": "#dddddd",
+                    "tty": "system",
+                    "bgcr": "#111111",
+                    "bycr": "#dddddd",
+                    "byty": "system",
+                    "ttsc": "20px",
+                    "byatt": "start",
+                    "bytse": "18px"
+                },
+                "header": {
+                    "ban": "start",
+                    "bbg": "#444444",
+                    "bbr": "1px",
+                    "bcr": "#dddddd",
+                    "bgp": "4px",
+                    "brs": "8px",
+                    "bty": "system",
+                    "bbae": "#444444",
+                    "bbcr": "#dddddd",
+                    "bbhr": "#555555",
+                    "bcae": "#ffffff",
+                    "btse": "20px",
+                    "bbcae": "#555555"
+                },
                 "preset": "userPreset",
+                "gallery": {
+                    "br": "0px",
+                    "rs": "18px",
+                    "bcr": "#000000",
+                    "crs": "6px",
+                    "tcr": "#f9fafb",
+                    "tty": "system",
+                    "bgcr": "#0b0b0b",
+                    "cbcr": "#111111",
+                    "tatt": "start",
+                    "ttse": "14px"
+                },
+                "features": {
+                    "br": "0px",
+                    "rs": "18px",
+                    "bcr": "#000000",
+                    "ibr": "1px",
+                    "irs": "6px",
+                    "tcr": "#f9fafb",
+                    "tty": "system",
+                    "bgcr": "#0b0b0b",
+                    "ibcr": "#dddddd",
+                    "itcr": "#f9fafb",
+                    "itty": "system",
+                    "tatt": "start",
+                    "ttse": "20px",
+                    "ibgcr": "#111111",
+                    "itatt": "start",
+                    "ittse": "18px",
+                    "itxcr": "#d1d5db",
+                    "itxty": "system",
+                    "itxatt": "start",
+                    "itxtse": "14px"
+                },
                 "components": {
                     "card": {
                         "shadow": "none"
@@ -161,66 +262,23 @@
                         "variant": "solid"
                     }
                 },
-                "hero": {
-                    "bgcr": "#0b0b0b",
-                    "tcr": "#f9fafb",
-                    "scr": "#9ca3af",
-                    "ttse": "22px",
-                    "stse": "16px",
-                    "tatt": "start",
-                    "satt": "start",
-                    "tty": "system",
-                    "sty": "system",
-                    "br": "0px",
-                    "rs": "18px",
-                    "bcr": "#000000"
-                },
-                "features": {
-                    "bgcr": "#0b0b0b",
-                    "tcr": "#f9fafb",
-                    "ttse": "20px",
-                    "tatt": "start",
-                    "ibgcr": "#111111",
-                    "itcr": "#f9fafb",
-                    "itxcr": "#d1d5db",
-                    "itxtse": "14px",
-                    "rs": "18px",
-                    "br": "0px",
-                    "bcr": "#000000"
-                },
                 "productive": {
-                    "bgcr": "#0b0b0b",
+                    "br": "0px",
+                    "rs": "18px",
+                    "bcr": "#000000",
                     "tcr": "#f9fafb",
-                    "yyse": "20px",
+                    "tty": "system",
+                    "bgcr": "#0b0b0b",
                     "itcr": "#f9fafb",
+                    "itse": "18px",
+                    "itty": "system",
+                    "tatt": "start",
+                    "yyse": "20px",
+                    "itatt": "start",
                     "itxcr": "#d1d5db",
-                    "rs": "18px",
-                    "br": "0px",
-                    "bcr": "#000000"
-                },
-                "gallery": {
-                    "bgcr": "#0b0b0b",
-                    "tcr": "#f9fafb",
-                    "ttse": "14px",
-                    "cbcr": "#111111",
-                    "rs": "18px",
-                    "br": "0px",
-                    "bcr": "#000000"
-                },
-                "cta": {
-                    "bgcr": "#0b0b0b",
-                    "tcr": "#d1d5db",
-                    "ticr": "#f9fafb",
-                    "titse": "20px",
-                    "ttse": "14px",
-                    "btse": "16px",
-                    "bttse": "16px",
-                    "btrs": "999px",
-                    "btbdcr": "#f9fafb",
-                    "btbdcrhv": "#e5e7eb",
-                    "rs": "18px",
-                    "br": "0px",
-                    "bcr": "#000000"
+                    "itxty": "system",
+                    "itxatt": "start",
+                    "itxtse": "16px"
                 }
             },
             "showContactForm": true,
@@ -258,6 +316,416 @@
                         }
                     }
                 ]
+            },
+            {
+                "id": 3,
+                "slug": "contacto",
+                "title": "Contacto",
+                "content": [
+                    {
+                        "id": "hero-contacto",
+                        "kind": "hero",
+                        "data": {
+                            "title": "Contacto",
+                            "subtitle": "Respondemos a la brevedad",
+                            "align": "center"
+                        }
+                    },
+                    {
+                        "id": "text-contacto",
+                        "kind": "text",
+                        "data": {
+                            "title": "Escribinos",
+                            "body": "Este es un sitio de ejemplo (template).\nEl contacto real se habilita al aplicarlo a un negocio."
+                        }
+                    },
+                    {
+                        "id": "cta-contacto",
+                        "kind": "cta",
+                        "data": {
+                            "title": "Aplicá este template a tu negocio",
+                            "text": "En Studio podés habilitar el formulario real.",
+                            "buttonText": "Ver Studio",
+                            "href": "#"
+                        }
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": "pizzeria-clasica",
+        "label": "Pizzería clásica",
+        "previewImage": "/templates/pizzeria/preview.jpg",
+        "business": {
+            "id": 0,
+            "slug": "pizzeria-clasica",
+            "name": "Pizzería Don Luigi",
+            "headline": "Pizza a la piedra · Empanadas · Delivery",
+            "category": "Gastronomía",
+            "surfaceBgColor": "#000000",
+            "bgColor": "#001f00",
+            "width": "lg",
+            "headerHeight": "lg",
+            "headerBgColor": "#000044",
+            "headerBgSize": "cover",
+            "headerBgPosition": "center",
+            "headerOpacityOverlay": 80,
+            "headerOverlayPosition": "center",
+            "titleColor": "#ffffff",
+            "titleTypography": "sans",
+            "titleTextSize": 30,
+            "titleAlignText": "center",
+            "headlineColor": "#cbd5e1",
+            "headlineTypography": "sans",
+            "headlineTextSize": 16,
+            "headlineAlignText": "center",
+            "categoryColor": "#94a3b8",
+            "categoryTypography": "sans",
+            "categoryTextSize": 12,
+            "categoryAlignText": "center",
+            "ownerName": "Demo",
+            "headerBgImageUrl": "/templates/pizzeria/header.jpg"
+        },
+        "site": {
+            "nav": [
+                {
+                    "kind": "home",
+                    "slug": "home",
+                    "title": "Inicio",
+                    "order": 0,
+                    "visible": true
+                },
+                {
+                    "kind": "page",
+                    "slug": "menu",
+                    "title": "Menú",
+                    "order": 1,
+                    "visible": true
+                },
+                {
+                    "kind": "page",
+                    "slug": "promos",
+                    "title": "Promos",
+                    "order": 2,
+                    "visible": true
+                },
+                {
+                    "kind": "page",
+                    "slug": "contacto",
+                    "title": "Contacto",
+                    "order": 3,
+                    "visible": true
+                }
+            ],
+            "homeContent": [
+                {
+                    "id": "hero-1",
+                    "kind": "hero",
+                    "data": {
+                        "title": "Pizzería Don Luigi",
+                        "subtitle": "La mejor pizza del barrio",
+                        "align": "center"
+                    }
+                },
+                {
+                    "id": "features-1",
+                    "kind": "features",
+                    "data": {
+                        "title": "Por qué elegirnos",
+                        "columns": 3,
+                        "items": [
+                            {
+                                "title": "Horno a la piedra",
+                                "text": "Sabor auténtico"
+                            },
+                            {
+                                "title": "Ingredientes frescos",
+                                "text": "Calidad todos los días"
+                            },
+                            {
+                                "title": "Delivery rápido",
+                                "text": "Llegamos a tu casa"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "id": "productive-1",
+                    "kind": "productive",
+                    "data": {
+                        "title": "Productos destacados (demo)",
+                        "type": "product",
+                        "items": [
+                            {
+                                "listingId": 101,
+                                "title": "Muzzarella",
+                                "text": "Clásica",
+                                "thumbUrl": "/templates/pizzeria/thumbs/muzza.jpg"
+                            },
+                            {
+                                "listingId": 102,
+                                "title": "Napolitana",
+                                "text": "Con tomate y ajo",
+                                "thumbUrl": "/templates/pizzeria/thumbs/napo.jpg"
+                            },
+                            {
+                                "listingId": 103,
+                                "title": "Fugazzetta",
+                                "text": "Queso y cebolla",
+                                "thumbUrl": "/templates/pizzeria/thumbs/fugazzetta.jpg"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "id": "gallery-1",
+                    "kind": "gallery",
+                    "data": {
+                        "title": "Galería",
+                        "columns": 3,
+                        "swiper": "false",
+                        "width": "100%",
+                        "minWidth": "320px",
+                        "images": [
+                            {
+                                "url": "/templates/pizzeria/gallery/1.jpg",
+                                "alt": "Pizza 1"
+                            },
+                            {
+                                "url": "/templates/pizzeria/gallery/2.jpg",
+                                "alt": "Pizza 2"
+                            },
+                            {
+                                "url": "/templates/pizzeria/gallery/3.jpg",
+                                "alt": "Pizza 3"
+                            }
+                        ]
+                    }
+                }
+            ],
+            "themePreset": "userPreset",
+            "themeConfig": {
+                "cta": {
+                    "br": "0px",
+                    "rs": "18px",
+                    "bcr": "#000000",
+                    "tcr": "#d1d5db",
+                    "tty": "system",
+                    "bgcr": "#000f00",
+                    "btan": "start",
+                    "btbr": "0px",
+                    "btcr": "#dddddd",
+                    "btrs": "999px",
+                    "btse": "16px",
+                    "btty": "sans",
+                    "tatt": "start",
+                    "ticr": "#f9fafb",
+                    "tity": "system",
+                    "ttse": "14px",
+                    "bttse": "16px",
+                    "tiatt": "start",
+                    "titse": "20px",
+                    "btbdcr": "#001f00",
+                    "btbrcr": "#001f00",
+                    "btbdcrhv": "#004700"
+                },
+                "hero": {
+                    "br": "0px",
+                    "rs": "18px",
+                    "bcr": "#000000",
+                    "scr": "#9ca3af",
+                    "sty": "system",
+                    "tcr": "#f9fafb",
+                    "tty": "sans",
+                    "bgcr": "#000f00",
+                    "satt": "start",
+                    "stse": "16px",
+                    "tatt": "start",
+                    "ttse": "22px"
+                },
+                "text": {
+                    "br": "0px",
+                    "rs": "8px",
+                    "bcr": "#412000",
+                    "tat": "start",
+                    "tcr": "#dddddd",
+                    "tty": "system",
+                    "bgcr": "#000f00",
+                    "bycr": "#dddddd",
+                    "byty": "system",
+                    "ttsc": "20px",
+                    "byatt": "start",
+                    "bytse": "18px"
+                },
+                "header": {
+                    "ban": "start",
+                    "bbg": "#3b3b3b",
+                    "bbr": "0px",
+                    "bcr": "#dddddd",
+                    "bgp": "4px",
+                    "brs": "4px",
+                    "bty": "sans",
+                    "bbae": "#8a8a8a",
+                    "bbcr": "#dddddd",
+                    "bbhr": "#737373",
+                    "bcae": "#ffffff",
+                    "btse": "16px",
+                    "bbcae": "#8a8a8a"
+                },
+                "preset": "userPreset",
+                "contact": {
+                    "br": "1px",
+                    "rs": "16px",
+                    "bcr": "#1f2937",
+                    "ibr": "1px",
+                    "icr": "#e5e7eb",
+                    "irs": "12px",
+                    "lcr": "#cbd5e1",
+                    "lty": "sans",
+                    "bgcr": "#000f00",
+                    "btan": "start",
+                    "btbg": "#05966922",
+                    "btbr": "1px",
+                    "btcr": "#a7f3d0",
+                    "btrs": "12px",
+                    "btty": "system",
+                    "ibcr": "#1f2937",
+                    "ifcr": "#475569",
+                    "ipcr": "#64748b",
+                    "ltse": "12px",
+                    "btbgv": "#05966933",
+                    "bttse": "16px",
+                    "ibgcr": "#070707",
+                    "btbrcr": "#10b98166"
+                },
+                "gallery": {
+                    "br": "0px",
+                    "rs": "18px",
+                    "bcr": "#000000",
+                    "cbr": "0px",
+                    "crs": "6px",
+                    "tcr": "#f9fafb",
+                    "tty": "system",
+                    "bgcr": "#000f00",
+                    "cbcr": "#000000",
+                    "tatt": "start",
+                    "ttse": "14px",
+                    "cbrcr": "#000000"
+                },
+                "features": {
+                    "br": "0px",
+                    "rs": "18px",
+                    "bcr": "#000000",
+                    "ibr": "0px",
+                    "irs": "6px",
+                    "tcr": "#f9fafb",
+                    "tty": "system",
+                    "bgcr": "#000f00",
+                    "ibcr": "#001f00",
+                    "itcr": "#f9fafb",
+                    "itty": "system",
+                    "tatt": "start",
+                    "ttse": "20px",
+                    "ibgcr": "#001f00",
+                    "itatt": "start",
+                    "ittse": "18px",
+                    "itxcr": "#d1d5db",
+                    "itxty": "system",
+                    "itxatt": "start",
+                    "itxtse": "14px"
+                },
+                "components": {
+                    "card": {
+                        "shadow": "none"
+                    },
+                    "button": {
+                        "variant": "solid"
+                    }
+                },
+                "productive": {
+                    "br": "0px",
+                    "rs": "18px",
+                    "bcr": "#000000",
+                    "cbr": "0px",
+                    "crs": "8px",
+                    "tcr": "#f9fafb",
+                    "tty": "system",
+                    "bgcr": "#000f00",
+                    "itcr": "#f9fafb",
+                    "itse": "18px",
+                    "itty": "system",
+                    "tatt": "start",
+                    "yyse": "20px",
+                    "cbgcr": "#000000",
+                    "cbrcr": "#000000",
+                    "itatt": "start",
+                    "itxcr": "#d1d5db",
+                    "itxty": "system",
+                    "itxatt": "start",
+                    "itxtse": "16px"
+                }
+            },
+            "showContactForm": true,
+            "contactEmailExists": false
+        },
+        "pages": [
+            {
+                "id": 1,
+                "slug": "menu",
+                "title": "Menú",
+                "content": [
+                    {
+                        "id": "text-menu",
+                        "kind": "text",
+                        "data": {
+                            "title": "Carta",
+                            "body": "Pizzas clásicas · Especiales · Empanadas\nBebidas · Postres"
+                        }
+                    }
+                ]
+            },
+            {
+                "id": 2,
+                "slug": "promos",
+                "title": "Promos",
+                "content": [
+                    {
+                        "id": "cta-1",
+                        "kind": "cta",
+                        "data": {
+                            "title": "Promo 2x1 (demo)",
+                            "text": "Solo para ejemplo de template.",
+                            "buttonText": "Ver más",
+                            "href": "#"
+                        }
+                    }
+                ]
+            },
+            {
+                "id": 3,
+                "slug": "contacto",
+                "title": "Contacto",
+                "content": [
+                    {
+                        "id": "text-contacto",
+                        "kind": "text",
+                        "data": {
+                            "title": "Escribinos",
+                            "body": "Este es un sitio de ejemplo (template).\nEl contacto real se habilita al aplicarlo a un negocio."
+                        }
+                    },
+                    {
+                        "id": "cta-contacto",
+                        "kind": "contactForm",
+                        "data": {
+                            "title": "Aplicá este template a tu negocio",
+                            "text": "En Studio podés habilitar el formulario real.",
+                            "buttonText": "Ver Studio",
+                            "href": "#"
+                        }
+                    }
+                ]
             }
         ]
     },
@@ -281,15 +749,15 @@
             "headerOpacityOverlay": 70,
             "headerOverlayPosition": "right",
             "titleColor": "#f8fafc",
-            "titleTypography": "Georgia, serif",
+            "titleTypography": "serif",
             "titleTextSize": 28,
             "titleAlignText": "start",
             "headlineColor": "#cbd5e1",
-            "headlineTypography": "Inter, system-ui, sans-serif",
+            "headlineTypography": "inter",
             "headlineTextSize": 14,
             "headlineAlignText": "start",
             "categoryColor": "#94a3b8",
-            "categoryTypography": "Inter, system-ui, sans-serif",
+            "categoryTypography": "inter",
             "categoryTextSize": 12,
             "categoryAlignText": "start",
             "ownerName": "Demo",
@@ -326,7 +794,7 @@
                     "visible": true
                 },
                 {
-                    "kind": "contact",
+                    "kind": "page",
                     "slug": "contacto",
                     "title": "Contacto",
                     "order": 4,
@@ -395,68 +863,154 @@
                         "variant": "outline"
                     }
                 },
+                "header": {
+                    "bbg": "rgba(11,16,32,0.65)",
+                    "bbhr": "rgba(226,232,240,0.10)",
+                    "bcr": "#e5e7eb",
+                    "bty": "serif",
+                    "btse": "15px",
+                    "bbr": "1px",
+                    "bbcr": "rgba(226,232,240,0.14)",
+                    "brs": "12px",
+                    "ban": "start",
+                    "bgp": "6px",
+                    "bbae": "rgba(226,232,240,0.08)",
+                    "bcae": "#ffffff",
+                    "bbcae": "rgba(226,232,240,0.18)"
+                },
                 "hero": {
                     "bgcr": "#0b1020",
-                    "tcr": "#f8fafc",
-                    "scr": "#cbd5e1",
-                    "ttse": "22px",
-                    "stse": "14px",
-                    "tatt": "start",
-                    "satt": "start",
-                    "tty": "system",
-                    "sty": "system",
-                    "rs": "18px",
                     "br": "0px",
-                    "bcr": "#000000"
+                    "bcr": "#000000",
+                    "rs": "18px",
+                    "tcr": "#f8fafc",
+                    "tty": "serif",
+                    "ttse": "22px",
+                    "tatt": "start",
+                    "scr": "#cbd5e1",
+                    "sty": "system",
+                    "stse": "14px",
+                    "satt": "start"
                 },
                 "text": {
                     "bgcr": "#0b1020",
-                    "tcr": "#f8fafc",
-                    "bycr": "#cbd5e1",
-                    "ttsc": "18px",
-                    "bytse": "14px",
-                    "tat": "start",
-                    "byatt": "start",
-                    "tty": "system",
-                    "byty": "system",
-                    "rs": "18px",
                     "br": "0px",
-                    "bcr": "#000000"
+                    "bcr": "#000000",
+                    "rs": "18px",
+                    "tcr": "#f8fafc",
+                    "tty": "serif",
+                    "ttsc": "18px",
+                    "tat": "start",
+                    "bycr": "#cbd5e1",
+                    "byty": "system",
+                    "bytse": "14px",
+                    "byatt": "start"
                 },
                 "features": {
                     "bgcr": "#0b1020",
+                    "br": "0px",
+                    "bcr": "#000000",
+                    "rs": "18px",
                     "tcr": "#f8fafc",
+                    "tty": "serif",
                     "ttse": "18px",
                     "tatt": "start",
                     "ibgcr": "#101a33",
+                    "ibr": "1px",
+                    "ibcr": "rgba(226,232,240,0.10)",
+                    "irs": "14px",
                     "itcr": "#f8fafc",
-                    "itxcr": "#cbd5e1",
-                    "itxtse": "13px",
-                    "tty": "system",
                     "itty": "system",
-                    "itxty": "system",
+                    "ittse": "14px",
                     "itatt": "start",
-                    "itxatt": "start",
-                    "rs": "18px",
+                    "itxcr": "#cbd5e1",
+                    "itxty": "system",
+                    "itxtse": "13px",
+                    "itxatt": "start"
+                },
+                "gallery": {
+                    "bgcr": "#0b1020",
                     "br": "0px",
-                    "bcr": "#000000"
+                    "bcr": "#000000",
+                    "rs": "18px",
+                    "tcr": "#f8fafc",
+                    "tty": "serif",
+                    "ttse": "16px",
+                    "tatt": "start",
+                    "cbcr": "#05060a",
+                    "cbr": "1px",
+                    "cbrcr": "rgba(226,232,240,0.10)",
+                    "crs": "12px"
+                },
+                "productive": {
+                    "bgcr": "#0b1020",
+                    "br": "0px",
+                    "bcr": "#000000",
+                    "rs": "18px",
+                    "cbgcr": "#05060a",
+                    "cbr": "1px",
+                    "cbrcr": "rgba(226,232,240,0.10)",
+                    "crs": "12px",
+                    "tcr": "#f8fafc",
+                    "tty": "serif",
+                    "yyse": "18px",
+                    "tatt": "start",
+                    "itcr": "#f8fafc",
+                    "itty": "system",
+                    "itse": "14px",
+                    "itatt": "start",
+                    "itxcr": "#cbd5e1",
+                    "itxty": "system",
+                    "itxtse": "13px",
+                    "itxatt": "start"
                 },
                 "cta": {
                     "bgcr": "#0b1020",
-                    "ticr": "#f8fafc",
-                    "tcr": "#cbd5e1",
-                    "titse": "18px",
-                    "ttse": "14px",
-                    "tity": "system",
-                    "tty": "system",
-                    "tatt": "start",
-                    "tiatt": "start",
-                    "btrs": "999px",
-                    "btbdcr": "#f8fafc",
-                    "btbdcrhv": "#e2e8f0",
-                    "rs": "18px",
                     "br": "0px",
-                    "bcr": "#000000"
+                    "bcr": "#000000",
+                    "rs": "18px",
+                    "ticr": "#f8fafc",
+                    "tity": "serif",
+                    "titse": "18px",
+                    "tiatt": "start",
+                    "tcr": "#cbd5e1",
+                    "tty": "system",
+                    "ttse": "14px",
+                    "tatt": "start",
+                    "btbdcr": "rgba(248,250,252,0.10)",
+                    "btbdcrhv": "rgba(248,250,252,0.16)",
+                    "btbr": "1px",
+                    "btbrcr": "rgba(248,250,252,0.24)",
+                    "btrs": "999px",
+                    "btcr": "#f8fafc",
+                    "btty": "system",
+                    "bttse": "14px",
+                    "btan": "start"
+                },
+                "contact": {
+                    "bgcr": "#0b1020",
+                    "br": "1px",
+                    "bcr": "rgba(226,232,240,0.10)",
+                    "rs": "18px",
+                    "lcr": "#cbd5e1",
+                    "lty": "system",
+                    "ltse": "12px",
+                    "ibgcr": "#05060a",
+                    "ibr": "1px",
+                    "ibcr": "rgba(226,232,240,0.12)",
+                    "irs": "12px",
+                    "icr": "#e5e7eb",
+                    "ipcr": "rgba(203,213,225,0.55)",
+                    "ifcr": "rgba(248,250,252,0.28)",
+                    "btbg": "rgba(248,250,252,0.10)",
+                    "btbgv": "rgba(248,250,252,0.16)",
+                    "btbr": "1px",
+                    "btbrcr": "rgba(248,250,252,0.24)",
+                    "btrs": "12px",
+                    "btcr": "#f8fafc",
+                    "btty": "system",
+                    "bttse": "14px",
+                    "btan": "start"
                 }
             },
             "showContactForm": true,
@@ -525,6 +1079,29 @@
                         }
                     }
                 ]
+            },
+            {
+                "id": 4,
+                "slug": "contacto",
+                "title": "Contacto",
+                "content": [
+                    {
+                        "id": "text-contacto",
+                        "kind": "text",
+                        "data": {
+                            "title": "Contactanos",
+                            "body": "Este es un sitio de ejemplo (template).\nEl formulario real se habilita al aplicarlo a un negocio y configurar un email de contacto."
+                        }
+                    },
+                    {
+                        "id": "contact-form-1",
+                        "kind": "contactForm",
+                        "data": {
+                            "title": "Dejanos tu consulta",
+                            "description": "Completá el formulario y el dueño del negocio recibirá un email para responderte."
+                        }
+                    }
+                ]
             }
         ]
     },
@@ -548,15 +1125,15 @@
             "headerOpacityOverlay": 55,
             "headerOverlayPosition": "left",
             "titleColor": "#fff7ed",
-            "titleTypography": "Inter, system-ui, sans-serif",
+            "titleTypography": "sans",
             "titleTextSize": 30,
             "titleAlignText": "start",
             "headlineColor": "#fed7aa",
-            "headlineTypography": "Inter, system-ui, sans-serif",
+            "headlineTypography": "sans",
             "headlineTextSize": 14,
             "headlineAlignText": "start",
             "categoryColor": "#fdba74",
-            "categoryTypography": "Inter, system-ui, sans-serif",
+            "categoryTypography": "sans",
             "categoryTextSize": 12,
             "categoryAlignText": "start",
             "ownerName": "Demo",
@@ -586,7 +1163,7 @@
                     "visible": true
                 },
                 {
-                    "kind": "contact",
+                    "kind": "page",
                     "slug": "contacto",
                     "title": "Contacto",
                     "order": 3,
@@ -663,107 +1240,7 @@
             ],
             "themePreset": "userPreset",
             "themeConfig": {
-                "cta": {
-                    "br": "0px",
-                    "rs": "18px",
-                    "bcr": "#22170e",
-                    "tcr": "#fed7aa",
-                    "tty": "system",
-                    "bgcr": "#22170e",
-                    "btan": "start",
-                    "btbr": "1px",
-                    "btcr": "#413e3e",
-                    "btrs": "999px",
-                    "btty": "system",
-                    "tatt": "start",
-                    "ticr": "#fff7ed",
-                    "tity": "system",
-                    "ttse": "14px",
-                    "bttse": "18px",
-                    "tiatt": "start",
-                    "titse": "18px",
-                    "btbdcr": "#fff7ed",
-                    "btbrcr": "#33ff33",
-                    "btbdcrhv": "#fed7aa"
-                },
-                "hero": {
-                    "br": "0px",
-                    "rs": "18px",
-                    "bcr": "#000000",
-                    "scr": "#fed7aa",
-                    "sty": "system",
-                    "tcr": "#fff7ed",
-                    "tty": "system",
-                    "bgcr": "#1a120b",
-                    "satt": "start",
-                    "stse": "14px",
-                    "tatt": "start",
-                    "ttse": "22px"
-                },
-                "text": {
-                    "br": "0px",
-                    "rs": "8px",
-                    "bcr": "#22170e",
-                    "tat": "start",
-                    "tcr": "#dddddd",
-                    "tty": "system",
-                    "bgcr": "#22170e",
-                    "bycr": "#dddddd",
-                    "byty": "system",
-                    "ttsc": "20px",
-                    "byatt": "start",
-                    "bytse": "18px"
-                },
-                "header": {
-                    "ban": "start",
-                    "bbg": "#444444",
-                    "bbr": "1px",
-                    "bcr": "#dddddd",
-                    "bgp": "4px",
-                    "brs": "8px",
-                    "bty": "system",
-                    "bbae": "#444444",
-                    "bbcr": "#dddddd",
-                    "bbhr": "#555555",
-                    "bcae": "#ffffff",
-                    "btse": "20px",
-                    "bbcae": "#555555"
-                },
                 "preset": "userPreset",
-                "gallery": {
-                    "br": "0px",
-                    "rs": "18px",
-                    "bcr": "#000000",
-                    "crs": "6px",
-                    "tcr": "#fff7ed",
-                    "tty": "system",
-                    "bgcr": "#120d08",
-                    "cbcr": "#22170e",
-                    "tatt": "start",
-                    "ttse": "14px"
-                },
-                "features": {
-                    "br": "0px",
-                    "rs": "18px",
-                    "bcr": "#000000",
-                    "ibr": "0px",
-                    "irs": "6px",
-                    "tcr": "#fff7ed",
-                    "tty": "system",
-                    "bgcr": "#120d08",
-                    "ibcr": "#22170e",
-                    "itcr": "#fff7ed",
-                    "itty": "system",
-                    "tatt": "start",
-                    "ttse": "18px",
-                    "ibgcr": "#22170e",
-                    "itatt": "start",
-                    "ittse": "18px",
-                    "itxcr": "#fed7aa",
-                    "itxty": "system",
-                    "itxatt": "start",
-                    "itxtse": "13px"
-                },
                 "components": {
                     "card": {
                         "shadow": "none"
@@ -772,23 +1249,154 @@
                         "variant": "solid"
                     }
                 },
-                "productive": {
+                "header": {
+                    "ban": "start",
+                    "bbg": "rgba(26,18,11,0.55)",
+                    "bbhr": "rgba(255,247,237,0.10)",
+                    "bcr": "#fff7ed",
+                    "bty": "sans",
+                    "btse": "16px",
+                    "bbr": "1px",
+                    "bbcr": "rgba(255,247,237,0.14)",
+                    "brs": "10px",
+                    "bgp": "6px",
+                    "bbae": "rgba(255,247,237,0.08)",
+                    "bcae": "#fff7ed",
+                    "bbcae": "rgba(254,215,170,0.22)"
+                },
+                "hero": {
+                    "bgcr": "#1a120b",
                     "br": "0px",
-                    "rs": "8px",
-                    "bcr": "#22170e",
-                    "tcr": "#dddddd",
-                    "tty": "system",
-                    "bgcr": "#22170e",
-                    "itcr": "#dddddd",
-                    "itse": "18px",
-                    "itty": "system",
+                    "bcr": "#000000",
+                    "rs": "18px",
+                    "tcr": "#fff7ed",
+                    "tty": "sans",
+                    "ttse": "22px",
                     "tatt": "start",
-                    "yyse": "20px",
+                    "scr": "#fed7aa",
+                    "sty": "sans",
+                    "stse": "14px",
+                    "satt": "start"
+                },
+                "text": {
+                    "bgcr": "#22170e",
+                    "br": "0px",
+                    "bcr": "#22170e",
+                    "rs": "14px",
+                    "tcr": "#fff7ed",
+                    "tty": "sans",
+                    "ttsc": "18px",
+                    "tat": "start",
+                    "bycr": "#fed7aa",
+                    "byty": "system",
+                    "bytse": "14px",
+                    "byatt": "start"
+                },
+                "features": {
+                    "bgcr": "#120d08",
+                    "br": "0px",
+                    "bcr": "#000000",
+                    "rs": "18px",
+                    "tcr": "#fff7ed",
+                    "tty": "sans",
+                    "ttse": "18px",
+                    "tatt": "start",
+                    "ibgcr": "#22170e",
+                    "ibr": "1px",
+                    "ibcr": "rgba(254,215,170,0.10)",
+                    "irs": "12px",
+                    "itcr": "#fff7ed",
+                    "itty": "system",
+                    "ittse": "16px",
                     "itatt": "start",
-                    "itxcr": "#dddddd",
+                    "itxcr": "#fed7aa",
                     "itxty": "system",
-                    "itxatt": "start",
-                    "itxtse": "16px"
+                    "itxtse": "13px",
+                    "itxatt": "start"
+                },
+                "gallery": {
+                    "bgcr": "#120d08",
+                    "br": "0px",
+                    "bcr": "#000000",
+                    "rs": "18px",
+                    "tcr": "#fff7ed",
+                    "tty": "sans",
+                    "ttse": "14px",
+                    "tatt": "start",
+                    "cbcr": "#22170e",
+                    "cbr": "1px",
+                    "cbrcr": "rgba(254,215,170,0.10)",
+                    "crs": "10px"
+                },
+                "cta": {
+                    "bgcr": "#22170e",
+                    "br": "0px",
+                    "bcr": "#22170e",
+                    "rs": "18px",
+                    "ticr": "#fff7ed",
+                    "tity": "sans",
+                    "titse": "18px",
+                    "tiatt": "start",
+                    "tcr": "#fed7aa",
+                    "tty": "system",
+                    "ttse": "14px",
+                    "tatt": "start",
+                    "btbdcr": "#fff7ed",
+                    "btbdcrhv": "#fed7aa",
+                    "btbr": "1px",
+                    "btbrcr": "rgba(255,247,237,0.30)",
+                    "btrs": "999px",
+                    "btcr": "#22170e",
+                    "btty": "sans",
+                    "bttse": "16px",
+                    "btan": "start"
+                },
+                "productive": {
+                    "bgcr": "#120d08",
+                    "br": "0px",
+                    "bcr": "#000000",
+                    "rs": "18px",
+                    "cbgcr": "#22170e",
+                    "cbr": "1px",
+                    "cbrcr": "rgba(254,215,170,0.10)",
+                    "crs": "12px",
+                    "tcr": "#fff7ed",
+                    "tty": "sans",
+                    "yyse": "18px",
+                    "tatt": "start",
+                    "itcr": "#fff7ed",
+                    "itty": "system",
+                    "itse": "16px",
+                    "itatt": "start",
+                    "itxcr": "#fed7aa",
+                    "itxty": "system",
+                    "itxtse": "13px",
+                    "itxatt": "start"
+                },
+                "contact": {
+                    "bgcr": "#120d08",
+                    "br": "1px",
+                    "bcr": "rgba(254,215,170,0.10)",
+                    "rs": "18px",
+                    "lcr": "#fed7aa",
+                    "lty": "system",
+                    "ltse": "12px",
+                    "ibgcr": "#070707",
+                    "ibr": "1px",
+                    "ibcr": "rgba(254,215,170,0.12)",
+                    "irs": "12px",
+                    "icr": "#fff7ed",
+                    "ipcr": "rgba(254,215,170,0.55)",
+                    "ifcr": "rgba(255,247,237,0.28)",
+                    "btbg": "rgba(255,247,237,0.10)",
+                    "btbgv": "rgba(255,247,237,0.16)",
+                    "btbr": "1px",
+                    "btbrcr": "rgba(255,247,237,0.30)",
+                    "btrs": "12px",
+                    "btcr": "#fff7ed",
+                    "btty": "sans",
+                    "bttse": "16px",
+                    "btan": "start"
                 }
             },
             "showContactForm": true,
@@ -806,6 +1414,31 @@
                         "data": {
                             "title": "Portfolio",
                             "body": "Placares · Muebles de baño · Muebles de cocina · Escritorios.\nConsultá por maderas y terminaciones."
+                        }
+                    },
+                    {
+                        "id": "gallery-t2",
+                        "kind": "gallery",
+                        "data": {
+                            "title": "Trabajos destacados",
+                            "columns": 3,
+                            "swiper": "false",
+                            "width": "100%",
+                            "minWidth": "320px",
+                            "images": [
+                                {
+                                    "url": "/templates/carpinteria/gallery/1.jpg",
+                                    "alt": "Trabajo 1"
+                                },
+                                {
+                                    "url": "/templates/carpinteria/gallery/2.jpg",
+                                    "alt": "Trabajo 2"
+                                },
+                                {
+                                    "url": "/templates/carpinteria/gallery/3.jpg",
+                                    "alt": "Trabajo 3"
+                                }
+                            ]
                         }
                     }
                 ]
@@ -834,6 +1467,29 @@
                         }
                     }
                 ]
+            },
+            {
+                "id": 3,
+                "slug": "contacto",
+                "title": "Contacto",
+                "content": [
+                    {
+                        "id": "text-c1",
+                        "kind": "text",
+                        "data": {
+                            "title": "Hablemos de tu proyecto",
+                            "body": "Este es un sitio de ejemplo (template).\nEl formulario real se habilita al aplicarlo a un negocio y configurar un email de contacto."
+                        }
+                    },
+                    {
+                        "id": "contact-form-1",
+                        "kind": "contactForm",
+                        "data": {
+                            "title": "Consulta rápida",
+                            "description": "Completá el formulario y el dueño del negocio recibirá un email para responderte."
+                        }
+                    }
+                ]
             }
         ]
     },
@@ -857,15 +1513,15 @@
             "headerOpacityOverlay": 65,
             "headerOverlayPosition": "center",
             "titleColor": "#f8fafc",
-            "titleTypography": "Inter, system-ui, sans-serif",
+            "titleTypography": "sans",
             "titleTextSize": 30,
             "titleAlignText": "center",
             "headlineColor": "#e2e8f0",
-            "headlineTypography": "Inter, system-ui, sans-serif",
+            "headlineTypography": "sans",
             "headlineTextSize": 14,
             "headlineAlignText": "center",
             "categoryColor": "#94a3b8",
-            "categoryTypography": "Inter, system-ui, sans-serif",
+            "categoryTypography": "sans",
             "categoryTextSize": 12,
             "categoryAlignText": "center",
             "ownerName": "Demo",
@@ -895,7 +1551,7 @@
                     "visible": true
                 },
                 {
-                    "kind": "contact",
+                    "kind": "page",
                     "slug": "contacto",
                     "title": "Contacto",
                     "order": 3,
@@ -964,68 +1620,154 @@
                         "variant": "solid"
                     }
                 },
+                "header": {
+                    "ban": "center",
+                    "bbg": "rgba(11,11,15,0.55)",
+                    "bbhr": "rgba(248,250,252,0.10)",
+                    "bcr": "#f8fafc",
+                    "bty": "sans",
+                    "btse": "15px",
+                    "bbr": "1px",
+                    "bbcr": "rgba(248,250,252,0.12)",
+                    "brs": "12px",
+                    "bgp": "6px",
+                    "bbae": "rgba(248,250,252,0.08)",
+                    "bcae": "#ffffff",
+                    "bbcae": "rgba(148,163,184,0.25)"
+                },
                 "hero": {
                     "bgcr": "#0b0b0f",
+                    "br": "0px",
+                    "bcr": "#000000",
+                    "rs": "18px",
                     "tcr": "#f8fafc",
-                    "scr": "#e2e8f0",
+                    "tty": "sans",
                     "ttse": "22px",
-                    "stse": "14px",
                     "tatt": "center",
-                    "satt": "center",
-                    "tty": "system",
+                    "scr": "#e2e8f0",
                     "sty": "system",
-                    "rs": "18px",
-                    "br": "0px",
-                    "bcr": "#000000"
-                },
-                "features": {
-                    "bgcr": "#0b0b0f",
-                    "tcr": "#f8fafc",
-                    "ttse": "18px",
-                    "tatt": "start",
-                    "ibgcr": "#111118",
-                    "itcr": "#f8fafc",
-                    "itxcr": "#cbd5e1",
-                    "itxtse": "13px",
-                    "tty": "system",
-                    "itty": "system",
-                    "itxty": "system",
-                    "itatt": "start",
-                    "itxatt": "start",
-                    "rs": "18px",
-                    "br": "0px",
-                    "bcr": "#000000"
+                    "stse": "14px",
+                    "satt": "center"
                 },
                 "text": {
                     "bgcr": "#0b0b0f",
-                    "tcr": "#f8fafc",
-                    "bycr": "#cbd5e1",
-                    "ttsc": "18px",
-                    "bytse": "14px",
-                    "tat": "start",
-                    "byatt": "start",
-                    "tty": "system",
-                    "byty": "system",
-                    "rs": "18px",
                     "br": "0px",
-                    "bcr": "#000000"
+                    "bcr": "#000000",
+                    "rs": "18px",
+                    "tcr": "#f8fafc",
+                    "tty": "sans",
+                    "ttsc": "18px",
+                    "tat": "start",
+                    "bycr": "#cbd5e1",
+                    "byty": "system",
+                    "bytse": "14px",
+                    "byatt": "start"
+                },
+                "features": {
+                    "bgcr": "#0b0b0f",
+                    "br": "0px",
+                    "bcr": "#000000",
+                    "rs": "18px",
+                    "tcr": "#f8fafc",
+                    "tty": "sans",
+                    "ttse": "18px",
+                    "tatt": "start",
+                    "ibgcr": "#111118",
+                    "ibr": "1px",
+                    "ibcr": "rgba(248,250,252,0.10)",
+                    "irs": "12px",
+                    "itcr": "#f8fafc",
+                    "itty": "system",
+                    "ittse": "16px",
+                    "itatt": "start",
+                    "itxcr": "#cbd5e1",
+                    "itxty": "system",
+                    "itxtse": "13px",
+                    "itxatt": "start"
+                },
+                "gallery": {
+                    "bgcr": "#0b0b0f",
+                    "br": "0px",
+                    "bcr": "#000000",
+                    "rs": "18px",
+                    "tcr": "#f8fafc",
+                    "tty": "sans",
+                    "ttse": "14px",
+                    "tatt": "start",
+                    "cbcr": "#050507",
+                    "cbr": "1px",
+                    "cbrcr": "rgba(248,250,252,0.10)",
+                    "crs": "12px"
                 },
                 "cta": {
                     "bgcr": "#0b0b0f",
+                    "br": "0px",
+                    "bcr": "#000000",
+                    "rs": "18px",
                     "ticr": "#f8fafc",
-                    "tcr": "#cbd5e1",
+                    "tity": "sans",
                     "titse": "18px",
-                    "ttse": "14px",
-                    "tity": "system",
-                    "tty": "system",
-                    "tatt": "start",
                     "tiatt": "start",
-                    "btrs": "999px",
+                    "tcr": "#cbd5e1",
+                    "tty": "system",
+                    "ttse": "14px",
+                    "tatt": "start",
                     "btbdcr": "#f8fafc",
                     "btbdcrhv": "#e2e8f0",
-                    "rs": "18px",
+                    "btbr": "1px",
+                    "btbrcr": "rgba(248,250,252,0.20)",
+                    "btrs": "999px",
+                    "btcr": "#0b0b0f",
+                    "btty": "sans",
+                    "bttse": "16px",
+                    "btan": "start"
+                },
+                "productive": {
+                    "bgcr": "#0b0b0f",
                     "br": "0px",
-                    "bcr": "#000000"
+                    "bcr": "#000000",
+                    "rs": "18px",
+                    "cbgcr": "#111118",
+                    "cbr": "1px",
+                    "cbrcr": "rgba(248,250,252,0.10)",
+                    "crs": "12px",
+                    "tcr": "#f8fafc",
+                    "tty": "sans",
+                    "yyse": "18px",
+                    "tatt": "start",
+                    "itcr": "#f8fafc",
+                    "itty": "system",
+                    "itse": "16px",
+                    "itatt": "start",
+                    "itxcr": "#cbd5e1",
+                    "itxty": "system",
+                    "itxtse": "13px",
+                    "itxatt": "start"
+                },
+                "contact": {
+                    "bgcr": "#0b0b0f",
+                    "br": "1px",
+                    "bcr": "rgba(248,250,252,0.10)",
+                    "rs": "18px",
+                    "lcr": "#cbd5e1",
+                    "lty": "system",
+                    "ltse": "12px",
+                    "ibgcr": "#050507",
+                    "ibr": "1px",
+                    "ibcr": "rgba(248,250,252,0.12)",
+                    "irs": "12px",
+                    "icr": "#f8fafc",
+                    "ipcr": "rgba(148,163,184,0.65)",
+                    "ifcr": "rgba(248,250,252,0.28)",
+                    "btbg": "rgba(248,250,252,0.10)",
+                    "btbgv": "rgba(248,250,252,0.16)",
+                    "btbr": "1px",
+                    "btbrcr": "rgba(248,250,252,0.22)",
+                    "btrs": "12px",
+                    "btcr": "#f8fafc",
+                    "btty": "sans",
+                    "bttse": "16px",
+                    "btan": "start"
                 }
             },
             "showContactForm": true,
@@ -1069,6 +1811,39 @@
                             "title": "Cómo pedir turno",
                             "body": "Indicá: marca/modelo/año · síntoma · disponibilidad horaria.\nRespondemos a la brevedad."
                         }
+                    },
+                    {
+                        "id": "cta-t2",
+                        "kind": "cta",
+                        "data": {
+                            "title": "Turno por WhatsApp (demo)",
+                            "text": "En un negocio real, este botón podría abrir un link directo.",
+                            "buttonText": "Abrir WhatsApp",
+                            "href": "#"
+                        }
+                    }
+                ]
+            },
+            {
+                "id": 3,
+                "slug": "contacto",
+                "title": "Contacto",
+                "content": [
+                    {
+                        "id": "text-c1",
+                        "kind": "text",
+                        "data": {
+                            "title": "Contactanos",
+                            "body": "Este es un sitio de ejemplo (template).\nEl formulario real se habilita al aplicarlo a un negocio y configurar un email de contacto."
+                        }
+                    },
+                    {
+                        "id": "contact-form-1",
+                        "kind": "contactForm",
+                        "data": {
+                            "title": "Solicitud de turno",
+                            "description": "Completá el formulario y el dueño del taller recibirá un email para responderte."
+                        }
                     }
                 ]
             }
@@ -1094,15 +1869,15 @@
             "headerOpacityOverlay": 60,
             "headerOverlayPosition": "left",
             "titleColor": "#f8fafc",
-            "titleTypography": "Inter, system-ui, sans-serif",
+            "titleTypography": "sans",
             "titleTextSize": 28,
             "titleAlignText": "start",
             "headlineColor": "#e2e8f0",
-            "headlineTypography": "Inter, system-ui, sans-serif",
+            "headlineTypography": "sans",
             "headlineTextSize": 14,
             "headlineAlignText": "start",
             "categoryColor": "#93c5fd",
-            "categoryTypography": "Inter, system-ui, sans-serif",
+            "categoryTypography": "sans",
             "categoryTextSize": 12,
             "categoryAlignText": "start",
             "ownerName": "Demo",
@@ -1132,7 +1907,7 @@
                     "visible": true
                 },
                 {
-                    "kind": "contact",
+                    "kind": "page",
                     "slug": "contacto",
                     "title": "Contacto",
                     "order": 3,
@@ -1193,54 +1968,154 @@
                         "variant": "solid"
                     }
                 },
+                "header": {
+                    "ban": "start",
+                    "bbg": "rgba(7,18,31,0.55)",
+                    "bbhr": "rgba(147,197,253,0.16)",
+                    "bcr": "#f8fafc",
+                    "bty": "sans",
+                    "btse": "14px",
+                    "bbr": "1px",
+                    "bbcr": "rgba(248,250,252,0.14)",
+                    "brs": "12px",
+                    "bgp": "6px",
+                    "bbae": "rgba(147,197,253,0.10)",
+                    "bcae": "#ffffff",
+                    "bbcae": "rgba(147,197,253,0.22)"
+                },
                 "hero": {
                     "bgcr": "#07121f",
-                    "tcr": "#f8fafc",
-                    "scr": "#e2e8f0",
-                    "ttse": "22px",
-                    "stse": "14px",
-                    "tatt": "start",
-                    "satt": "start",
-                    "tty": "system",
-                    "sty": "system",
-                    "rs": "18px",
                     "br": "0px",
-                    "bcr": "#000000"
+                    "bcr": "#000000",
+                    "rs": "18px",
+                    "tcr": "#f8fafc",
+                    "tty": "sans",
+                    "ttse": "22px",
+                    "tatt": "start",
+                    "scr": "#e2e8f0",
+                    "sty": "system",
+                    "stse": "14px",
+                    "satt": "start"
+                },
+                "text": {
+                    "bgcr": "#07121f",
+                    "br": "0px",
+                    "bcr": "#000000",
+                    "rs": "18px",
+                    "tcr": "#f8fafc",
+                    "tty": "sans",
+                    "ttsc": "18px",
+                    "tat": "start",
+                    "bycr": "#cbd5e1",
+                    "byty": "system",
+                    "bytse": "14px",
+                    "byatt": "start"
                 },
                 "features": {
                     "bgcr": "#07121f",
+                    "br": "0px",
+                    "bcr": "#000000",
+                    "rs": "18px",
                     "tcr": "#f8fafc",
+                    "tty": "sans",
                     "ttse": "18px",
                     "tatt": "start",
                     "ibgcr": "#0b1a2c",
+                    "ibr": "1px",
+                    "ibcr": "rgba(148,163,184,0.22)",
+                    "irs": "12px",
                     "itcr": "#f8fafc",
-                    "itxcr": "#cbd5e1",
-                    "itxtse": "13px",
-                    "tty": "system",
                     "itty": "system",
-                    "itxty": "system",
+                    "ittse": "16px",
                     "itatt": "start",
-                    "itxatt": "start",
-                    "rs": "18px",
+                    "itxcr": "#cbd5e1",
+                    "itxty": "system",
+                    "itxtse": "13px",
+                    "itxatt": "start"
+                },
+                "gallery": {
+                    "bgcr": "#07121f",
                     "br": "0px",
-                    "bcr": "#000000"
+                    "bcr": "#000000",
+                    "rs": "18px",
+                    "tcr": "#f8fafc",
+                    "tty": "sans",
+                    "ttse": "14px",
+                    "tatt": "start",
+                    "cbcr": "#05070a",
+                    "cbr": "1px",
+                    "cbrcr": "rgba(148,163,184,0.18)",
+                    "crs": "12px"
                 },
                 "cta": {
                     "bgcr": "#07121f",
+                    "br": "0px",
+                    "bcr": "#000000",
+                    "rs": "18px",
                     "ticr": "#f8fafc",
-                    "tcr": "#cbd5e1",
+                    "tity": "sans",
                     "titse": "18px",
-                    "ttse": "14px",
-                    "tity": "system",
-                    "tty": "system",
-                    "tatt": "start",
                     "tiatt": "start",
-                    "btrs": "999px",
+                    "tcr": "#cbd5e1",
+                    "tty": "system",
+                    "ttse": "14px",
+                    "tatt": "start",
                     "btbdcr": "#93c5fd",
                     "btbdcrhv": "#bfdbfe",
-                    "rs": "18px",
+                    "btbr": "1px",
+                    "btbrcr": "rgba(147,197,253,0.30)",
+                    "btrs": "999px",
+                    "btcr": "#07121f",
+                    "btty": "sans",
+                    "bttse": "16px",
+                    "btan": "start"
+                },
+                "productive": {
+                    "bgcr": "#07121f",
                     "br": "0px",
-                    "bcr": "#000000"
+                    "bcr": "#000000",
+                    "rs": "18px",
+                    "cbgcr": "#0b1a2c",
+                    "cbr": "1px",
+                    "cbrcr": "rgba(148,163,184,0.22)",
+                    "crs": "12px",
+                    "tcr": "#f8fafc",
+                    "tty": "sans",
+                    "yyse": "18px",
+                    "tatt": "start",
+                    "itcr": "#f8fafc",
+                    "itty": "system",
+                    "itse": "16px",
+                    "itatt": "start",
+                    "itxcr": "#cbd5e1",
+                    "itxty": "system",
+                    "itxtse": "13px",
+                    "itxatt": "start"
+                },
+                "contact": {
+                    "bgcr": "#07121f",
+                    "br": "1px",
+                    "bcr": "rgba(148,163,184,0.22)",
+                    "rs": "18px",
+                    "lcr": "#cbd5e1",
+                    "lty": "system",
+                    "ltse": "12px",
+                    "ibgcr": "#05070a",
+                    "ibr": "1px",
+                    "ibcr": "rgba(148,163,184,0.22)",
+                    "irs": "12px",
+                    "icr": "#f8fafc",
+                    "ipcr": "rgba(148,163,184,0.70)",
+                    "ifcr": "rgba(147,197,253,0.45)",
+                    "btbg": "rgba(147,197,253,0.14)",
+                    "btbgv": "rgba(147,197,253,0.20)",
+                    "btbr": "1px",
+                    "btbrcr": "rgba(147,197,253,0.28)",
+                    "btrs": "12px",
+                    "btcr": "#dbeafe",
+                    "btty": "sans",
+                    "bttse": "16px",
+                    "btan": "start"
                 }
             },
             "showContactForm": true,
@@ -1259,6 +2134,24 @@
                             "title": "Instalaciones y reparaciones",
                             "body": "Instalación domiciliaria.\nTableros.\nPuesta a tierra.\nIluminación."
                         }
+                    },
+                    {
+                        "id": "features-s2",
+                        "kind": "features",
+                        "data": {
+                            "title": "Trabajos típicos",
+                            "columns": 2,
+                            "items": [
+                                {
+                                    "title": "Térmicas y disyuntores",
+                                    "text": "Revisión, cambio y puesta a punto."
+                                },
+                                {
+                                    "title": "Puesta a tierra",
+                                    "text": "Medición y normalización."
+                                }
+                            ]
+                        }
                     }
                 ]
             },
@@ -1273,6 +2166,39 @@
                         "data": {
                             "title": "Cobertura",
                             "body": "Atención en CABA y GBA (según disponibilidad).\nConsultá tu zona."
+                        }
+                    },
+                    {
+                        "id": "cta-z2",
+                        "kind": "cta",
+                        "data": {
+                            "title": "Coordinemos visita (demo)",
+                            "text": "En un negocio real, este botón puede abrir un link directo o un WhatsApp.",
+                            "buttonText": "Consultar disponibilidad",
+                            "href": "#"
+                        }
+                    }
+                ]
+            },
+            {
+                "id": 3,
+                "slug": "contacto",
+                "title": "Contacto",
+                "content": [
+                    {
+                        "id": "text-c1",
+                        "kind": "text",
+                        "data": {
+                            "title": "Contacto",
+                            "body": "Este es un sitio de ejemplo (template).\nEl formulario real se habilita al aplicarlo a un negocio y configurar un email de contacto."
+                        }
+                    },
+                    {
+                        "id": "contact-form-1",
+                        "kind": "contactForm",
+                        "data": {
+                            "title": "Solicitud de visita",
+                            "description": "Completá el formulario y el profesional recibirá un email para responderte."
                         }
                     }
                 ]
@@ -1299,15 +2225,15 @@
             "headerOpacityOverlay": 55,
             "headerOverlayPosition": "center",
             "titleColor": "#f8fafc",
-            "titleTypography": "Inter, system-ui, sans-serif",
+            "titleTypography": "sans",
             "titleTextSize": 30,
             "titleAlignText": "center",
             "headlineColor": "#bae6fd",
-            "headlineTypography": "Inter, system-ui, sans-serif",
+            "headlineTypography": "sans",
             "headlineTextSize": 14,
             "headlineAlignText": "center",
             "categoryColor": "#93c5fd",
-            "categoryTypography": "Inter, system-ui, sans-serif",
+            "categoryTypography": "sans",
             "categoryTextSize": 12,
             "categoryAlignText": "center",
             "ownerName": "Demo",
@@ -1344,7 +2270,7 @@
                     "visible": true
                 },
                 {
-                    "kind": "contact",
+                    "kind": "page",
                     "slug": "contacto",
                     "title": "Contacto",
                     "order": 4,
@@ -1413,68 +2339,154 @@
                         "variant": "solid"
                     }
                 },
+                "header": {
+                    "ban": "center",
+                    "bbg": "rgba(7,26,43,0.55)",
+                    "bbhr": "rgba(147,197,253,0.16)",
+                    "bcr": "#f8fafc",
+                    "bty": "sans",
+                    "btse": "14px",
+                    "bbr": "1px",
+                    "bbcr": "rgba(248,250,252,0.14)",
+                    "brs": "999px",
+                    "bgp": "8px",
+                    "bbae": "rgba(147,197,253,0.10)",
+                    "bcae": "#ffffff",
+                    "bbcae": "rgba(147,197,253,0.22)"
+                },
                 "hero": {
                     "bgcr": "#071a2b",
-                    "tcr": "#f8fafc",
-                    "scr": "#bae6fd",
-                    "ttse": "22px",
-                    "stse": "14px",
-                    "tatt": "center",
-                    "satt": "center",
-                    "tty": "system",
-                    "sty": "system",
-                    "rs": "18px",
                     "br": "0px",
-                    "bcr": "#000000"
+                    "bcr": "#000000",
+                    "rs": "18px",
+                    "tcr": "#f8fafc",
+                    "tty": "sans",
+                    "ttse": "22px",
+                    "tatt": "center",
+                    "scr": "#bae6fd",
+                    "sty": "system",
+                    "stse": "14px",
+                    "satt": "center"
                 },
                 "features": {
                     "bgcr": "#071a2b",
+                    "br": "0px",
+                    "bcr": "#000000",
+                    "rs": "18px",
                     "tcr": "#f8fafc",
+                    "tty": "sans",
                     "ttse": "18px",
                     "tatt": "start",
                     "ibgcr": "#0b2238",
+                    "ibr": "1px",
+                    "ibcr": "rgba(147,197,253,0.22)",
+                    "irs": "14px",
                     "itcr": "#f8fafc",
-                    "itxcr": "#bae6fd",
-                    "itxtse": "13px",
-                    "tty": "system",
                     "itty": "system",
-                    "itxty": "system",
+                    "ittse": "16px",
                     "itatt": "start",
-                    "itxatt": "start",
-                    "rs": "18px",
-                    "br": "0px",
-                    "bcr": "#000000"
+                    "itxcr": "#bae6fd",
+                    "itxty": "system",
+                    "itxtse": "13px",
+                    "itxatt": "start"
                 },
                 "text": {
                     "bgcr": "#071a2b",
-                    "tcr": "#f8fafc",
-                    "bycr": "#bae6fd",
-                    "ttsc": "18px",
-                    "bytse": "14px",
-                    "tat": "start",
-                    "byatt": "start",
-                    "tty": "system",
-                    "byty": "system",
-                    "rs": "18px",
                     "br": "0px",
-                    "bcr": "#000000"
+                    "bcr": "#000000",
+                    "rs": "18px",
+                    "tcr": "#f8fafc",
+                    "tty": "sans",
+                    "ttsc": "18px",
+                    "tat": "start",
+                    "bycr": "#bae6fd",
+                    "byty": "system",
+                    "bytse": "14px",
+                    "byatt": "start"
+                },
+                "gallery": {
+                    "bgcr": "#071a2b",
+                    "br": "0px",
+                    "bcr": "#000000",
+                    "rs": "18px",
+                    "tcr": "#f8fafc",
+                    "tty": "sans",
+                    "ttse": "14px",
+                    "tatt": "start",
+                    "cbcr": "#040a12",
+                    "cbr": "1px",
+                    "cbrcr": "rgba(147,197,253,0.18)",
+                    "crs": "14px"
                 },
                 "cta": {
                     "bgcr": "#071a2b",
+                    "br": "0px",
+                    "bcr": "#000000",
+                    "rs": "18px",
                     "ticr": "#f8fafc",
-                    "tcr": "#bae6fd",
+                    "tity": "sans",
                     "titse": "18px",
-                    "ttse": "14px",
-                    "tity": "system",
-                    "tty": "system",
-                    "tatt": "start",
                     "tiatt": "start",
-                    "btrs": "999px",
+                    "tcr": "#bae6fd",
+                    "tty": "system",
+                    "ttse": "14px",
+                    "tatt": "start",
                     "btbdcr": "#93c5fd",
                     "btbdcrhv": "#bfdbfe",
-                    "rs": "18px",
+                    "btbr": "1px",
+                    "btbrcr": "rgba(147,197,253,0.30)",
+                    "btrs": "999px",
+                    "btcr": "#071a2b",
+                    "btty": "sans",
+                    "bttse": "16px",
+                    "btan": "start"
+                },
+                "productive": {
+                    "bgcr": "#071a2b",
                     "br": "0px",
-                    "bcr": "#000000"
+                    "bcr": "#000000",
+                    "rs": "18px",
+                    "cbgcr": "#0b2238",
+                    "cbr": "1px",
+                    "cbrcr": "rgba(147,197,253,0.22)",
+                    "crs": "14px",
+                    "tcr": "#f8fafc",
+                    "tty": "sans",
+                    "yyse": "18px",
+                    "tatt": "start",
+                    "itcr": "#f8fafc",
+                    "itty": "system",
+                    "itse": "16px",
+                    "itatt": "start",
+                    "itxcr": "#bae6fd",
+                    "itxty": "system",
+                    "itxtse": "13px",
+                    "itxatt": "start"
+                },
+                "contact": {
+                    "bgcr": "#071a2b",
+                    "br": "1px",
+                    "bcr": "rgba(147,197,253,0.22)",
+                    "rs": "18px",
+                    "lcr": "#bae6fd",
+                    "lty": "system",
+                    "ltse": "12px",
+                    "ibgcr": "#040a12",
+                    "ibr": "1px",
+                    "ibcr": "rgba(147,197,253,0.22)",
+                    "irs": "12px",
+                    "icr": "#f8fafc",
+                    "ipcr": "rgba(186,230,253,0.70)",
+                    "ifcr": "rgba(147,197,253,0.45)",
+                    "btbg": "rgba(147,197,253,0.14)",
+                    "btbgv": "rgba(147,197,253,0.20)",
+                    "btbr": "1px",
+                    "btbrcr": "rgba(147,197,253,0.28)",
+                    "btrs": "12px",
+                    "btcr": "#dbeafe",
+                    "btty": "sans",
+                    "bttse": "16px",
+                    "btan": "start"
                 }
             },
             "showContactForm": true,
@@ -1503,6 +2515,14 @@
                                 }
                             ]
                         }
+                    },
+                    {
+                        "id": "text-c2",
+                        "kind": "text",
+                        "data": {
+                            "title": "Preparación de exámenes",
+                            "body": "Cambridge · IELTS · First.\nSimulacros y seguimiento con objetivos."
+                        }
                     }
                 ]
             },
@@ -1518,6 +2538,16 @@
                             "title": "Niveles",
                             "body": "A1–A2: Bases\nB1–B2: Fluidez\nC1–C2: Avanzado"
                         }
+                    },
+                    {
+                        "id": "cta-n2",
+                        "kind": "cta",
+                        "data": {
+                            "title": "¿No sabés tu nivel?",
+                            "text": "Hacé el test y te orientamos.",
+                            "buttonText": "Hacer test",
+                            "href": "#"
+                        }
                     }
                 ]
             },
@@ -1527,6 +2557,14 @@
                 "title": "Inscripción",
                 "content": [
                     {
+                        "id": "text-i0",
+                        "kind": "text",
+                        "data": {
+                            "title": "Inscripción",
+                            "body": "Contanos edad, objetivo y disponibilidad.\nTe recomendamos un curso y horarios."
+                        }
+                    },
+                    {
                         "id": "cta-i1",
                         "kind": "cta",
                         "data": {
@@ -1534,6 +2572,29 @@
                             "text": "Este es un template de ejemplo.",
                             "buttonText": "Enviar consulta",
                             "href": "#"
+                        }
+                    }
+                ]
+            },
+            {
+                "id": 4,
+                "slug": "contacto",
+                "title": "Contacto",
+                "content": [
+                    {
+                        "id": "text-ct1",
+                        "kind": "text",
+                        "data": {
+                            "title": "Contacto",
+                            "body": "Este es un sitio de ejemplo (template).\nEl formulario real se habilita al aplicarlo a un negocio y configurar un email de contacto."
+                        }
+                    },
+                    {
+                        "id": "contact-form-1",
+                        "kind": "contactForm",
+                        "data": {
+                            "title": "Consultas e inscripción",
+                            "description": "Completá el formulario y el instituto recibirá un email para responderte."
                         }
                     }
                 ]
@@ -1560,15 +2621,15 @@
             "headerOpacityOverlay": 70,
             "headerOverlayPosition": "left",
             "titleColor": "#f8fafc",
-            "titleTypography": "Inter, system-ui, sans-serif",
+            "titleTypography": "sans",
             "titleTextSize": 30,
             "titleAlignText": "start",
             "headlineColor": "#e9d5ff",
-            "headlineTypography": "Inter, system-ui, sans-serif",
+            "headlineTypography": "sans",
             "headlineTextSize": 14,
             "headlineAlignText": "start",
             "categoryColor": "#c4b5fd",
-            "categoryTypography": "Inter, system-ui, sans-serif",
+            "categoryTypography": "sans",
             "categoryTextSize": 12,
             "categoryAlignText": "start",
             "ownerName": "Demo",
@@ -1598,7 +2659,7 @@
                     "visible": true
                 },
                 {
-                    "kind": "contact",
+                    "kind": "page",
                     "slug": "contacto",
                     "title": "Contacto",
                     "order": 3,
@@ -1689,6 +2750,16 @@
                             }
                         ]
                     }
+                },
+                {
+                    "id": "cta-1",
+                    "kind": "cta",
+                    "data": {
+                        "title": "Probá instrumentos en el showroom",
+                        "text": "Te armamos una recomendación según tu nivel y presupuesto.",
+                        "buttonText": "Hablar con un asesor",
+                        "href": "#"
+                    }
                 }
             ],
             "themePreset": "userPreset",
@@ -1702,95 +2773,154 @@
                         "variant": "solid"
                     }
                 },
+                "header": {
+                    "ban": "start",
+                    "bbg": "rgba(18,10,29,0.55)",
+                    "bbhr": "rgba(196,181,253,0.18)",
+                    "bcr": "#f8fafc",
+                    "bty": "sans",
+                    "btse": "14px",
+                    "bbr": "1px",
+                    "bbcr": "rgba(248,250,252,0.14)",
+                    "brs": "999px",
+                    "bgp": "8px",
+                    "bbae": "rgba(196,181,253,0.12)",
+                    "bcae": "#ffffff",
+                    "bbcae": "rgba(196,181,253,0.24)"
+                },
                 "hero": {
                     "bgcr": "#120a1d",
-                    "tcr": "#f8fafc",
-                    "scr": "#e9d5ff",
-                    "ttse": "22px",
-                    "stse": "14px",
-                    "tatt": "start",
-                    "satt": "start",
-                    "tty": "system",
-                    "sty": "system",
-                    "rs": "18px",
                     "br": "0px",
-                    "bcr": "#000000"
+                    "bcr": "#000000",
+                    "rs": "18px",
+                    "tcr": "#f8fafc",
+                    "tty": "sans",
+                    "ttse": "22px",
+                    "tatt": "start",
+                    "scr": "#e9d5ff",
+                    "sty": "system",
+                    "stse": "14px",
+                    "satt": "start"
                 },
                 "productive": {
                     "bgcr": "#120a1d",
-                    "tcr": "#f8fafc",
-                    "yyse": "18px",
-                    "itcr": "#f8fafc",
-                    "itxcr": "#e9d5ff",
-                    "itty": "system",
-                    "itxty": "system",
-                    "itatt": "start",
-                    "itxatt": "start",
-                    "tty": "system",
-                    "tatt": "start",
-                    "rs": "18px",
                     "br": "0px",
-                    "bcr": "#000000"
+                    "bcr": "#000000",
+                    "rs": "18px",
+                    "cbgcr": "#1b0f2a",
+                    "cbr": "1px",
+                    "cbrcr": "rgba(196,181,253,0.20)",
+                    "crs": "14px",
+                    "tcr": "#f8fafc",
+                    "tty": "sans",
+                    "yyse": "18px",
+                    "tatt": "start",
+                    "itcr": "#f8fafc",
+                    "itty": "system",
+                    "itse": "16px",
+                    "itatt": "start",
+                    "itxcr": "#e9d5ff",
+                    "itxty": "system",
+                    "itxtse": "13px",
+                    "itxatt": "start"
                 },
                 "features": {
                     "bgcr": "#120a1d",
+                    "br": "0px",
+                    "bcr": "#000000",
+                    "rs": "18px",
                     "tcr": "#f8fafc",
+                    "tty": "sans",
                     "ttse": "18px",
                     "tatt": "start",
                     "ibgcr": "#1b0f2a",
+                    "ibr": "1px",
+                    "ibcr": "rgba(196,181,253,0.20)",
+                    "irs": "14px",
                     "itcr": "#f8fafc",
-                    "itxcr": "#e9d5ff",
-                    "itxtse": "13px",
-                    "tty": "system",
                     "itty": "system",
-                    "itxty": "system",
+                    "ittse": "16px",
                     "itatt": "start",
-                    "itxatt": "start",
-                    "rs": "18px",
-                    "br": "0px",
-                    "bcr": "#000000"
+                    "itxcr": "#e9d5ff",
+                    "itxty": "system",
+                    "itxtse": "13px",
+                    "itxatt": "start"
                 },
                 "gallery": {
                     "bgcr": "#120a1d",
+                    "br": "0px",
+                    "bcr": "#000000",
+                    "rs": "18px",
                     "tcr": "#f8fafc",
+                    "tty": "sans",
                     "ttse": "14px",
                     "tatt": "start",
-                    "tty": "system",
                     "cbcr": "#1b0f2a",
-                    "rs": "18px",
-                    "br": "0px",
-                    "bcr": "#000000"
+                    "cbr": "1px",
+                    "cbrcr": "rgba(196,181,253,0.18)",
+                    "crs": "14px"
                 },
                 "text": {
                     "bgcr": "#120a1d",
-                    "tcr": "#f8fafc",
-                    "bycr": "#e9d5ff",
-                    "ttsc": "18px",
-                    "bytse": "14px",
-                    "tat": "start",
-                    "byatt": "start",
-                    "tty": "system",
-                    "byty": "system",
-                    "rs": "18px",
                     "br": "0px",
-                    "bcr": "#000000"
+                    "bcr": "#000000",
+                    "rs": "18px",
+                    "tcr": "#f8fafc",
+                    "tty": "sans",
+                    "ttsc": "18px",
+                    "tat": "start",
+                    "bycr": "#e9d5ff",
+                    "byty": "system",
+                    "bytse": "14px",
+                    "byatt": "start"
                 },
                 "cta": {
                     "bgcr": "#120a1d",
+                    "br": "0px",
+                    "bcr": "#000000",
+                    "rs": "18px",
                     "ticr": "#f8fafc",
-                    "tcr": "#e9d5ff",
+                    "tity": "sans",
                     "titse": "18px",
-                    "ttse": "14px",
-                    "tity": "system",
-                    "tty": "system",
-                    "tatt": "start",
                     "tiatt": "start",
-                    "btrs": "999px",
+                    "tcr": "#e9d5ff",
+                    "tty": "system",
+                    "ttse": "14px",
+                    "tatt": "start",
                     "btbdcr": "#c4b5fd",
                     "btbdcrhv": "#ddd6fe",
+                    "btbr": "1px",
+                    "btbrcr": "rgba(196,181,253,0.28)",
+                    "btrs": "999px",
+                    "btcr": "#120a1d",
+                    "btty": "sans",
+                    "bttse": "16px",
+                    "btan": "start"
+                },
+                "contact": {
+                    "bgcr": "#120a1d",
+                    "br": "1px",
+                    "bcr": "rgba(196,181,253,0.20)",
                     "rs": "18px",
-                    "br": "0px",
-                    "bcr": "#000000"
+                    "lcr": "#e9d5ff",
+                    "lty": "system",
+                    "ltse": "12px",
+                    "ibgcr": "#0f0818",
+                    "ibr": "1px",
+                    "ibcr": "rgba(196,181,253,0.20)",
+                    "irs": "12px",
+                    "icr": "#f8fafc",
+                    "ipcr": "rgba(233,213,255,0.70)",
+                    "ifcr": "rgba(196,181,253,0.42)",
+                    "btbg": "rgba(196,181,253,0.12)",
+                    "btbgv": "rgba(196,181,253,0.18)",
+                    "btbr": "1px",
+                    "btbrcr": "rgba(196,181,253,0.26)",
+                    "btrs": "12px",
+                    "btcr": "#f5f3ff",
+                    "btty": "sans",
+                    "bttse": "16px",
+                    "btan": "start"
                 }
             },
             "showContactForm": true,
@@ -1808,6 +2938,16 @@
                         "data": {
                             "title": "Categorías",
                             "body": "Guitarras · Bajos · Teclados · Baterías · Vientos · Accesorios"
+                        }
+                    },
+                    {
+                        "id": "cta-cat-1",
+                        "kind": "cta",
+                        "data": {
+                            "title": "¿Buscás algo específico?",
+                            "text": "Contanos estilo, nivel y presupuesto.",
+                            "buttonText": "Pedir recomendación",
+                            "href": "#"
                         }
                     }
                 ]
@@ -1834,6 +2974,37 @@
                                 }
                             ]
                         }
+                    },
+                    {
+                        "id": "text-serv-2",
+                        "kind": "text",
+                        "data": {
+                            "title": "Taller y mantenimiento",
+                            "body": "Trabajamos con técnicos especializados.\nConsultá por tiempos y disponibilidad."
+                        }
+                    }
+                ]
+            },
+            {
+                "id": 3,
+                "slug": "contacto",
+                "title": "Contacto",
+                "content": [
+                    {
+                        "id": "text-ct1",
+                        "kind": "text",
+                        "data": {
+                            "title": "Contacto",
+                            "body": "Este es un sitio de ejemplo (template).\nEl formulario real se habilita al aplicarlo a un negocio y configurar un email de contacto."
+                        }
+                    },
+                    {
+                        "id": "contact-form-1",
+                        "kind": "contactForm",
+                        "data": {
+                            "title": "Consultas y ventas",
+                            "description": "Completá el formulario y el equipo de Casa Sonora recibirá un email para responderte."
+                        }
                     }
                 ]
             }
@@ -1859,15 +3030,15 @@
             "headerOpacityOverlay": 75,
             "headerOverlayPosition": "right",
             "titleColor": "#f8fafc",
-            "titleTypography": "Inter, system-ui, sans-serif",
+            "titleTypography": "sans",
             "titleTextSize": 34,
             "titleAlignText": "end",
             "headlineColor": "#e2e8f0",
-            "headlineTypography": "Inter, system-ui, sans-serif",
+            "headlineTypography": "sans",
             "headlineTextSize": 14,
             "headlineAlignText": "end",
             "categoryColor": "#86efac",
-            "categoryTypography": "Inter, system-ui, sans-serif",
+            "categoryTypography": "sans",
             "categoryTextSize": 12,
             "categoryAlignText": "end",
             "ownerName": "Demo",
@@ -1904,7 +3075,7 @@
                     "visible": true
                 },
                 {
-                    "kind": "contact",
+                    "kind": "page",
                     "slug": "contacto",
                     "title": "Contacto",
                     "order": 4,
@@ -1970,6 +3141,16 @@
                             }
                         ]
                     }
+                },
+                {
+                    "id": "cta-1",
+                    "kind": "cta",
+                    "data": {
+                        "title": "Armá tu outfit",
+                        "text": "Te ayudamos a elegir según tu deporte y objetivo.",
+                        "buttonText": "Consultar stock",
+                        "href": "#"
+                    }
                 }
             ],
             "themePreset": "userPreset",
@@ -1983,84 +3164,154 @@
                         "variant": "solid"
                     }
                 },
+                "header": {
+                    "ban": "end",
+                    "bbg": "rgba(11,11,11,0.60)",
+                    "bbhr": "rgba(134,239,172,0.18)",
+                    "bcr": "#f8fafc",
+                    "bty": "sans",
+                    "btse": "14px",
+                    "bbr": "1px",
+                    "bbcr": "rgba(248,250,252,0.14)",
+                    "brs": "999px",
+                    "bgp": "8px",
+                    "bbae": "rgba(134,239,172,0.14)",
+                    "bcae": "#ffffff",
+                    "bbcae": "rgba(134,239,172,0.26)"
+                },
                 "hero": {
                     "bgcr": "#0b0b0b",
-                    "tcr": "#f8fafc",
-                    "scr": "#e2e8f0",
-                    "ttse": "24px",
-                    "stse": "14px",
-                    "tatt": "end",
-                    "satt": "end",
-                    "tty": "system",
-                    "sty": "system",
-                    "rs": "18px",
                     "br": "0px",
-                    "bcr": "#000000"
+                    "bcr": "#000000",
+                    "rs": "18px",
+                    "tcr": "#f8fafc",
+                    "tty": "sans",
+                    "ttse": "24px",
+                    "tatt": "end",
+                    "scr": "#e2e8f0",
+                    "sty": "system",
+                    "stse": "14px",
+                    "satt": "end"
                 },
                 "productive": {
                     "bgcr": "#0b0b0b",
-                    "tcr": "#f8fafc",
-                    "yyse": "18px",
-                    "itcr": "#f8fafc",
-                    "itxcr": "#e2e8f0",
-                    "itty": "system",
-                    "itxty": "system",
-                    "itatt": "start",
-                    "itxatt": "start",
-                    "tty": "system",
-                    "tatt": "start",
-                    "rs": "18px",
                     "br": "0px",
-                    "bcr": "#000000"
+                    "bcr": "#000000",
+                    "rs": "18px",
+                    "cbgcr": "#0f1010",
+                    "cbr": "1px",
+                    "cbrcr": "rgba(148,163,184,0.22)",
+                    "crs": "16px",
+                    "tcr": "#f8fafc",
+                    "tty": "sans",
+                    "yyse": "18px",
+                    "tatt": "start",
+                    "itcr": "#f8fafc",
+                    "itty": "system",
+                    "itse": "16px",
+                    "itatt": "start",
+                    "itxcr": "#e2e8f0",
+                    "itxty": "system",
+                    "itxtse": "13px",
+                    "itxatt": "start"
                 },
                 "features": {
                     "bgcr": "#0b0b0b",
+                    "br": "0px",
+                    "bcr": "#000000",
+                    "rs": "18px",
                     "tcr": "#f8fafc",
+                    "tty": "sans",
                     "ttse": "18px",
                     "tatt": "start",
                     "ibgcr": "#111111",
+                    "ibr": "1px",
+                    "ibcr": "rgba(148,163,184,0.22)",
+                    "irs": "14px",
                     "itcr": "#f8fafc",
-                    "itxcr": "#e2e8f0",
-                    "itxtse": "13px",
-                    "tty": "system",
                     "itty": "system",
-                    "itxty": "system",
+                    "ittse": "16px",
                     "itatt": "start",
-                    "itxatt": "start",
-                    "rs": "18px",
+                    "itxcr": "#e2e8f0",
+                    "itxty": "system",
+                    "itxtse": "13px",
+                    "itxatt": "start"
+                },
+                "gallery": {
+                    "bgcr": "#0b0b0b",
                     "br": "0px",
-                    "bcr": "#000000"
+                    "bcr": "#000000",
+                    "rs": "18px",
+                    "tcr": "#f8fafc",
+                    "tty": "sans",
+                    "ttse": "14px",
+                    "tatt": "start",
+                    "cbcr": "#111111",
+                    "cbr": "1px",
+                    "cbrcr": "rgba(148,163,184,0.18)",
+                    "crs": "16px"
                 },
                 "text": {
                     "bgcr": "#0b0b0b",
-                    "tcr": "#f8fafc",
-                    "bycr": "#e2e8f0",
-                    "ttsc": "18px",
-                    "bytse": "14px",
-                    "tat": "start",
-                    "byatt": "start",
-                    "tty": "system",
-                    "byty": "system",
-                    "rs": "18px",
                     "br": "0px",
-                    "bcr": "#000000"
+                    "bcr": "#000000",
+                    "rs": "18px",
+                    "tcr": "#f8fafc",
+                    "tty": "sans",
+                    "ttsc": "18px",
+                    "tat": "start",
+                    "bycr": "#e2e8f0",
+                    "byty": "system",
+                    "bytse": "14px",
+                    "byatt": "start"
                 },
                 "cta": {
                     "bgcr": "#0b0b0b",
+                    "br": "0px",
+                    "bcr": "#000000",
+                    "rs": "18px",
                     "ticr": "#f8fafc",
-                    "tcr": "#e2e8f0",
+                    "tity": "sans",
                     "titse": "18px",
-                    "ttse": "14px",
-                    "tity": "system",
-                    "tty": "system",
-                    "tatt": "start",
                     "tiatt": "start",
-                    "btrs": "999px",
+                    "tcr": "#e2e8f0",
+                    "tty": "system",
+                    "ttse": "14px",
+                    "tatt": "start",
                     "btbdcr": "#86efac",
                     "btbdcrhv": "#bbf7d0",
+                    "btbr": "1px",
+                    "btbrcr": "rgba(134,239,172,0.28)",
+                    "btrs": "999px",
+                    "btcr": "#0b0b0b",
+                    "btty": "sans",
+                    "bttse": "16px",
+                    "btan": "start"
+                },
+                "contact": {
+                    "bgcr": "#0b0b0b",
+                    "br": "1px",
+                    "bcr": "rgba(148,163,184,0.22)",
                     "rs": "18px",
-                    "br": "0px",
-                    "bcr": "#000000"
+                    "lcr": "#e2e8f0",
+                    "lty": "system",
+                    "ltse": "12px",
+                    "ibgcr": "#0f1010",
+                    "ibr": "1px",
+                    "ibcr": "rgba(148,163,184,0.22)",
+                    "irs": "12px",
+                    "icr": "#f8fafc",
+                    "ipcr": "rgba(226,232,240,0.70)",
+                    "ifcr": "rgba(134,239,172,0.45)",
+                    "btbg": "rgba(134,239,172,0.12)",
+                    "btbgv": "rgba(134,239,172,0.18)",
+                    "btbr": "1px",
+                    "btbrcr": "rgba(134,239,172,0.28)",
+                    "btrs": "12px",
+                    "btcr": "#bbf7d0",
+                    "btty": "sans",
+                    "bttse": "16px",
+                    "btan": "start"
                 }
             },
             "showContactForm": true,
@@ -2078,6 +3329,16 @@
                         "data": {
                             "title": "Categorías",
                             "body": "Remeras · Shorts · Calzas · Camperas · Accesorios"
+                        }
+                    },
+                    {
+                        "id": "cta-p2",
+                        "kind": "cta",
+                        "data": {
+                            "title": "¿Qué estás buscando?",
+                            "text": "Decinos deporte y talle, y te guiamos.",
+                            "buttonText": "Consultar",
+                            "href": "#"
                         }
                     }
                 ]
@@ -2111,6 +3372,29 @@
                         }
                     }
                 ]
+            },
+            {
+                "id": 4,
+                "slug": "contacto",
+                "title": "Contacto",
+                "content": [
+                    {
+                        "id": "text-c1",
+                        "kind": "text",
+                        "data": {
+                            "title": "Contacto",
+                            "body": "Este es un sitio de ejemplo (template).\nEl formulario real se habilita al aplicarlo a un negocio y configurar un email de contacto."
+                        }
+                    },
+                    {
+                        "id": "contact-form-1",
+                        "kind": "contactForm",
+                        "data": {
+                            "title": "Consultas y stock",
+                            "description": "Completá el formulario y SportZone recibirá un email para responderte."
+                        }
+                    }
+                ]
             }
         ]
     },
@@ -2121,7 +3405,7 @@
         "business": {
             "id": 0,
             "slug": "desarrollador-web",
-            "name": "Survila Web Studio",
+            "name": "Web Studio Calderón",
             "headline": "Next.js · React · UX · Performance · SEO",
             "category": "Desarrollo Web",
             "surfaceBgColor": "#05060a",
@@ -2134,15 +3418,15 @@
             "headerOpacityOverlay": 60,
             "headerOverlayPosition": "center",
             "titleColor": "#f8fafc",
-            "titleTypography": "Inter, system-ui, sans-serif",
+            "titleTypography": "sans",
             "titleTextSize": 28,
             "titleAlignText": "center",
             "headlineColor": "#a5b4fc",
-            "headlineTypography": "Inter, system-ui, sans-serif",
+            "headlineTypography": "sans",
             "headlineTextSize": 14,
             "headlineAlignText": "center",
             "categoryColor": "#93c5fd",
-            "categoryTypography": "Inter, system-ui, sans-serif",
+            "categoryTypography": "sans",
             "categoryTextSize": 12,
             "categoryAlignText": "center",
             "ownerName": "Demo",
@@ -2179,7 +3463,7 @@
                     "visible": true
                 },
                 {
-                    "kind": "contact",
+                    "kind": "page",
                     "slug": "contacto",
                     "title": "Contacto",
                     "order": 4,
@@ -2191,7 +3475,7 @@
                     "id": "hero-1",
                     "kind": "hero",
                     "data": {
-                        "title": "Survila Web Studio",
+                        "title": "Web Studio Calderón",
                         "subtitle": "Sitios rápidos, claros y listos para vender.",
                         "align": "center"
                     }
@@ -2248,68 +3532,154 @@
                         "variant": "solid"
                     }
                 },
+                "header": {
+                    "ban": "center",
+                    "bbg": "rgba(7,10,18,0.65)",
+                    "bbhr": "rgba(147,197,253,0.18)",
+                    "bcr": "#f8fafc",
+                    "bty": "sans",
+                    "btse": "14px",
+                    "bbr": "1px",
+                    "bbcr": "rgba(248,250,252,0.12)",
+                    "brs": "999px",
+                    "bgp": "8px",
+                    "bbae": "rgba(165,180,252,0.14)",
+                    "bcae": "#ffffff",
+                    "bbcae": "rgba(147,197,253,0.28)"
+                },
                 "hero": {
                     "bgcr": "#070a12",
+                    "br": "0px",
+                    "bcr": "#000000",
+                    "rs": "18px",
                     "tcr": "#f8fafc",
-                    "scr": "#a5b4fc",
+                    "tty": "sans",
                     "ttse": "22px",
-                    "stse": "14px",
                     "tatt": "center",
-                    "satt": "center",
-                    "tty": "system",
+                    "scr": "#a5b4fc",
                     "sty": "system",
-                    "rs": "18px",
-                    "br": "0px",
-                    "bcr": "#000000"
-                },
-                "features": {
-                    "bgcr": "#070a12",
-                    "tcr": "#f8fafc",
-                    "ttse": "18px",
-                    "tatt": "start",
-                    "ibgcr": "#0b1020",
-                    "itcr": "#f8fafc",
-                    "itxcr": "#c7d2fe",
-                    "itxtse": "13px",
-                    "tty": "system",
-                    "itty": "system",
-                    "itxty": "system",
-                    "itatt": "start",
-                    "itxatt": "start",
-                    "rs": "18px",
-                    "br": "0px",
-                    "bcr": "#000000"
+                    "stse": "14px",
+                    "satt": "center"
                 },
                 "text": {
                     "bgcr": "#070a12",
-                    "tcr": "#f8fafc",
-                    "bycr": "#c7d2fe",
-                    "ttsc": "18px",
-                    "bytse": "14px",
-                    "tat": "start",
-                    "byatt": "start",
-                    "tty": "system",
-                    "byty": "system",
-                    "rs": "18px",
                     "br": "0px",
-                    "bcr": "#000000"
+                    "bcr": "#000000",
+                    "rs": "18px",
+                    "tcr": "#f8fafc",
+                    "tty": "sans",
+                    "ttsc": "18px",
+                    "tat": "start",
+                    "bycr": "#c7d2fe",
+                    "byty": "system",
+                    "bytse": "14px",
+                    "byatt": "start"
+                },
+                "features": {
+                    "bgcr": "#070a12",
+                    "br": "0px",
+                    "bcr": "#000000",
+                    "rs": "18px",
+                    "tcr": "#f8fafc",
+                    "tty": "sans",
+                    "ttse": "18px",
+                    "tatt": "start",
+                    "ibgcr": "#0b1020",
+                    "ibr": "1px",
+                    "ibcr": "rgba(99,102,241,0.22)",
+                    "irs": "14px",
+                    "itcr": "#f8fafc",
+                    "itty": "system",
+                    "ittse": "16px",
+                    "itatt": "start",
+                    "itxcr": "#c7d2fe",
+                    "itxty": "system",
+                    "itxtse": "13px",
+                    "itxatt": "start"
+                },
+                "gallery": {
+                    "bgcr": "#070a12",
+                    "br": "0px",
+                    "bcr": "#000000",
+                    "rs": "18px",
+                    "tcr": "#f8fafc",
+                    "tty": "sans",
+                    "ttse": "14px",
+                    "tatt": "start",
+                    "cbcr": "#0b1020",
+                    "cbr": "1px",
+                    "cbrcr": "rgba(99,102,241,0.20)",
+                    "crs": "16px"
+                },
+                "productive": {
+                    "bgcr": "#070a12",
+                    "br": "0px",
+                    "bcr": "#000000",
+                    "rs": "18px",
+                    "cbgcr": "#0b1020",
+                    "cbr": "1px",
+                    "cbrcr": "rgba(99,102,241,0.20)",
+                    "crs": "16px",
+                    "tcr": "#f8fafc",
+                    "tty": "sans",
+                    "yyse": "18px",
+                    "tatt": "start",
+                    "itcr": "#f8fafc",
+                    "itty": "system",
+                    "itse": "16px",
+                    "itatt": "start",
+                    "itxcr": "#c7d2fe",
+                    "itxty": "system",
+                    "itxtse": "13px",
+                    "itxatt": "start"
                 },
                 "cta": {
                     "bgcr": "#070a12",
+                    "br": "0px",
+                    "bcr": "#000000",
+                    "rs": "18px",
                     "ticr": "#f8fafc",
-                    "tcr": "#c7d2fe",
+                    "tity": "sans",
                     "titse": "18px",
-                    "ttse": "14px",
-                    "tity": "system",
-                    "tty": "system",
-                    "tatt": "start",
                     "tiatt": "start",
-                    "btrs": "999px",
+                    "tcr": "#c7d2fe",
+                    "tty": "system",
+                    "ttse": "14px",
+                    "tatt": "start",
                     "btbdcr": "#93c5fd",
                     "btbdcrhv": "#bfdbfe",
+                    "btbr": "1px",
+                    "btbrcr": "rgba(147,197,253,0.28)",
+                    "btrs": "999px",
+                    "btcr": "#070a12",
+                    "btty": "sans",
+                    "bttse": "16px",
+                    "btan": "start"
+                },
+                "contact": {
+                    "bgcr": "#070a12",
+                    "br": "1px",
+                    "bcr": "rgba(99,102,241,0.20)",
                     "rs": "18px",
-                    "br": "0px",
-                    "bcr": "#000000"
+                    "lcr": "#c7d2fe",
+                    "lty": "system",
+                    "ltse": "12px",
+                    "ibgcr": "#0b1020",
+                    "ibr": "1px",
+                    "ibcr": "rgba(99,102,241,0.20)",
+                    "irs": "12px",
+                    "icr": "#f8fafc",
+                    "ipcr": "rgba(199,210,254,0.70)",
+                    "ifcr": "rgba(147,197,253,0.45)",
+                    "btbg": "rgba(147,197,253,0.12)",
+                    "btbgv": "rgba(147,197,253,0.18)",
+                    "btbr": "1px",
+                    "btbrcr": "rgba(147,197,253,0.28)",
+                    "btrs": "12px",
+                    "btcr": "#bfdbfe",
+                    "btty": "sans",
+                    "bttse": "16px",
+                    "btan": "start"
                 }
             },
             "showContactForm": true,
@@ -2353,6 +3723,16 @@
                             "title": "Proyectos",
                             "body": "E-commerce · Portfolios · Sitios de negocio · Apps internas.\n(Contenido demo)"
                         }
+                    },
+                    {
+                        "id": "cta-p2",
+                        "kind": "cta",
+                        "data": {
+                            "title": "¿Querés ver algo similar?",
+                            "text": "Te paso ejemplos según tu rubro.",
+                            "buttonText": "Pedir ejemplos",
+                            "href": "#"
+                        }
                     }
                 ]
             },
@@ -2367,6 +3747,29 @@
                         "data": {
                             "title": "Stack",
                             "body": "Next.js · React · TypeScript · Prisma · Tailwind · Deploy"
+                        }
+                    }
+                ]
+            },
+            {
+                "id": 4,
+                "slug": "contacto",
+                "title": "Contacto",
+                "content": [
+                    {
+                        "id": "text-c1",
+                        "kind": "text",
+                        "data": {
+                            "title": "Contacto",
+                            "body": "Este es un sitio de ejemplo (template).\nEl formulario real se habilita al aplicarlo a un negocio y configurar un email de contacto."
+                        }
+                    },
+                    {
+                        "id": "contact-form-1",
+                        "kind": "contactForm",
+                        "data": {
+                            "title": "Pedir presupuesto",
+                            "description": "Completá el formulario y el desarrollador recibirá un email para responderte."
                         }
                     }
                 ]
@@ -2393,15 +3796,15 @@
             "headerOpacityOverlay": 60,
             "headerOverlayPosition": "center",
             "titleColor": "#f8fafc",
-            "titleTypography": "Inter, system-ui, sans-serif",
+            "titleTypography": "sans",
             "titleTextSize": 28,
             "titleAlignText": "center",
             "headlineColor": "#a5f3fc",
-            "headlineTypography": "Inter, system-ui, sans-serif",
+            "headlineTypography": "sans",
             "headlineTextSize": 14,
             "headlineAlignText": "center",
             "categoryColor": "#93c5fd",
-            "categoryTypography": "Inter, system-ui, sans-serif",
+            "categoryTypography": "sans",
             "categoryTextSize": 12,
             "categoryAlignText": "center",
             "ownerName": "Demo",
@@ -2438,7 +3841,7 @@
                     "visible": true
                 },
                 {
-                    "kind": "contact",
+                    "kind": "page",
                     "slug": "contacto",
                     "title": "Contacto",
                     "order": 4,
@@ -2478,6 +3881,14 @@
                     }
                 },
                 {
+                    "id": "text-1",
+                    "kind": "text",
+                    "data": {
+                        "title": "Atención y confianza",
+                        "body": "Primera evaluación y plan de tratamiento.\nTecnología y materiales de calidad.\nSeguimiento y cuidado post-tratamiento."
+                    }
+                },
+                {
                     "id": "cta-1",
                     "kind": "cta",
                     "data": {
@@ -2499,68 +3910,154 @@
                         "variant": "solid"
                     }
                 },
+                "header": {
+                    "ban": "center",
+                    "bbg": "rgba(7,19,29,0.72)",
+                    "bbhr": "rgba(165,243,252,0.18)",
+                    "bcr": "#f8fafc",
+                    "bty": "sans",
+                    "btse": "14px",
+                    "bbr": "1px",
+                    "bbcr": "rgba(248,250,252,0.12)",
+                    "brs": "999px",
+                    "bgp": "8px",
+                    "bbae": "rgba(147,197,253,0.14)",
+                    "bcae": "#ffffff",
+                    "bbcae": "rgba(165,243,252,0.26)"
+                },
                 "hero": {
                     "bgcr": "#07131d",
+                    "br": "0px",
+                    "bcr": "#000000",
+                    "rs": "18px",
                     "tcr": "#f8fafc",
-                    "scr": "#a5f3fc",
+                    "tty": "sans",
                     "ttse": "22px",
-                    "stse": "14px",
                     "tatt": "center",
-                    "satt": "center",
-                    "tty": "system",
+                    "scr": "#a5f3fc",
                     "sty": "system",
-                    "rs": "18px",
-                    "br": "0px",
-                    "bcr": "#000000"
-                },
-                "features": {
-                    "bgcr": "#07131d",
-                    "tcr": "#f8fafc",
-                    "ttse": "18px",
-                    "tatt": "start",
-                    "ibgcr": "#0b1c28",
-                    "itcr": "#f8fafc",
-                    "itxcr": "#bae6fd",
-                    "itxtse": "13px",
-                    "tty": "system",
-                    "itty": "system",
-                    "itxty": "system",
-                    "itatt": "start",
-                    "itxatt": "start",
-                    "rs": "18px",
-                    "br": "0px",
-                    "bcr": "#000000"
+                    "stse": "14px",
+                    "satt": "center"
                 },
                 "text": {
                     "bgcr": "#07131d",
-                    "tcr": "#f8fafc",
-                    "bycr": "#bae6fd",
-                    "ttsc": "18px",
-                    "bytse": "14px",
-                    "tat": "start",
-                    "byatt": "start",
-                    "tty": "system",
-                    "byty": "system",
-                    "rs": "18px",
                     "br": "0px",
-                    "bcr": "#000000"
+                    "bcr": "#000000",
+                    "rs": "18px",
+                    "tcr": "#f8fafc",
+                    "tty": "sans",
+                    "ttsc": "18px",
+                    "tat": "start",
+                    "bycr": "#bae6fd",
+                    "byty": "system",
+                    "bytse": "14px",
+                    "byatt": "start"
+                },
+                "features": {
+                    "bgcr": "#07131d",
+                    "br": "0px",
+                    "bcr": "#000000",
+                    "rs": "18px",
+                    "tcr": "#f8fafc",
+                    "tty": "sans",
+                    "ttse": "18px",
+                    "tatt": "start",
+                    "ibgcr": "#0b1c28",
+                    "ibr": "1px",
+                    "ibcr": "rgba(165,243,252,0.18)",
+                    "irs": "14px",
+                    "itcr": "#f8fafc",
+                    "itty": "system",
+                    "ittse": "16px",
+                    "itatt": "start",
+                    "itxcr": "#bae6fd",
+                    "itxty": "system",
+                    "itxtse": "13px",
+                    "itxatt": "start"
+                },
+                "gallery": {
+                    "bgcr": "#07131d",
+                    "br": "0px",
+                    "bcr": "#000000",
+                    "rs": "18px",
+                    "tcr": "#f8fafc",
+                    "tty": "sans",
+                    "ttse": "14px",
+                    "tatt": "start",
+                    "cbcr": "#0b1c28",
+                    "cbr": "1px",
+                    "cbrcr": "rgba(165,243,252,0.18)",
+                    "crs": "16px"
+                },
+                "productive": {
+                    "bgcr": "#07131d",
+                    "br": "0px",
+                    "bcr": "#000000",
+                    "rs": "18px",
+                    "cbgcr": "#0b1c28",
+                    "cbr": "1px",
+                    "cbrcr": "rgba(165,243,252,0.18)",
+                    "crs": "16px",
+                    "tcr": "#f8fafc",
+                    "tty": "sans",
+                    "yyse": "18px",
+                    "tatt": "start",
+                    "itcr": "#f8fafc",
+                    "itty": "system",
+                    "itse": "16px",
+                    "itatt": "start",
+                    "itxcr": "#bae6fd",
+                    "itxty": "system",
+                    "itxtse": "13px",
+                    "itxatt": "start"
                 },
                 "cta": {
                     "bgcr": "#07131d",
+                    "br": "0px",
+                    "bcr": "#000000",
+                    "rs": "18px",
                     "ticr": "#f8fafc",
-                    "tcr": "#bae6fd",
+                    "tity": "sans",
                     "titse": "18px",
-                    "ttse": "14px",
-                    "tity": "system",
-                    "tty": "system",
-                    "tatt": "start",
                     "tiatt": "start",
-                    "btrs": "999px",
+                    "tcr": "#bae6fd",
+                    "tty": "system",
+                    "ttse": "14px",
+                    "tatt": "start",
                     "btbdcr": "#93c5fd",
                     "btbdcrhv": "#bfdbfe",
+                    "btbr": "1px",
+                    "btbrcr": "rgba(147,197,253,0.28)",
+                    "btrs": "999px",
+                    "btcr": "#07131d",
+                    "btty": "sans",
+                    "bttse": "16px",
+                    "btan": "start"
+                },
+                "contact": {
+                    "bgcr": "#07131d",
+                    "br": "1px",
+                    "bcr": "rgba(165,243,252,0.18)",
                     "rs": "18px",
-                    "br": "0px",
-                    "bcr": "#000000"
+                    "lcr": "#bae6fd",
+                    "lty": "system",
+                    "ltse": "12px",
+                    "ibgcr": "#0b1c28",
+                    "ibr": "1px",
+                    "ibcr": "rgba(165,243,252,0.18)",
+                    "irs": "12px",
+                    "icr": "#f8fafc",
+                    "ipcr": "rgba(186,230,253,0.70)",
+                    "ifcr": "rgba(147,197,253,0.45)",
+                    "btbg": "rgba(147,197,253,0.12)",
+                    "btbgv": "rgba(147,197,253,0.18)",
+                    "btbr": "1px",
+                    "btbrcr": "rgba(147,197,253,0.28)",
+                    "btrs": "12px",
+                    "btcr": "#bfdbfe",
+                    "btty": "sans",
+                    "bttse": "16px",
+                    "btan": "start"
                 }
             },
             "showContactForm": true,
@@ -2579,6 +4076,24 @@
                             "title": "Tratamientos",
                             "body": "Ortodoncia · Implantes · Endodoncia · Limpieza · Estética\n(Contenido demo)"
                         }
+                    },
+                    {
+                        "id": "features-tr2",
+                        "kind": "features",
+                        "data": {
+                            "title": "Especialidades",
+                            "columns": 2,
+                            "items": [
+                                {
+                                    "title": "Odontología general",
+                                    "text": "Prevención, controles y restauraciones."
+                                },
+                                {
+                                    "title": "Urgencias",
+                                    "text": "Dolor, fracturas, infecciones."
+                                }
+                            ]
+                        }
                     }
                 ]
             },
@@ -2594,6 +4109,14 @@
                             "title": "Cómo reservar",
                             "body": "Indicá: tratamiento/consulta · disponibilidad horaria · obra social (opcional)."
                         }
+                    },
+                    {
+                        "id": "contact-form-tu2",
+                        "kind": "contactForm",
+                        "data": {
+                            "title": "Solicitar turno",
+                            "description": "Completá el formulario y coordinamos la disponibilidad por email."
+                        }
                     }
                 ]
             },
@@ -2608,6 +4131,29 @@
                         "data": {
                             "title": "Profesionales",
                             "body": "Equipo de odontología general y especialistas.\n(Contenido demo)"
+                        }
+                    }
+                ]
+            },
+            {
+                "id": 4,
+                "slug": "contacto",
+                "title": "Contacto",
+                "content": [
+                    {
+                        "id": "text-c1",
+                        "kind": "text",
+                        "data": {
+                            "title": "Contacto",
+                            "body": "Este es un sitio de ejemplo (template).\nEl formulario real se habilita al aplicarlo a un negocio y configurar un email de contacto."
+                        }
+                    },
+                    {
+                        "id": "contact-form-1",
+                        "kind": "contactForm",
+                        "data": {
+                            "title": "Escribinos",
+                            "description": "Dejanos tu consulta y te respondemos a la brevedad."
                         }
                     }
                 ]
@@ -2634,15 +4180,15 @@
             "headerOpacityOverlay": 75,
             "headerOverlayPosition": "left",
             "titleColor": "#f8fafc",
-            "titleTypography": "Inter, system-ui, sans-serif",
+            "titleTypography": "sans",
             "titleTextSize": 32,
             "titleAlignText": "start",
             "headlineColor": "#e2e8f0",
-            "headlineTypography": "Inter, system-ui, sans-serif",
+            "headlineTypography": "sans",
             "headlineTextSize": 14,
             "headlineAlignText": "start",
             "categoryColor": "#86efac",
-            "categoryTypography": "Inter, system-ui, sans-serif",
+            "categoryTypography": "sans",
             "categoryTextSize": 12,
             "categoryAlignText": "start",
             "ownerName": "Demo",
@@ -2679,7 +4225,7 @@
                     "visible": true
                 },
                 {
-                    "kind": "contact",
+                    "kind": "page",
                     "slug": "contacto",
                     "title": "Contacto",
                     "order": 4,
@@ -2793,95 +4339,154 @@
                         "variant": "solid"
                     }
                 },
+                "header": {
+                    "ban": "start",
+                    "bbg": "rgba(11,11,11,0.72)",
+                    "bbhr": "rgba(134,239,172,0.18)",
+                    "bcr": "#f8fafc",
+                    "bty": "sans",
+                    "btse": "14px",
+                    "bbr": "1px",
+                    "bbcr": "rgba(248,250,252,0.12)",
+                    "brs": "999px",
+                    "bgp": "8px",
+                    "bbae": "rgba(134,239,172,0.14)",
+                    "bcae": "#ffffff",
+                    "bbcae": "rgba(134,239,172,0.22)"
+                },
                 "hero": {
                     "bgcr": "#0b0b0b",
+                    "br": "0px",
+                    "bcr": "#000000",
+                    "rs": "18px",
                     "tcr": "#f8fafc",
-                    "scr": "#e2e8f0",
+                    "tty": "sans",
                     "ttse": "24px",
-                    "stse": "14px",
                     "tatt": "start",
-                    "satt": "start",
-                    "tty": "system",
+                    "scr": "#e2e8f0",
                     "sty": "system",
-                    "rs": "18px",
-                    "br": "0px",
-                    "bcr": "#000000"
-                },
-                "features": {
-                    "bgcr": "#0b0b0b",
-                    "tcr": "#f8fafc",
-                    "ttse": "18px",
-                    "tatt": "start",
-                    "ibgcr": "#111111",
-                    "itcr": "#f8fafc",
-                    "itxcr": "#e2e8f0",
-                    "itxtse": "13px",
-                    "tty": "system",
-                    "itty": "system",
-                    "itxty": "system",
-                    "itatt": "start",
-                    "itxatt": "start",
-                    "rs": "18px",
-                    "br": "0px",
-                    "bcr": "#000000"
-                },
-                "productive": {
-                    "bgcr": "#0b0b0b",
-                    "tcr": "#f8fafc",
-                    "yyse": "18px",
-                    "itcr": "#f8fafc",
-                    "itxcr": "#e2e8f0",
-                    "itty": "system",
-                    "itxty": "system",
-                    "itatt": "start",
-                    "itxatt": "start",
-                    "tty": "system",
-                    "tatt": "start",
-                    "rs": "18px",
-                    "br": "0px",
-                    "bcr": "#000000"
-                },
-                "gallery": {
-                    "bgcr": "#0b0b0b",
-                    "tcr": "#f8fafc",
-                    "ttse": "14px",
-                    "tatt": "start",
-                    "tty": "system",
-                    "cbcr": "#111111",
-                    "rs": "18px",
-                    "br": "0px",
-                    "bcr": "#000000"
+                    "stse": "14px",
+                    "satt": "start"
                 },
                 "text": {
                     "bgcr": "#0b0b0b",
-                    "tcr": "#f8fafc",
-                    "bycr": "#e2e8f0",
-                    "ttsc": "18px",
-                    "bytse": "14px",
-                    "tat": "start",
-                    "byatt": "start",
-                    "tty": "system",
-                    "byty": "system",
-                    "rs": "18px",
                     "br": "0px",
-                    "bcr": "#000000"
+                    "bcr": "#000000",
+                    "rs": "18px",
+                    "tcr": "#f8fafc",
+                    "tty": "sans",
+                    "ttsc": "18px",
+                    "tat": "start",
+                    "bycr": "#e2e8f0",
+                    "byty": "system",
+                    "bytse": "14px",
+                    "byatt": "start"
+                },
+                "features": {
+                    "bgcr": "#0b0b0b",
+                    "br": "0px",
+                    "bcr": "#000000",
+                    "rs": "18px",
+                    "tcr": "#f8fafc",
+                    "tty": "sans",
+                    "ttse": "18px",
+                    "tatt": "start",
+                    "ibgcr": "#101010",
+                    "ibr": "1px",
+                    "ibcr": "rgba(248,250,252,0.10)",
+                    "irs": "14px",
+                    "itcr": "#f8fafc",
+                    "itty": "system",
+                    "ittse": "16px",
+                    "itatt": "start",
+                    "itxcr": "#cbd5e1",
+                    "itxty": "system",
+                    "itxtse": "13px",
+                    "itxatt": "start"
+                },
+                "gallery": {
+                    "bgcr": "#0b0b0b",
+                    "br": "0px",
+                    "bcr": "#000000",
+                    "rs": "18px",
+                    "tcr": "#f8fafc",
+                    "tty": "sans",
+                    "ttse": "14px",
+                    "tatt": "start",
+                    "cbcr": "#0e0e0e",
+                    "cbr": "1px",
+                    "cbrcr": "rgba(134,239,172,0.20)",
+                    "crs": "16px"
+                },
+                "productive": {
+                    "bgcr": "#0b0b0b",
+                    "br": "0px",
+                    "bcr": "#000000",
+                    "rs": "18px",
+                    "cbgcr": "#0e0e0e",
+                    "cbr": "1px",
+                    "cbrcr": "rgba(248,250,252,0.10)",
+                    "crs": "16px",
+                    "tcr": "#f8fafc",
+                    "tty": "sans",
+                    "yyse": "18px",
+                    "tatt": "start",
+                    "itcr": "#f8fafc",
+                    "itty": "system",
+                    "itse": "16px",
+                    "itatt": "start",
+                    "itxcr": "#cbd5e1",
+                    "itxty": "system",
+                    "itxtse": "13px",
+                    "itxatt": "start"
                 },
                 "cta": {
                     "bgcr": "#0b0b0b",
+                    "br": "0px",
+                    "bcr": "#000000",
+                    "rs": "18px",
                     "ticr": "#f8fafc",
-                    "tcr": "#e2e8f0",
+                    "tity": "sans",
                     "titse": "18px",
-                    "ttse": "14px",
-                    "tity": "system",
-                    "tty": "system",
-                    "tatt": "start",
                     "tiatt": "start",
-                    "btrs": "999px",
+                    "tcr": "#e2e8f0",
+                    "tty": "system",
+                    "ttse": "14px",
+                    "tatt": "start",
                     "btbdcr": "#86efac",
                     "btbdcrhv": "#bbf7d0",
+                    "btbr": "1px",
+                    "btbrcr": "rgba(134,239,172,0.28)",
+                    "btrs": "999px",
+                    "btcr": "#052e16",
+                    "btty": "sans",
+                    "bttse": "16px",
+                    "btan": "start"
+                },
+                "contact": {
+                    "bgcr": "#0b0b0b",
+                    "br": "1px",
+                    "bcr": "rgba(248,250,252,0.10)",
                     "rs": "18px",
-                    "br": "0px",
-                    "bcr": "#000000"
+                    "lcr": "#cbd5e1",
+                    "lty": "system",
+                    "ltse": "12px",
+                    "ibgcr": "#0e0e0e",
+                    "ibr": "1px",
+                    "ibcr": "rgba(248,250,252,0.10)",
+                    "irs": "12px",
+                    "icr": "#f8fafc",
+                    "ipcr": "rgba(226,232,240,0.70)",
+                    "ifcr": "rgba(134,239,172,0.28)",
+                    "btbg": "rgba(134,239,172,0.12)",
+                    "btbgv": "rgba(134,239,172,0.18)",
+                    "btbr": "1px",
+                    "btbrcr": "rgba(134,239,172,0.28)",
+                    "btrs": "12px",
+                    "btcr": "#bbf7d0",
+                    "btty": "sans",
+                    "bttse": "16px",
+                    "btan": "start"
                 }
             },
             "showContactForm": true,
@@ -2960,6 +4565,29 @@
                         }
                     }
                 ]
+            },
+            {
+                "id": 4,
+                "slug": "contacto",
+                "title": "Contacto",
+                "content": [
+                    {
+                        "id": "text-c1",
+                        "kind": "text",
+                        "data": {
+                            "title": "Contacto",
+                            "body": "Este es un sitio de ejemplo (template).\nEl formulario real se habilita al aplicarlo a un negocio y configurar un email de contacto."
+                        }
+                    },
+                    {
+                        "id": "contact-form-1",
+                        "kind": "contactForm",
+                        "data": {
+                            "title": "Quiero entrenar",
+                            "description": "Dejanos tu consulta y objetivo (opcional) para recomendarte el mejor plan."
+                        }
+                    }
+                ]
             }
         ]
     },
@@ -2983,15 +4611,15 @@
             "headerOpacityOverlay": 70,
             "headerOverlayPosition": "left",
             "titleColor": "#f8fafc",
-            "titleTypography": "Inter, system-ui, sans-serif",
+            "titleTypography": "sans",
             "titleTextSize": 32,
             "titleAlignText": "start",
             "headlineColor": "#cbd5e1",
-            "headlineTypography": "Inter, system-ui, sans-serif",
+            "headlineTypography": "sans",
             "headlineTextSize": 14,
             "headlineAlignText": "start",
             "categoryColor": "#93c5fd",
-            "categoryTypography": "Inter, system-ui, sans-serif",
+            "categoryTypography": "sans",
             "categoryTextSize": 12,
             "categoryAlignText": "start",
             "ownerName": "Demo",
@@ -3028,7 +4656,7 @@
                     "visible": true
                 },
                 {
-                    "kind": "contact",
+                    "kind": "page",
                     "slug": "contacto",
                     "title": "Contacto",
                     "order": 4,
@@ -3117,95 +4745,154 @@
                         "variant": "solid"
                     }
                 },
+                "header": {
+                    "ban": "start",
+                    "bbg": "rgba(11,16,32,0.72)",
+                    "bbhr": "rgba(147,197,253,0.18)",
+                    "bcr": "#f8fafc",
+                    "bty": "sans",
+                    "btse": "14px",
+                    "bbr": "1px",
+                    "bbcr": "rgba(248,250,252,0.12)",
+                    "brs": "999px",
+                    "bgp": "8px",
+                    "bbae": "rgba(147,197,253,0.14)",
+                    "bcae": "#ffffff",
+                    "bbcae": "rgba(147,197,253,0.22)"
+                },
                 "hero": {
                     "bgcr": "#0b1020",
+                    "br": "0px",
+                    "bcr": "#000000",
+                    "rs": "18px",
                     "tcr": "#f8fafc",
-                    "scr": "#cbd5e1",
+                    "tty": "sans",
                     "ttse": "22px",
-                    "stse": "14px",
                     "tatt": "start",
-                    "satt": "start",
-                    "tty": "system",
+                    "scr": "#cbd5e1",
                     "sty": "system",
-                    "rs": "18px",
-                    "br": "0px",
-                    "bcr": "#000000"
-                },
-                "productive": {
-                    "bgcr": "#0b1020",
-                    "tcr": "#f8fafc",
-                    "yyse": "18px",
-                    "itcr": "#f8fafc",
-                    "itxcr": "#cbd5e1",
-                    "itty": "system",
-                    "itxty": "system",
-                    "itatt": "start",
-                    "itxatt": "start",
-                    "tty": "system",
-                    "tatt": "start",
-                    "rs": "18px",
-                    "br": "0px",
-                    "bcr": "#000000"
-                },
-                "features": {
-                    "bgcr": "#0b1020",
-                    "tcr": "#f8fafc",
-                    "ttse": "18px",
-                    "tatt": "start",
-                    "ibgcr": "#101a33",
-                    "itcr": "#f8fafc",
-                    "itxcr": "#cbd5e1",
-                    "itxtse": "13px",
-                    "tty": "system",
-                    "itty": "system",
-                    "itxty": "system",
-                    "itatt": "start",
-                    "itxatt": "start",
-                    "rs": "18px",
-                    "br": "0px",
-                    "bcr": "#000000"
+                    "stse": "14px",
+                    "satt": "start"
                 },
                 "text": {
                     "bgcr": "#0b1020",
-                    "tcr": "#f8fafc",
-                    "bycr": "#cbd5e1",
-                    "ttsc": "18px",
-                    "bytse": "14px",
-                    "tat": "start",
-                    "byatt": "start",
-                    "tty": "system",
-                    "byty": "system",
-                    "rs": "18px",
                     "br": "0px",
-                    "bcr": "#000000"
+                    "bcr": "#000000",
+                    "rs": "18px",
+                    "tcr": "#f8fafc",
+                    "tty": "sans",
+                    "ttsc": "18px",
+                    "tat": "start",
+                    "bycr": "#cbd5e1",
+                    "byty": "system",
+                    "bytse": "14px",
+                    "byatt": "start"
+                },
+                "features": {
+                    "bgcr": "#0b1020",
+                    "br": "0px",
+                    "bcr": "#000000",
+                    "rs": "18px",
+                    "tcr": "#f8fafc",
+                    "tty": "sans",
+                    "ttse": "18px",
+                    "tatt": "start",
+                    "ibgcr": "#101a33",
+                    "ibr": "1px",
+                    "ibcr": "rgba(248,250,252,0.10)",
+                    "irs": "14px",
+                    "itcr": "#f8fafc",
+                    "itty": "system",
+                    "ittse": "16px",
+                    "itatt": "start",
+                    "itxcr": "#cbd5e1",
+                    "itxty": "system",
+                    "itxtse": "13px",
+                    "itxatt": "start"
                 },
                 "gallery": {
                     "bgcr": "#0b1020",
+                    "br": "0px",
+                    "bcr": "#000000",
+                    "rs": "18px",
                     "tcr": "#f8fafc",
+                    "tty": "sans",
                     "ttse": "14px",
                     "tatt": "start",
-                    "tty": "system",
                     "cbcr": "#101a33",
-                    "rs": "18px",
+                    "cbr": "1px",
+                    "cbrcr": "rgba(147,197,253,0.20)",
+                    "crs": "16px"
+                },
+                "productive": {
+                    "bgcr": "#0b1020",
                     "br": "0px",
-                    "bcr": "#000000"
+                    "bcr": "#000000",
+                    "rs": "18px",
+                    "cbgcr": "#0e1630",
+                    "cbr": "1px",
+                    "cbrcr": "rgba(248,250,252,0.10)",
+                    "crs": "16px",
+                    "tcr": "#f8fafc",
+                    "tty": "sans",
+                    "yyse": "18px",
+                    "tatt": "start",
+                    "itcr": "#f8fafc",
+                    "itty": "system",
+                    "itse": "16px",
+                    "itatt": "start",
+                    "itxcr": "#cbd5e1",
+                    "itxty": "system",
+                    "itxtse": "13px",
+                    "itxatt": "start"
                 },
                 "cta": {
                     "bgcr": "#0b1020",
+                    "br": "0px",
+                    "bcr": "#000000",
+                    "rs": "18px",
                     "ticr": "#f8fafc",
-                    "tcr": "#cbd5e1",
+                    "tity": "sans",
                     "titse": "18px",
-                    "ttse": "14px",
-                    "tity": "system",
-                    "tty": "system",
-                    "tatt": "start",
                     "tiatt": "start",
-                    "btrs": "999px",
+                    "tcr": "#cbd5e1",
+                    "tty": "system",
+                    "ttse": "14px",
+                    "tatt": "start",
                     "btbdcr": "#93c5fd",
                     "btbdcrhv": "#bfdbfe",
+                    "btbr": "1px",
+                    "btbrcr": "rgba(147,197,253,0.28)",
+                    "btrs": "999px",
+                    "btcr": "#0b1020",
+                    "btty": "sans",
+                    "bttse": "16px",
+                    "btan": "start"
+                },
+                "contact": {
+                    "bgcr": "#0b1020",
+                    "br": "1px",
+                    "bcr": "rgba(248,250,252,0.10)",
                     "rs": "18px",
-                    "br": "0px",
-                    "bcr": "#000000"
+                    "lcr": "#cbd5e1",
+                    "lty": "system",
+                    "ltse": "12px",
+                    "ibgcr": "#101a33",
+                    "ibr": "1px",
+                    "ibcr": "rgba(248,250,252,0.10)",
+                    "irs": "12px",
+                    "icr": "#f8fafc",
+                    "ipcr": "rgba(203,213,225,0.70)",
+                    "ifcr": "rgba(147,197,253,0.28)",
+                    "btbg": "rgba(147,197,253,0.12)",
+                    "btbgv": "rgba(147,197,253,0.18)",
+                    "btbr": "1px",
+                    "btbrcr": "rgba(147,197,253,0.28)",
+                    "btrs": "12px",
+                    "btcr": "#bfdbfe",
+                    "btty": "sans",
+                    "bttse": "16px",
+                    "btan": "start"
                 }
             },
             "showContactForm": true,
@@ -3298,6 +4985,29 @@
                         }
                     }
                 ]
+            },
+            {
+                "id": 4,
+                "slug": "contacto",
+                "title": "Contacto",
+                "content": [
+                    {
+                        "id": "text-c1",
+                        "kind": "text",
+                        "data": {
+                            "title": "Contacto",
+                            "body": "Este es un sitio de ejemplo (template).\nEl formulario real se habilita al aplicarlo a un negocio y configurar un email de contacto."
+                        }
+                    },
+                    {
+                        "id": "contact-form-1",
+                        "kind": "contactForm",
+                        "data": {
+                            "title": "Quiero consultar",
+                            "description": "Contanos si querés vender, alquilar o tasar, y la zona (opcional)."
+                        }
+                    }
+                ]
             }
         ]
     },
@@ -3321,15 +5031,15 @@
             "headerOpacityOverlay": 70,
             "headerOverlayPosition": "center",
             "titleColor": "#f8fafc",
-            "titleTypography": "Inter, system-ui, sans-serif",
+            "titleTypography": "sans",
             "titleTextSize": 32,
             "titleAlignText": "center",
             "headlineColor": "#e2e8f0",
-            "headlineTypography": "Inter, system-ui, sans-serif",
+            "headlineTypography": "sans",
             "headlineTextSize": 14,
             "headlineAlignText": "center",
             "categoryColor": "#a5b4fc",
-            "categoryTypography": "Inter, system-ui, sans-serif",
+            "categoryTypography": "sans",
             "categoryTextSize": 12,
             "categoryAlignText": "center",
             "ownerName": "Demo",
@@ -3366,7 +5076,7 @@
                     "visible": true
                 },
                 {
-                    "kind": "contact",
+                    "kind": "page",
                     "slug": "contacto",
                     "title": "Contacto",
                     "order": 4,
@@ -3452,6 +5162,21 @@
                         "variant": "solid"
                     }
                 },
+                "header": {
+                    "ban": "center",
+                    "bbg": "rgba(11,11,15,0.65)",
+                    "bbhr": "rgba(165,180,252,0.18)",
+                    "bcr": "#f8fafc",
+                    "bty": "sans",
+                    "btse": "14px",
+                    "bbr": "1px",
+                    "bbcr": "rgba(248,250,252,0.12)",
+                    "brs": "999px",
+                    "bgp": "8px",
+                    "bbae": "rgba(165,180,252,0.12)",
+                    "bcae": "#ffffff",
+                    "bbcae": "rgba(165,180,252,0.22)"
+                },
                 "hero": {
                     "bgcr": "#0b0b0f",
                     "tcr": "#f8fafc",
@@ -3460,7 +5185,7 @@
                     "stse": "14px",
                     "tatt": "center",
                     "satt": "center",
-                    "tty": "system",
+                    "tty": "sans",
                     "sty": "system",
                     "rs": "18px",
                     "br": "0px",
@@ -3471,8 +5196,11 @@
                     "tcr": "#f8fafc",
                     "ttse": "14px",
                     "tatt": "start",
-                    "tty": "system",
+                    "tty": "sans",
                     "cbcr": "#111118",
+                    "cbr": "1px",
+                    "cbrcr": "rgba(248,250,252,0.10)",
+                    "crs": "16px",
                     "rs": "18px",
                     "br": "0px",
                     "bcr": "#000000"
@@ -3483,10 +5211,13 @@
                     "ttse": "18px",
                     "tatt": "start",
                     "ibgcr": "#111118",
+                    "ibr": "1px",
+                    "ibcr": "rgba(248,250,252,0.10)",
+                    "irs": "14px",
                     "itcr": "#f8fafc",
                     "itxcr": "#e2e8f0",
                     "itxtse": "13px",
-                    "tty": "system",
+                    "tty": "sans",
                     "itty": "system",
                     "itxty": "system",
                     "itatt": "start",
@@ -3503,7 +5234,7 @@
                     "bytse": "14px",
                     "tat": "start",
                     "byatt": "start",
-                    "tty": "system",
+                    "tty": "sans",
                     "byty": "system",
                     "rs": "18px",
                     "br": "0px",
@@ -3511,19 +5242,25 @@
                 },
                 "productive": {
                     "bgcr": "#0b0b0f",
-                    "tcr": "#f8fafc",
-                    "yyse": "18px",
-                    "itcr": "#f8fafc",
-                    "itxcr": "#e2e8f0",
-                    "itty": "system",
-                    "itxty": "system",
-                    "itatt": "start",
-                    "itxatt": "start",
-                    "tty": "system",
-                    "tatt": "start",
-                    "rs": "18px",
                     "br": "0px",
-                    "bcr": "#000000"
+                    "bcr": "#000000",
+                    "rs": "18px",
+                    "cbgcr": "#0f0f16",
+                    "cbr": "1px",
+                    "cbrcr": "rgba(248,250,252,0.10)",
+                    "crs": "16px",
+                    "tcr": "#f8fafc",
+                    "tty": "sans",
+                    "yyse": "18px",
+                    "tatt": "start",
+                    "itcr": "#f8fafc",
+                    "itse": "16px",
+                    "itty": "system",
+                    "itatt": "start",
+                    "itxcr": "#e2e8f0",
+                    "itxtse": "13px",
+                    "itxty": "system",
+                    "itxatt": "start"
                 },
                 "cta": {
                     "bgcr": "#0b0b0f",
@@ -3531,16 +5268,47 @@
                     "tcr": "#e2e8f0",
                     "titse": "18px",
                     "ttse": "14px",
-                    "tity": "system",
+                    "tity": "sans",
                     "tty": "system",
                     "tatt": "start",
                     "tiatt": "start",
                     "btrs": "999px",
+                    "btbr": "1px",
+                    "btbrcr": "rgba(165,180,252,0.28)",
                     "btbdcr": "#a5b4fc",
                     "btbdcrhv": "#c7d2fe",
+                    "btcr": "#0b0b0f",
+                    "btty": "sans",
+                    "bttse": "16px",
+                    "btan": "start",
                     "rs": "18px",
                     "br": "0px",
                     "bcr": "#000000"
+                },
+                "contact": {
+                    "bgcr": "#0b0b0f",
+                    "br": "1px",
+                    "bcr": "rgba(248,250,252,0.10)",
+                    "rs": "18px",
+                    "lcr": "#cbd5e1",
+                    "lty": "system",
+                    "ltse": "12px",
+                    "ibgcr": "#111118",
+                    "ibr": "1px",
+                    "ibcr": "rgba(248,250,252,0.10)",
+                    "irs": "12px",
+                    "icr": "#f8fafc",
+                    "ipcr": "rgba(226,232,240,0.70)",
+                    "ifcr": "rgba(165,180,252,0.28)",
+                    "btbg": "rgba(165,180,252,0.12)",
+                    "btbgv": "rgba(165,180,252,0.18)",
+                    "btbr": "1px",
+                    "btbrcr": "rgba(165,180,252,0.28)",
+                    "btrs": "12px",
+                    "btcr": "#c7d2fe",
+                    "btty": "sans",
+                    "bttse": "16px",
+                    "btan": "start"
                 }
             },
             "showContactForm": true,
@@ -3632,6 +5400,29 @@
                         }
                     }
                 ]
+            },
+            {
+                "id": 4,
+                "slug": "contacto",
+                "title": "Contacto",
+                "content": [
+                    {
+                        "id": "text-c1",
+                        "kind": "text",
+                        "data": {
+                            "title": "Contacto",
+                            "body": "Este es un sitio de ejemplo (template).\nEl formulario real se habilita al aplicarlo a un negocio y configurar un email de contacto."
+                        }
+                    },
+                    {
+                        "id": "contact-form-1",
+                        "kind": "contactForm",
+                        "data": {
+                            "title": "Reservar / Consultar",
+                            "description": "Contanos fecha, tipo de sesión (retrato / evento / producto / video) y zona (opcional)."
+                        }
+                    }
+                ]
             }
         ]
     },
@@ -3655,15 +5446,15 @@
             "headerOpacityOverlay": 55,
             "headerOverlayPosition": "center",
             "titleColor": "#f8fafc",
-            "titleTypography": "Inter, system-ui, sans-serif",
+            "titleTypography": "sans",
             "titleTextSize": 28,
             "titleAlignText": "center",
             "headlineColor": "#c7d2fe",
-            "headlineTypography": "Inter, system-ui, sans-serif",
+            "headlineTypography": "sans",
             "headlineTextSize": 14,
             "headlineAlignText": "center",
             "categoryColor": "#a5b4fc",
-            "categoryTypography": "Inter, system-ui, sans-serif",
+            "categoryTypography": "sans",
             "categoryTextSize": 12,
             "categoryAlignText": "center",
             "ownerName": "Demo",
@@ -3700,7 +5491,7 @@
                     "visible": true
                 },
                 {
-                    "kind": "contact",
+                    "kind": "page",
                     "slug": "contacto",
                     "title": "Contacto",
                     "order": 4,
@@ -3769,6 +5560,21 @@
                         "variant": "solid"
                     }
                 },
+                "header": {
+                    "ban": "center",
+                    "bbg": "rgba(11,11,15,0.55)",
+                    "bbhr": "rgba(165,180,252,0.16)",
+                    "bcr": "#f8fafc",
+                    "bty": "sans",
+                    "btse": "14px",
+                    "bbr": "1px",
+                    "bbcr": "rgba(248,250,252,0.10)",
+                    "brs": "999px",
+                    "bgp": "8px",
+                    "bbae": "rgba(199,210,254,0.10)",
+                    "bcae": "#ffffff",
+                    "bbcae": "rgba(165,180,252,0.22)"
+                },
                 "hero": {
                     "bgcr": "#0b0b0f",
                     "tcr": "#f8fafc",
@@ -3777,7 +5583,7 @@
                     "stse": "14px",
                     "tatt": "center",
                     "satt": "center",
-                    "tty": "system",
+                    "tty": "sans",
                     "sty": "system",
                     "rs": "18px",
                     "br": "0px",
@@ -3791,7 +5597,7 @@
                     "bytse": "14px",
                     "tat": "start",
                     "byatt": "start",
-                    "tty": "system",
+                    "tty": "sans",
                     "byty": "system",
                     "rs": "18px",
                     "br": "0px",
@@ -3803,10 +5609,13 @@
                     "ttse": "18px",
                     "tatt": "start",
                     "ibgcr": "#111118",
+                    "ibr": "1px",
+                    "ibcr": "rgba(248,250,252,0.10)",
+                    "irs": "14px",
                     "itcr": "#f8fafc",
                     "itxcr": "#c7d2fe",
                     "itxtse": "13px",
-                    "tty": "system",
+                    "tty": "sans",
                     "itty": "system",
                     "itxty": "system",
                     "itatt": "start",
@@ -3821,13 +5630,19 @@
                     "tcr": "#c7d2fe",
                     "titse": "18px",
                     "ttse": "14px",
-                    "tity": "system",
+                    "tity": "sans",
                     "tty": "system",
                     "tatt": "start",
                     "tiatt": "start",
                     "btrs": "999px",
+                    "btbr": "1px",
+                    "btbrcr": "rgba(165,180,252,0.30)",
                     "btbdcr": "#a5b4fc",
                     "btbdcrhv": "#c7d2fe",
+                    "btcr": "#0b0b0f",
+                    "btty": "sans",
+                    "bttse": "16px",
+                    "btan": "start",
                     "rs": "18px",
                     "br": "0px",
                     "bcr": "#000000"
@@ -3837,27 +5652,61 @@
                     "tcr": "#f8fafc",
                     "ttse": "14px",
                     "tatt": "start",
-                    "tty": "system",
+                    "tty": "sans",
                     "cbcr": "#111118",
+                    "cbr": "1px",
+                    "cbrcr": "rgba(248,250,252,0.10)",
+                    "crs": "16px",
                     "rs": "18px",
                     "br": "0px",
                     "bcr": "#000000"
                 },
                 "productive": {
                     "bgcr": "#0b0b0f",
-                    "tcr": "#f8fafc",
-                    "yyse": "18px",
-                    "itcr": "#f8fafc",
-                    "itxcr": "#c7d2fe",
-                    "itty": "system",
-                    "itxty": "system",
-                    "itatt": "start",
-                    "itxatt": "start",
-                    "tty": "system",
-                    "tatt": "start",
-                    "rs": "18px",
                     "br": "0px",
-                    "bcr": "#000000"
+                    "bcr": "#000000",
+                    "rs": "18px",
+                    "cbgcr": "#111118",
+                    "cbr": "1px",
+                    "cbrcr": "rgba(248,250,252,0.10)",
+                    "crs": "16px",
+                    "tcr": "#f8fafc",
+                    "tty": "sans",
+                    "yyse": "18px",
+                    "tatt": "start",
+                    "itcr": "#f8fafc",
+                    "itse": "16px",
+                    "itty": "system",
+                    "itatt": "start",
+                    "itxcr": "#c7d2fe",
+                    "itxtse": "13px",
+                    "itxty": "system",
+                    "itxatt": "start"
+                },
+                "contact": {
+                    "bgcr": "#0b0b0f",
+                    "br": "1px",
+                    "bcr": "rgba(248,250,252,0.10)",
+                    "rs": "18px",
+                    "lcr": "#cbd5e1",
+                    "lty": "system",
+                    "ltse": "12px",
+                    "ibgcr": "#111118",
+                    "ibr": "1px",
+                    "ibcr": "rgba(248,250,252,0.10)",
+                    "irs": "12px",
+                    "icr": "#f8fafc",
+                    "ipcr": "rgba(199,210,254,0.70)",
+                    "ifcr": "rgba(165,180,252,0.28)",
+                    "btbg": "rgba(165,180,252,0.12)",
+                    "btbgv": "rgba(165,180,252,0.18)",
+                    "btbr": "1px",
+                    "btbrcr": "rgba(165,180,252,0.30)",
+                    "btrs": "12px",
+                    "btcr": "#c7d2fe",
+                    "btty": "sans",
+                    "bttse": "16px",
+                    "btan": "start"
                 }
             },
             "showContactForm": true,
@@ -3908,6 +5757,29 @@
                         }
                     }
                 ]
+            },
+            {
+                "id": 4,
+                "slug": "contacto",
+                "title": "Contacto",
+                "content": [
+                    {
+                        "id": "text-c1",
+                        "kind": "text",
+                        "data": {
+                            "title": "Contacto",
+                            "body": "Este es un sitio de ejemplo (template).\nEl formulario real se habilita al aplicarlo a un negocio y configurar un email de contacto."
+                        }
+                    },
+                    {
+                        "id": "contact-form-1",
+                        "kind": "contactForm",
+                        "data": {
+                            "title": "Agendar consulta",
+                            "description": "Podés contarme (si querés) motivo de consulta, modalidad (online/presencial) y disponibilidad horaria."
+                        }
+                    }
+                ]
             }
         ]
     },
@@ -3931,15 +5803,15 @@
             "headerOpacityOverlay": 70,
             "headerOverlayPosition": "left",
             "titleColor": "#fff7ed",
-            "titleTypography": "Inter, system-ui, sans-serif",
+            "titleTypography": "sans",
             "titleTextSize": 32,
             "titleAlignText": "start",
             "headlineColor": "#fed7aa",
-            "headlineTypography": "Inter, system-ui, sans-serif",
+            "headlineTypography": "sans",
             "headlineTextSize": 14,
             "headlineAlignText": "start",
             "categoryColor": "#fdba74",
-            "categoryTypography": "Inter, system-ui, sans-serif",
+            "categoryTypography": "sans",
             "categoryTextSize": 12,
             "categoryAlignText": "start",
             "ownerName": "Demo",
@@ -3976,7 +5848,7 @@
                     "visible": true
                 },
                 {
-                    "kind": "contact",
+                    "kind": "page",
                     "slug": "contacto",
                     "title": "Contacto",
                     "order": 4,
@@ -4070,6 +5942,21 @@
                         "variant": "solid"
                     }
                 },
+                "header": {
+                    "ban": "start",
+                    "bbg": "rgba(26,18,11,0.55)",
+                    "bbhr": "rgba(253,186,116,0.18)",
+                    "bcr": "#fff7ed",
+                    "bty": "sans",
+                    "btse": "14px",
+                    "bbr": "1px",
+                    "bbcr": "rgba(255,247,237,0.12)",
+                    "brs": "999px",
+                    "bgp": "8px",
+                    "bbae": "rgba(254,215,170,0.10)",
+                    "bcae": "#ffffff",
+                    "bbcae": "rgba(253,186,116,0.22)"
+                },
                 "hero": {
                     "bgcr": "#1a120b",
                     "tcr": "#fff7ed",
@@ -4078,7 +5965,7 @@
                     "stse": "14px",
                     "tatt": "start",
                     "satt": "start",
-                    "tty": "system",
+                    "tty": "sans",
                     "sty": "system",
                     "rs": "18px",
                     "br": "0px",
@@ -4090,10 +5977,13 @@
                     "ttse": "18px",
                     "tatt": "start",
                     "ibgcr": "#22170e",
+                    "ibr": "1px",
+                    "ibcr": "rgba(255,247,237,0.10)",
+                    "irs": "14px",
                     "itcr": "#fff7ed",
                     "itxcr": "#fed7aa",
                     "itxtse": "13px",
-                    "tty": "system",
+                    "tty": "sans",
                     "itty": "system",
                     "itxty": "system",
                     "itatt": "start",
@@ -4107,8 +5997,11 @@
                     "tcr": "#fff7ed",
                     "ttse": "14px",
                     "tatt": "start",
-                    "tty": "system",
+                    "tty": "sans",
                     "cbcr": "#22170e",
+                    "cbr": "1px",
+                    "cbrcr": "rgba(255,247,237,0.10)",
+                    "crs": "16px",
                     "rs": "18px",
                     "br": "0px",
                     "bcr": "#000000"
@@ -4121,7 +6014,7 @@
                     "bytse": "14px",
                     "tat": "start",
                     "byatt": "start",
-                    "tty": "system",
+                    "tty": "sans",
                     "byty": "system",
                     "rs": "18px",
                     "br": "0px",
@@ -4129,19 +6022,25 @@
                 },
                 "productive": {
                     "bgcr": "#120d08",
-                    "tcr": "#fff7ed",
-                    "yyse": "18px",
-                    "itcr": "#fff7ed",
-                    "itxcr": "#fed7aa",
-                    "itty": "system",
-                    "itxty": "system",
-                    "itatt": "start",
-                    "itxatt": "start",
-                    "tty": "system",
-                    "tatt": "start",
-                    "rs": "18px",
                     "br": "0px",
-                    "bcr": "#000000"
+                    "bcr": "#000000",
+                    "rs": "18px",
+                    "cbgcr": "#22170e",
+                    "cbr": "1px",
+                    "cbrcr": "rgba(255,247,237,0.10)",
+                    "crs": "16px",
+                    "tcr": "#fff7ed",
+                    "tty": "sans",
+                    "yyse": "18px",
+                    "tatt": "start",
+                    "itcr": "#fff7ed",
+                    "itse": "16px",
+                    "itty": "system",
+                    "itatt": "start",
+                    "itxcr": "#fed7aa",
+                    "itxtse": "13px",
+                    "itxty": "system",
+                    "itxatt": "start"
                 },
                 "cta": {
                     "bgcr": "#120d08",
@@ -4149,16 +6048,47 @@
                     "tcr": "#fed7aa",
                     "titse": "18px",
                     "ttse": "14px",
-                    "tity": "system",
+                    "tity": "sans",
                     "tty": "system",
                     "tatt": "start",
                     "tiatt": "start",
                     "btrs": "999px",
+                    "btbr": "1px",
+                    "btbrcr": "rgba(253,186,116,0.35)",
                     "btbdcr": "#fdba74",
                     "btbdcrhv": "#fed7aa",
+                    "btcr": "#120d08",
+                    "btty": "sans",
+                    "bttse": "16px",
+                    "btan": "start",
                     "rs": "18px",
                     "br": "0px",
                     "bcr": "#000000"
+                },
+                "contact": {
+                    "bgcr": "#120d08",
+                    "br": "1px",
+                    "bcr": "rgba(255,247,237,0.10)",
+                    "rs": "18px",
+                    "lcr": "#fed7aa",
+                    "lty": "system",
+                    "ltse": "12px",
+                    "ibgcr": "#22170e",
+                    "ibr": "1px",
+                    "ibcr": "rgba(255,247,237,0.10)",
+                    "irs": "12px",
+                    "icr": "#fff7ed",
+                    "ipcr": "rgba(254,215,170,0.72)",
+                    "ifcr": "rgba(253,186,116,0.28)",
+                    "btbg": "rgba(253,186,116,0.16)",
+                    "btbgv": "rgba(253,186,116,0.22)",
+                    "btbr": "1px",
+                    "btbrcr": "rgba(253,186,116,0.35)",
+                    "btrs": "12px",
+                    "btcr": "#fed7aa",
+                    "btty": "sans",
+                    "bttse": "16px",
+                    "btan": "start"
                 }
             },
             "showContactForm": true,
@@ -4233,6 +6163,29 @@
                         "data": {
                             "title": "Proceso",
                             "body": "1) Relevamiento\n2) Presupuesto\n3) Plan de obra\n4) Ejecución\n5) Entrega\n(Contenido demo)"
+                        }
+                    }
+                ]
+            },
+            {
+                "id": 4,
+                "slug": "contacto",
+                "title": "Contacto",
+                "content": [
+                    {
+                        "id": "text-c1",
+                        "kind": "text",
+                        "data": {
+                            "title": "Contacto",
+                            "body": "Este es un sitio de ejemplo (template).\nEl formulario real se habilita al aplicarlo a un negocio y configurar un email de contacto."
+                        }
+                    },
+                    {
+                        "id": "contact-form-1",
+                        "kind": "contactForm",
+                        "data": {
+                            "title": "Pedir presupuesto",
+                            "description": "Contanos tipo de obra/refacción, metros aproximados, ubicación y plazos. Si tenés planos o fotos, mejor."
                         }
                     }
                 ]

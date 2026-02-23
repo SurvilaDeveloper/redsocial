@@ -3,16 +3,9 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { BusinessSiteView } from "@/components/business/BusinessSiteView";
 
-import type { BusinessNavItem } from "@/types/business";
 import type { BusinessPageContent } from "@/types/business-sections";
 
-import {
-    DEFAULT_NAV,
-    normalizeNav,
-    safeParseJson,
-    defaultHomeContent,
-} from "@/lib/business/public-helpers";
-
+import { DEFAULT_NAV, normalizeNav, safeParseJson, defaultHomeContent } from "@/lib/business/public-helpers";
 import { PUBLIC_BUSINESS_TAB_PAGE_SELECT } from "@/lib/business/public-selects";
 
 export default async function BusinessTabPage({
@@ -37,10 +30,11 @@ export default async function BusinessTabPage({
 
     const themeConfig = safeParseJson<any>(business.site?.themeConfig, null);
 
-    // ✅ Regla: tab debe ser un slug de nav. Si no coincide, 404.
     const tabSlug = String(tab || "").trim();
     const isValidTab = nav.some((i) => i.slug === tabSlug);
     if (!isValidTab) notFound();
+
+    console.log(business.titleTypography);
 
     return (
         <BusinessSiteView
@@ -88,9 +82,7 @@ export default async function BusinessTabPage({
                 nav,
                 homeContent,
                 themePreset: business.site?.themePreset ?? "classic",
-                themeConfig, // queda por si lo querés inspeccionar/debug
-                showContactForm: business.site?.showContactForm ?? true,
-                contactEmailExists: Boolean(business.site?.contactEmail || business.owner?.email),
+                themeConfig,
             }}
             pages={(business.pages ?? []).map((p) => ({
                 id: p.id,

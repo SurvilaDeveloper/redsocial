@@ -10,8 +10,9 @@ import type { BusinessPageContent, BusinessSection } from "@/types/business-sect
 import { cn } from "@/lib/utils";
 import type { MediaMap } from "@/hooks/useMediaByIds";
 import { useMediaByIds } from "@/hooks/useMediaByIds";
-import { Loader2 } from "lucide-react";
+import { Loader2, Mail } from "lucide-react";
 import { ImagesSwiperSites } from "@/components/custom/ImagesSwiperSites";
+import { BusinessContactSection } from "@/components/business/BusinessContactSection";
 
 type TeaserItem = {
     id: number;
@@ -103,6 +104,48 @@ function SectionView({
     mediaMap?: MediaMap;
     businessSlug?: string;
 }) {
+    // ✅ NUEVO: CONTACT FORM SECTION
+    if (section.kind === "contactForm") {
+        const title = section.data?.title?.trim() || "Contacto";
+        const desc =
+            section.data?.description?.trim() ||
+            "Completá el formulario y el dueño del negocio recibirá un email para responderte.";
+
+        if (!businessSlug) {
+            return (
+                <Card className="bg-slate-950 border border-slate-800 p-5 rounded-2xl">
+                    <div className="flex items-center gap-2 text-slate-300">
+                        <Mail size={16} className="opacity-80" />
+                        <span className="font-medium">{title}</span>
+                    </div>
+                    <p className="mt-2 text-sm text-slate-400">{desc}</p>
+                    <p className="mt-3 text-xs text-slate-500">(Falta businessSlug para renderizar el formulario.)</p>
+                </Card>
+            );
+        }
+
+        return (
+            <div className="flex flex-col gap-4">
+                <Card className="p-5 rounded-2xl"
+                    style={{
+                        background: "var(--b-co-bgcr)",
+                        borderWidth: "var(--b-co-br)" as any,
+                        borderStyle: "solid",
+                        borderColor: "var(--b-co-bcr)",
+                        borderRadius: "var(--b-co-rs)",
+                        color: "var(--b-co-lcr)",
+                        fontFamily: "var(--b-co-lty)",
+                    }}>
+                    <div className="text-lg font-semibold">{title}</div>
+                    <p className="mt-2 text-sm">{desc}</p>
+                </Card>
+
+                <BusinessContactSection businessSlug={businessSlug} />
+            </div>
+        );
+    }
+
+    // --- lo demás: igual que tu archivo actual (copié/pegué tu lógica original)
     if (section.kind === "hero") {
         const { title, subtitle, align = "left" } = section.data;
 
@@ -241,6 +284,7 @@ function SectionView({
 
     if (section.kind === "gallery") {
         const { title, images = [], columns = 3, swiper, width, minWidth } = section.data;
+
         const cols =
             columns === 2
                 ? "lg:grid-cols-2"
@@ -319,10 +363,7 @@ function SectionView({
 
                             if (loading) {
                                 return (
-                                    <div
-                                        key={idx}
-                                        className="animate-pulse flex flex-row items-center justify-center w-full aspect-square"
-                                    >
+                                    <div key={idx} className="animate-pulse flex flex-row items-center justify-center w-full aspect-square">
                                         <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
                                     </div>
                                 );
@@ -342,15 +383,13 @@ function SectionView({
                                 <div
                                     key={idx}
                                     className="overflow-hidden border border-slate-500 bg-[var(--b-gy-cbcr)]"
-                                    style={{ borderRadius: "var(--b-gy-crs)" }}
+                                    style={{
+                                        border: "var(--b-gy-cbr) solid var(--b-gy-cbrcr)",
+                                        borderRadius: "var(--b-gy-crs)"
+                                    }}
                                 >
                                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img
-                                        src={resolvedUrl}
-                                        alt={img?.alt ?? ""}
-                                        className="w-full aspect-square object-contain"
-                                        loading="lazy"
-                                    />
+                                    <img src={resolvedUrl} alt={img?.alt ?? ""} className="w-full aspect-square object-contain" loading="lazy" />
                                 </div>
                             );
                         })}
@@ -392,7 +431,8 @@ function SectionView({
                         }}
                     >
                         {title}
-                    </div>)}
+                    </div>
+                )}
 
                 <div className="mt-2 text-[11px] text-slate-400">
                     {type === "product" ? "Productos" : "Servicios"} · {items?.length ?? 0}
@@ -403,24 +443,21 @@ function SectionView({
                         const n = safeInt(it.listingId);
                         const canOpen = !!n && !!businessSlug;
 
-                        const href = canOpen
-                            ? `${base}/listing/${type}/${n}?from=${encodeURIComponent(from)}`
-                            : "#";
-
+                        const href = canOpen ? `${base}/listing/${type}/${n}?from=${encodeURIComponent(from)}` : "#";
                         const thumb = n ? teasers?.[n]?.thumbUrl ?? null : null;
 
                         return (
                             <Link
                                 key={`${it.listingId}-${idx}`}
                                 href={href}
-                                className={cn(
-                                    "block rounded-xl border border-slate-800 overflow-hidden",
-                                    !canOpen && "opacity-60 pointer-events-none"
-                                )}
-                                style={{ backgroundColor: "var(--b-pe-bgcr)" }}
+                                className={cn("block rounded-xl border border-slate-800 overflow-hidden", !canOpen && "opacity-60 pointer-events-none")}
+                                style={{
+                                    border: "var(--b-pe-cbr) solid var(--b-pe-cbrcr)",
+                                    backgroundColor: "var(--b-pe-cbgcr)",
+                                    borderRadius: "var(--b-pe-crs)"
+                                }}
                                 title={canOpen ? "Abrir" : "listingId inválido o falta businessSlug"}
                             >
-                                {/* thumb */}
                                 <div className="w-full h-[150px] bg-slate-950 border-b border-slate-800 flex items-center justify-center overflow-hidden">
                                     {thumb ? (
                                         // eslint-disable-next-line @next/next/no-img-element
@@ -443,7 +480,7 @@ function SectionView({
                                         {it.title?.trim() ? it.title : "Sin título"}
                                     </div>
 
-                                    {!!it.text?.trim() &&
+                                    {!!it.text?.trim() && (
                                         <div
                                             className="mt-1 text-xs text-slate-400"
                                             style={{
@@ -454,9 +491,8 @@ function SectionView({
                                             }}
                                         >
                                             {it.text}
-                                        </div>}
-
-                                    {/*<div className="mt-3 text-[11px] text-slate-500">#{it.listingId}</div>*/}
+                                        </div>
+                                    )}
                                 </div>
                             </Link>
                         );

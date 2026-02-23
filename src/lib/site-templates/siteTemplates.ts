@@ -45,13 +45,26 @@ export function getTemplateThemeConfig(t: SiteTemplate): Prisma.JsonValue | null
     }
 
     // Prisma.JsonValue permite object/array/string/number/bool/null
-    if (isPlainObject(v) || Array.isArray(v) || typeof v === "number" || typeof v === "boolean" || typeof v === "string") {
+    if (
+        isPlainObject(v) ||
+        Array.isArray(v) ||
+        typeof v === "number" ||
+        typeof v === "boolean" ||
+        typeof v === "string"
+    ) {
         return v as any;
     }
 
     return null;
 }
 
+/**
+ * ✅ /t nav normalizada:
+ * - admite: home | page
+ * - regla mínima: debe existir home(home) y page(contacto)
+ * - sort por order
+ * - dedupe por slug
+ */
 export function normalizeTemplateNav(navRaw: any) {
     const list = Array.isArray(navRaw) ? navRaw : [];
     const out: any[] = [];
@@ -62,7 +75,7 @@ export function normalizeTemplateNav(navRaw: any) {
         const title = safeStr(it?.title) || slug || "Tab";
 
         if (!kind || !slug) continue;
-        if (kind !== "home" && kind !== "page" && kind !== "contact") continue;
+        if (kind !== "home" && kind !== "page") continue;
 
         out.push({
             kind,
@@ -73,10 +86,10 @@ export function normalizeTemplateNav(navRaw: any) {
         });
     }
 
-    // reglas mínimas: debe existir home/contacto
+    // reglas mínimas: debe existir home y page(contacto)
     const hasHome = out.some((x) => x.kind === "home" && x.slug === "home");
-    const hasContact = out.some((x) => x.kind === "contact" && x.slug === "contacto");
-    if (!hasHome || !hasContact) return [];
+    const hasContactoPage = out.some((x) => x.kind === "page" && x.slug === "contacto");
+    if (!hasHome || !hasContactoPage) return [];
 
     out.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 

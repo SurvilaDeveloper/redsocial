@@ -88,6 +88,8 @@ export function themeToCssVars(raw?: Partial<BusinessThemeConfig> | null): Recor
         "--b-gy-ttse": t.gallery.ttse,
         "--b-gy-tatt": t.gallery.tatt,
         "--b-gy-cbcr": t.gallery.cbcr,
+        "--b-gy-cbr": t.gallery.cbr,//card border NUEVO
+        "--b-gy-cbrcr": t.gallery.cbrcr,//card border color NUEVO
         "--b-gy-crs": t.gallery.crs,
 
         // cta
@@ -118,6 +120,12 @@ export function themeToCssVars(raw?: Partial<BusinessThemeConfig> | null): Recor
         "--b-pe-br": t.productive.br,
         "--b-pe-bcr": t.productive.bcr,
         "--b-pe-rs": t.productive.rs,
+
+        "--b-pe-cbgcr": t.productive.cbgcr,   // card background color Nuevo
+        "--b-pe-cbr": t.productive.cbr,         // card border nuevo
+        "--b-pe-cbrcr": t.productive.cbrcr,   // card border color Nuevo
+        "--b-pe-crs": t.productive.crs, // card border radius Nuevo
+
         "--b-pe-tcr": t.productive.tcr,
         "--b-pe-tty": resolveFontFamily(t.productive.tty),
         "--b-pe-yyse": t.productive.yyse,
@@ -130,5 +138,34 @@ export function themeToCssVars(raw?: Partial<BusinessThemeConfig> | null): Recor
         "--b-pe-itxty": resolveFontFamily(t.productive.itxty),
         "--b-pe-itxtse": t.productive.itxtse,
         "--b-pe-itxatt": t.productive.itxatt,
+
+        // contact
+        "--b-co-bgcr": t.contact.bgcr,
+        "--b-co-br": t.contact.br,
+        "--b-co-bcr": t.contact.bcr,
+        "--b-co-rs": t.contact.rs,
+
+        "--b-co-lcr": t.contact.lcr,
+        "--b-co-lty": resolveFontFamily(t.contact.lty),
+        "--b-co-ltse": t.contact.ltse,
+
+        "--b-co-icr": t.contact.icr,
+        "--b-co-ibgcr": t.contact.ibgcr,
+        "--b-co-ibr": t.contact.ibr,
+        "--b-co-ibcr": t.contact.ibcr,
+        "--b-co-irs": t.contact.irs,
+        "--b-co-ipcr": t.contact.ipcr,
+        "--b-co-ifcr": t.contact.ifcr,
+
+        "--b-co-btbg": t.contact.btbg,
+        "--b-co-btbgv": t.contact.btbgv,
+        "--b-co-btbr": t.contact.btbr,
+        "--b-co-btbrcr": t.contact.btbrcr,
+        "--b-co-btrs": t.contact.btrs,
+        "--b-co-btcr": t.contact.btcr,
+        "--b-co-btty": resolveFontFamily(t.contact.btty),
+        "--b-co-bttse": t.contact.bttse,
+        "--b-co-btan": t.contact.btan,
+
     };
 }

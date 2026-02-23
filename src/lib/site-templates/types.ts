@@ -1,9 +1,8 @@
-//src/lib/site-templates/types.ts
-export type TemplateNavKind = "home" | "page" | "contact";
+// src/lib/site-templates/types.ts
+export type TemplateNavKind = "home" | "page";
 
 export type TemplateNavItem =
     | { kind: "home"; slug: "home"; title: string; order: number; visible: boolean }
-    | { kind: "contact"; slug: "contacto"; title: string; order: number; visible: boolean }
     | { kind: "page"; slug: string; title: string; order: number; visible: boolean };
 
 export type TemplatePage = {
@@ -51,6 +50,8 @@ export type TemplateSite = {
     homeContent: any[];
     themePreset: string;       // "classic" | "minimal" | "userPreset" etc.
     themeConfig: any | null;   // overrides
+
+    // los dejo porque dijiste no tocar otras cosas (y pueden seguir existiendo en templates)
     showContactForm: boolean;
     contactEmailExists: boolean;
 };

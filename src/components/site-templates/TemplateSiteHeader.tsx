@@ -1,5 +1,7 @@
-//src/components/site-templates/TemplateSiteHeader.tsx
+// src/components/site-templates/TemplateSiteHeader.tsx
 "use client";
+
+import { resolveFontFamily } from "@/lib/fonts/families";
 
 type OverlayPosition = "left" | "center" | "right" | "none";
 
@@ -147,7 +149,7 @@ export function TemplateSiteHeader({
                             color: titleColor,
                             fontSize: titleSize,
                             justifyContent: titleAlignText,
-                            fontFamily: titleTypography,
+                            fontFamily: resolveFontFamily(titleTypography ?? "system"),
                         }}
                     >
                         {name}
@@ -160,7 +162,7 @@ export function TemplateSiteHeader({
                                 color: headlineColor,
                                 fontSize: headlineSize,
                                 justifyContent: headlineAlignText,
-                                fontFamily: headlineTypography,
+                                fontFamily: resolveFontFamily(headlineTypography ?? "system"),
                             }}
                         >
                             {headline}
@@ -174,7 +176,7 @@ export function TemplateSiteHeader({
                                 color: categoryColor,
                                 fontSize: categorySize,
                                 justifyContent: categoryAlignText,
-                                fontFamily: categoryTypography,
+                                fontFamily: resolveFontFamily(categoryTypography ?? "system"),
                             }}
                         >
                             {category}
@@ -185,5 +187,3 @@ export function TemplateSiteHeader({
         </div>
     );
 }
-
-

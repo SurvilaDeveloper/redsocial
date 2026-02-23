@@ -1,14 +1,14 @@
+// src/components/business/editor/BusinessNavEditor.tsx
 "use client";
 
 import React, { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
-import { ArrowLeft, ExternalLink, Loader2, Save } from "lucide-react";
+import { ExternalLink, Loader2, Save } from "lucide-react";
 
 import type { BusinessNavItem } from "@/types/business";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
-
 import BackToStudioBusiness from "@/components/custom/BackToStudioBusiness";
 
 type PageLite = { id: number; slug: string; title: string };
@@ -25,7 +25,6 @@ type Props = {
 const KIND_LABEL: Record<BusinessNavItem["kind"], string> = {
     home: "Inicio (Home)",
     page: "Página",
-    contact: "Contacto",
 };
 
 function isPageItem(item: BusinessNavItem): item is Extract<BusinessNavItem, { kind: "page" }> {
@@ -38,7 +37,6 @@ function makeKey() {
         : `k_${Math.random().toString(16).slice(2)}_${Date.now()}`;
 }
 
-// En el editor, el orden ES el índice del array.
 function normalizeForEditor(list: BusinessNavItem[]): UiNavItem[] {
     const base = Array.isArray(list) ? list : [];
     return base
@@ -53,7 +51,6 @@ function normalizeForEditor(list: BusinessNavItem[]): UiNavItem[] {
 
 function defaultTitleFor(item: Pick<BusinessNavItem, "kind" | "slug">) {
     if (item.kind === "home") return "Inicio";
-    if (item.kind === "contact") return "Contacto";
     switch (item.slug) {
         case "productos":
             return "Productos";
@@ -61,6 +58,8 @@ function defaultTitleFor(item: Pick<BusinessNavItem, "kind" | "slug">) {
             return "Novedades";
         case "sobre-nosotros":
             return "Sobre nosotros";
+        case "contacto":
+            return "Contacto";
         default:
             return "Página";
     }
@@ -77,7 +76,6 @@ export function BusinessNavEditor({ businessId, businessSlug, businessName, init
         return m;
     }, [pages]);
 
-    //const backHref = useMemo(() => `/studio/business/${businessId}`, [businessId]);
     const publicHref = useMemo(() => `/b/${businessSlug}`, [businessSlug]);
 
     function reindex(next: UiNavItem[]) {
@@ -129,18 +127,6 @@ export function BusinessNavEditor({ businessId, businessSlug, businessName, init
                 return reindex(next);
             }
 
-            if (kind === "contact") {
-                next.push({
-                    _key: makeKey(),
-                    kind: "contact",
-                    slug: "contacto",
-                    title: "Contacto",
-                    visible: true,
-                    order,
-                });
-                return reindex(next);
-            }
-
             // page
             const first = pages[0];
             if (!first) return prev;
@@ -161,16 +147,13 @@ export function BusinessNavEditor({ businessId, businessSlug, businessName, init
     async function save() {
         setStatus(null);
 
-        // Payload: orden sale del índice
         const payload: BusinessNavItem[] = items.map(({ _key, ...it }, idx) => ({
             ...(it as any),
             order: idx,
         }));
 
         const hasHome = payload.some((x) => x.kind === "home" && x.slug === "home");
-        const hasContact = payload.some((x) => x.kind === "contact" && x.slug === "contacto");
         if (!hasHome) return setStatus({ ok: false, msg: "Falta la pestaña Inicio (home)." });
-        if (!hasContact) return setStatus({ ok: false, msg: "Falta la pestaña Contacto." });
 
         startTransition(async () => {
             try {
@@ -205,11 +188,8 @@ export function BusinessNavEditor({ businessId, businessSlug, businessName, init
                             Negocio: <span className="text-slate-200">{businessName}</span>
                         </div>
 
-
-
                         <div className="mt-3 flex flex-wrap items-center gap-2">
                             <BackToStudioBusiness label="Volver" />
-
 
                             <Button
                                 onClick={save}
@@ -240,11 +220,7 @@ export function BusinessNavEditor({ businessId, businessSlug, businessName, init
                                 Ver público
                             </Link>
 
-                            {status && (
-                                <span className={cn("text-sm", status.ok ? "text-emerald-300" : "text-red-300")}>
-                                    {status.msg}
-                                </span>
-                            )}
+                            {status && <span className={cn("text-sm", status.ok ? "text-emerald-300" : "text-red-300")}>{status.msg}</span>}
                         </div>
                     </div>
                 </div>
@@ -277,10 +253,6 @@ export function BusinessNavEditor({ businessId, businessSlug, businessName, init
                                                             updateAt(idx, { kind: "home", slug: "home", title: title.trim() ? title : "Inicio" } as any);
                                                             return;
                                                         }
-                                                        if (nextKind === "contact") {
-                                                            updateAt(idx, { kind: "contact", slug: "contacto", title: title.trim() ? title : "Contacto" } as any);
-                                                            return;
-                                                        }
 
                                                         // page
                                                         const fallbackSlug = pages[0]?.slug;
@@ -293,13 +265,14 @@ export function BusinessNavEditor({ businessId, businessSlug, businessName, init
                                                         updateAt(idx, {
                                                             kind: "page",
                                                             slug: fallbackSlug,
-                                                            title: title.trim() ? title : (nextPage?.title || defaultTitleFor({ kind: "page", slug: fallbackSlug })),
+                                                            title: title.trim()
+                                                                ? title
+                                                                : nextPage?.title || defaultTitleFor({ kind: "page", slug: fallbackSlug }),
                                                         } as any);
                                                     }}
                                                 >
                                                     <option value="home">{KIND_LABEL.home}</option>
                                                     <option value="page">{KIND_LABEL.page}</option>
-                                                    <option value="contact">{KIND_LABEL.contact}</option>
                                                 </select>
                                             </label>
 
@@ -316,11 +289,7 @@ export function BusinessNavEditor({ businessId, businessSlug, businessName, init
                                             <label className="text-xs text-slate-400">
                                                 Visible
                                                 <div className="mt-1 flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-950 px-3 py-2">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={visible}
-                                                        onChange={(e) => updateAt(idx, { visible: e.target.checked } as any)}
-                                                    />
+                                                    <input type="checkbox" checked={visible} onChange={(e) => updateAt(idx, { visible: e.target.checked } as any)} />
                                                     <span className="text-sm text-slate-200">{visible ? "Sí" : "No"}</span>
                                                 </div>
                                             </label>
@@ -354,10 +323,7 @@ export function BusinessNavEditor({ businessId, businessSlug, businessName, init
                                                         <div className="text-xs text-slate-500 rounded-xl border border-slate-800 bg-slate-950 px-3 py-2">
                                                             <div className="text-slate-400">Info</div>
                                                             <div className="truncate">
-                                                                Seleccionada:{" "}
-                                                                <span className="text-slate-200">
-                                                                    {page ? `${page.title} (${page.slug})` : "—"}
-                                                                </span>
+                                                                Seleccionada: <span className="text-slate-200">{page ? `${page.title} (${page.slug})` : "—"}</span>
                                                             </div>
                                                             <div className="truncate">
                                                                 Título de pestaña: <span className="text-slate-200">{title || "—"}</span>
@@ -411,14 +377,6 @@ export function BusinessNavEditor({ businessId, businessSlug, businessName, init
 
                         <button
                             type="button"
-                            onClick={() => addItem("contact")}
-                            className="px-3 py-2 text-sm rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-800"
-                        >
-                            + Contacto
-                        </button>
-
-                        <button
-                            type="button"
                             onClick={() => addItem("page")}
                             className="px-3 py-2 text-sm rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-800"
                             disabled={pages.length === 0}
@@ -433,4 +391,3 @@ export function BusinessNavEditor({ businessId, businessSlug, businessName, init
 }
 
 export default BusinessNavEditor;
-

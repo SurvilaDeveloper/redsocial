@@ -5,7 +5,7 @@ import React, { useMemo } from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
-type TemplateNavItem = { kind: "home" | "page" | "contact"; slug: string; title: string; order: number; visible: boolean };
+type TemplateNavItem = { kind: "home" | "page"; slug: string; title: string; order: number; visible: boolean };
 
 function safeStr(v: any, fallback = ""): string {
     const s = typeof v === "string" ? v.trim() : "";

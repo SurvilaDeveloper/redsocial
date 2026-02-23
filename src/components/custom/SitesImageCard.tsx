@@ -24,6 +24,43 @@ interface SitesImageProps {
     variant?: "grid" | "swiper";
 }
 
+/**
+ * SitesImageCard
+ * -----------------------------------------------------------------------------
+ * Componente visual para renderizar una imagen dentro de grillas o swipers.
+ * Usa next/image con layout "fill" y muestra overlay de carga hasta que
+ * la imagen termina de renderizar.
+ *
+ * Props:
+ * - image: {
+ *     id: number
+ *     imageUrl: string
+ *     imagePublicId: string
+ *     index: number
+ *   }
+ *   Información de la imagen a mostrar.
+ *
+ * - isFirst: boolean
+ *   Indica si es la primera imagen (usado en layout tipo grid para ocupar
+ *   ancho completo).
+ *
+ * - variant?: "grid" | "swiper"
+ *   Define el comportamiento de layout:
+ *
+ *     • "grid" (default)
+ *       - Usa aspect-square.
+ *       - Mantiene proporción fija.
+ *       - Ideal para galerías tipo masonry/grid.
+ *
+ *     • "swiper"
+ *       - Ocupa todo el alto disponible (h-full).
+ *       - Pensado para usarse dentro de ImagesSwiperSites con fit="height".
+ *
+ * Comportamiento:
+ * - Muestra spinner mientras la imagen carga.
+ * - Usa object-contain para no recortar la imagen.
+ * - Evita drag nativo de la imagen (draggable={false}).
+ */
 export default function SitesImageCard({
     image,
     isFirst,
@@ -41,15 +78,18 @@ export default function SitesImageCard({
     const rootClass =
         variant === "swiper"
             ? // ✅ Swiper: ocupa el alto disponible, sin aspect-square
-            "flex flex-col gap-1 bg-black relative w-full h-full overflow-hidden border border-black rounded-[8px]"
+            "flex flex-col gap-1 bg-black relative w-full h-full overflow-hidden rounded-[8px]"
             : // ✅ Grid: tu layout original
             isFirst
-                ? "flex flex-col gap-1 bg-[var(--b-gy-cbcr)] relative w-full aspect-square overflow-hidden border border-slate-500"
-                : "flex flex-col gap-1 bg-[var(--b-gy-cbcr)] relative w-[48%] aspect-square overflow-hidden border border-black";
+                ? "flex flex-col gap-1 bg-[var(--b-gy-cbcr)] relative w-full aspect-square overflow-hidden"
+                : "flex flex-col gap-1 bg-[var(--b-gy-cbcr)] relative w-[48%] aspect-square overflow-hidden";
 
     return (
         <div className={rootClass}
-            style={{ borderRadius: "var(--b-gy-crs)" }}
+            style={{
+                border: "var(--b-gy-cbr) solid var(--b-gy-cbrcr)",
+                borderRadius: "var(--b-gy-crs)"
+            }}
         >
 
             {/* ✅ En swiper: la imagen debe ser flex-1 para dejar visible la barra de reacciones */}

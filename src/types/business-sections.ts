@@ -6,10 +6,11 @@ export type BusinessSectionKind =
     | "features"
     | "productive"
     | "gallery"
-    | "cta";
+    | "cta"
+    | "contactForm";
 
 export type BusinessSectionBase<K extends BusinessSectionKind, D> = {
-    id: string;      // uuid
+    id: string; // uuid
     kind: K;
     data: D;
 };
@@ -27,7 +28,7 @@ export type BusinessTextSection = BusinessSectionBase<
     "text",
     {
         title?: string;
-        body: string; // markdown simple o texto plano (por ahora)
+        body: string;
     }
 >;
 
@@ -39,12 +40,11 @@ export type BusinessFeaturesSection = BusinessSectionBase<
         items: Array<{
             title: string;
             text?: string;
-            icon?: string; // si después querés mapear a lucide
+            icon?: string;
         }>;
     }
 >;
 
-//ESTO ES LO QUE TENGO AHORA /////////////////////////////////////////////////////
 export type BusinessProductiveSection = BusinessSectionBase<
     "productive",
     {
@@ -64,10 +64,9 @@ export type BusinessGallerySection = BusinessSectionBase<
         title?: string;
         swiper?: string;
         images: Array<{
-            mediaId: number;      // CloudinaryImage.id
-            alt?: string;         // override opcional
-        }>
-        ;
+            mediaId: number;
+            alt?: string;
+        }>;
         columns?: 1 | 2 | 3 | 4;
         width?: "25%" | "33%" | "50%" | "66%" | "75%" | "83%" | "100%";
         minWidth?: "320px" | "384px" | "512px" | "640px" | "768px" | "1024px";
@@ -80,7 +79,20 @@ export type BusinessCTASection = BusinessSectionBase<
         title: string;
         text?: string;
         buttonText?: string;
-        href?: string; // whatsapp, mailto, etc.
+        href?: string;
+    }
+>;
+
+/**
+ * ✅ NUEVO: sección de formulario de contacto
+ * - Se renderiza en público como <BusinessContactSection />
+ * - En editor solo tiene un “placeholder” simple.
+ */
+export type BusinessContactFormSection = BusinessSectionBase<
+    "contactForm",
+    {
+        title?: string; // opcional (ej: "Contacto")
+        description?: string; // opcional (texto arriba del form)
     }
 >;
 
@@ -90,7 +102,7 @@ export type BusinessSection =
     | BusinessFeaturesSection
     | BusinessProductiveSection
     | BusinessGallerySection
-    | BusinessCTASection;
+    | BusinessCTASection
+    | BusinessContactFormSection;
 
 export type BusinessPageContent = BusinessSection[];
-

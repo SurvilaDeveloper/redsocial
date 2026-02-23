@@ -68,9 +68,18 @@ export function BusinessContactSection({ businessSlug }: { businessSlug: string 
     }
 
     return (
-        <Card className="bg-black border-slate-800 p-5 rounded-2xl">
+        <Card
+            className="p-5 rounded-2xl"
+            style={{
+                background: "var(--b-co-bgcr)",
+                borderWidth: "var(--b-co-br)" as any,
+                borderStyle: "solid",
+                borderColor: "var(--b-co-bcr)",
+                borderRadius: "var(--b-co-rs)",
+
+            }}
+        >
             <form onSubmit={onSubmit} className="flex flex-col gap-3">
-                {/* Honeypot invisible */}
                 <input
                     value={company}
                     onChange={(e) => setCompany(e.target.value)}
@@ -82,44 +91,116 @@ export function BusinessContactSection({ businessSlug }: { businessSlug: string 
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="flex flex-col gap-1">
-                        <label className="text-xs text-slate-300">Nombre (opcional)</label>
+                        <label
+                            className="text-xs"
+                            style={{
+                                color: "var(--b-co-lcr)",
+                                fontFamily: "var(--b-co-lty)",
+                                fontSize: "var(--b-co-ltse)" as any,
+                            }}
+                        >
+                            Nombre (opcional)
+                        </label>
+
                         <input
                             value={name}
                             onChange={(e) => setName(e.target.value)}
-                            className="h-10 rounded-xl bg-black border border-slate-800 px-3 text-sm outline-none focus:border-slate-600"
+                            className="h-10 px-3 text-sm outline-none"
                             placeholder="Tu nombre"
+                            style={{
+                                color: "var(--b-co-icr)",
+                                background: "var(--b-co-ibgcr)",
+                                borderWidth: "var(--b-co-ibr)" as any,
+                                borderStyle: "solid",
+                                borderColor: "var(--b-co-ibcr)",
+                                borderRadius: "var(--b-co-irs)",
+                            }}
                         />
                     </div>
 
                     <div className="flex flex-col gap-1">
-                        <label className="text-xs text-slate-300">Email</label>
+                        <label
+                            className="text-xs"
+                            style={{
+                                color: "var(--b-co-lcr)",
+                                fontFamily: "var(--b-co-lty)",
+                                fontSize: "var(--b-co-ltse)" as any,
+                            }}
+                        >
+                            Email
+                        </label>
+
                         <input
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            className="h-10 rounded-xl bg-black border border-slate-800 px-3 text-sm outline-none focus:border-slate-600"
+                            className="h-10 px-3 text-sm outline-none"
                             placeholder="tu@email.com"
+                            style={{
+                                color: "var(--b-co-icr)",
+                                background: "var(--b-co-ibgcr)",
+                                borderWidth: "var(--b-co-ibr)" as any,
+                                borderStyle: "solid",
+                                borderColor: "var(--b-co-ibcr)",
+                                borderRadius: "var(--b-co-irs)",
+                            }}
                         />
                     </div>
                 </div>
 
                 <div className="flex flex-col gap-1">
-                    <label className="text-xs text-slate-300">Asunto (opcional)</label>
+                    <label
+                        className="text-xs"
+                        style={{
+                            color: "var(--b-co-lcr)",
+                            fontFamily: "var(--b-co-lty)",
+                            fontSize: "var(--b-co-ltse)" as any,
+                        }}
+                    >
+                        Asunto (opcional)
+                    </label>
+
                     <input
                         value={subject}
                         onChange={(e) => setSubject(e.target.value)}
-                        className="h-10 rounded-xl bg-black border border-slate-800 px-3 text-sm outline-none focus:border-slate-600"
+                        className="h-10 px-3 text-sm outline-none"
                         placeholder="Consulta"
+                        style={{
+                            color: "var(--b-co-icr)",
+                            background: "var(--b-co-ibgcr)",
+                            borderWidth: "var(--b-co-ibr)" as any,
+                            borderStyle: "solid",
+                            borderColor: "var(--b-co-ibcr)",
+                            borderRadius: "var(--b-co-irs)",
+                        }}
                     />
                 </div>
 
                 <div className="flex flex-col gap-1">
-                    <label className="text-xs text-slate-300">Mensaje</label>
+                    <label
+                        className="text-xs"
+                        style={{
+                            color: "var(--b-co-lcr)",
+                            fontFamily: "var(--b-co-lty)",
+                            fontSize: "var(--b-co-ltse)" as any,
+                        }}
+                    >
+                        Mensaje
+                    </label>
+
                     <textarea
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
                         rows={6}
-                        className="rounded-xl bg-black border border-slate-800 px-3 py-2 text-sm outline-none focus:border-slate-600 resize-none"
+                        className="px-3 py-2 text-sm outline-none resize-none"
                         placeholder="Escribí tu mensaje..."
+                        style={{
+                            color: "var(--b-co-icr)",
+                            background: "var(--b-co-ibgcr)",
+                            borderWidth: "var(--b-co-ibr)" as any,
+                            borderStyle: "solid",
+                            borderColor: "var(--b-co-ibcr)",
+                            borderRadius: "var(--b-co-irs)",
+                        }}
                     />
                 </div>
 
@@ -141,7 +222,23 @@ export function BusinessContactSection({ businessSlug }: { businessSlug: string 
                     <Button
                         type="submit"
                         disabled={!canSend}
-                        className="rounded-xl bg-emerald-600/15 border border-emerald-500/40 text-emerald-200 hover:bg-emerald-600/20"
+                        className="rounded-xl border text-sm"
+                        style={{
+                            background: "var(--b-co-btbg)",
+                            borderWidth: "var(--b-co-btbr)" as any,
+                            borderStyle: "solid",
+                            borderColor: "var(--b-co-btbrcr)",
+                            borderRadius: "var(--b-co-btrs)",
+                            color: "var(--b-co-btcr)",
+                            fontFamily: "var(--b-co-btty)",
+                            fontSize: "var(--b-co-bttse)" as any,
+                            alignSelf:
+                                (getComputedStyle(document.documentElement).getPropertyValue("--b-co-btan").trim() as any) === "center"
+                                    ? "center"
+                                    : (getComputedStyle(document.documentElement).getPropertyValue("--b-co-btan").trim() as any) === "end"
+                                        ? "flex-end"
+                                        : "flex-start",
+                        }}
                     >
                         {pending ? (
                             <>
@@ -157,6 +254,17 @@ export function BusinessContactSection({ businessSlug }: { businessSlug: string 
                     </Button>
                 </div>
             </form>
+
+            <style jsx>{`
+        input::placeholder,
+        textarea::placeholder {
+          color: var(--b-co-ipcr);
+        }
+        input:focus,
+        textarea:focus {
+          border-color: var(--b-co-ifcr);
+        }
+      `}</style>
         </Card>
     );
 }

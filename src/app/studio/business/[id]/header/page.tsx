@@ -34,6 +34,9 @@ export default async function BusinessHeaderStudioPage({
             headerHeight: true,
             headerBgColor: true,
 
+            headerOpacityOverlay: true,
+            headerOverlayPosition: true,
+
             titleColor: true,
             titleTypography: true,
             titleTextSize: true,
@@ -74,6 +77,9 @@ export default async function BusinessHeaderStudioPage({
                 initialWidth={business.width}
                 initialHeaderHeight={business.headerHeight}
                 initialHeaderBgColor={business.headerBgColor}
+
+                initialHeaderOpacityOverlay={business.headerOpacityOverlay}
+                initialHeaderOverlayPosition={business.headerOverlayPosition}
 
                 initialTitleColor={business.titleColor}
                 initialTitleTypography={business.titleTypography}

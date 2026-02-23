@@ -1,5 +1,4 @@
 // src/lib/validators/business.ts
-
 import { z } from "zod";
 import { isReservedBusinessPageSlug, normalizeSlug } from "@/lib/slug";
 
@@ -33,7 +32,6 @@ export const BusinessFeaturesSectionSchema = z.object({
     kind: z.literal("features"),
     data: z.object({
         title: z.string().trim().max(120).optional(),
-        // si querés soportar 1..4 columnas acá, agregalo:
         columns: z.union([z.literal(1), z.literal(2), z.literal(3)]).optional(),
         items: z
             .array(
@@ -87,7 +85,6 @@ export const BusinessProductiveSectionSchema = z.object({
     }),
 });
 
-
 export const BusinessCTASectionSchema = z.object({
     id: idSchema,
     kind: z.literal("cta"),
@@ -99,6 +96,20 @@ export const BusinessCTASectionSchema = z.object({
     }),
 });
 
+/**
+ * ✅ NUEVO: Contact Form section
+ * - No envía emails desde acá (eso es endpoint).
+ * - Solo define el contenido “decorativo” arriba del form.
+ */
+export const BusinessContactFormSectionSchema = z.object({
+    id: idSchema,
+    kind: z.literal("contactForm"),
+    data: z.object({
+        title: z.string().trim().max(120).optional(),
+        description: z.string().trim().max(600).optional(),
+    }),
+});
+
 export const BusinessSectionSchema = z.discriminatedUnion("kind", [
     BusinessHeroSectionSchema,
     BusinessTextSectionSchema,
@@ -106,6 +117,7 @@ export const BusinessSectionSchema = z.discriminatedUnion("kind", [
     BusinessProductiveSectionSchema,
     BusinessGallerySectionSchema,
     BusinessCTASectionSchema,
+    BusinessContactFormSectionSchema,
 ]);
 
 export const BusinessPageContentSchema = z.array(BusinessSectionSchema).max(50);
@@ -114,33 +126,16 @@ export const BusinessPageContentSchema = z.array(BusinessSectionSchema).max(50);
  * NAV
  * ────────────────────────────────────── */
 
+/**
+ * Regla nueva:
+ * - nav solo admite: home y page
+ * - tab se navega siempre por slug
+ * - contacto es una page más (slug: "contacto")
+ */
 export const BusinessNavItemSchema = z.discriminatedUnion("kind", [
     z.object({
         kind: z.literal("home"),
-        title: z.string().trim().max(40),
-        order: z.number().int().nonnegative(),
-        visible: z.boolean(),
-    }),
-    z.object({
-        kind: z.literal("products"),
-        title: z.string().trim().max(40),
-        order: z.number().int().nonnegative(),
-        visible: z.boolean(),
-    }),
-    z.object({
-        kind: z.literal("services"),
-        title: z.string().trim().max(40),
-        order: z.number().int().nonnegative(),
-        visible: z.boolean(),
-    }),
-    z.object({
-        kind: z.literal("wall"),
-        title: z.string().trim().max(40),
-        order: z.number().int().nonnegative(),
-        visible: z.boolean(),
-    }),
-    z.object({
-        kind: z.literal("contact"),
+        slug: z.literal("home").optional().default("home"),
         title: z.string().trim().max(40),
         order: z.number().int().nonnegative(),
         visible: z.boolean(),
@@ -155,14 +150,6 @@ export const BusinessNavItemSchema = z.discriminatedUnion("kind", [
         order: z.number().int().nonnegative(),
         visible: z.boolean(),
     }),
-    z.object({
-        kind: z.literal("external"),
-        href: z.string().trim().min(5).max(2048),
-        title: z.string().trim().max(40),
-        order: z.number().int().nonnegative(),
-        visible: z.boolean(),
-    }),
 ]);
 
 export const BusinessNavSchema = z.array(BusinessNavItemSchema).max(20);
-

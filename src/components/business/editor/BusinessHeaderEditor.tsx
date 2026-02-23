@@ -23,7 +23,7 @@ import { cn } from "@/lib/utils";
 import { MediaPicker } from "@/components/media/MediaPicker";
 import { uploadSiteImage } from "@/lib/cloudinary-functions";
 
-import { previewFontFamily, TYPO_OPTIONS } from "@/lib/fonts/families";
+import { resolveFontFamily, TYPO_OPTIONS } from "@/lib/fonts/families";
 
 import BackToStudioBusiness from "@/components/custom/BackToStudioBusiness";
 
@@ -38,6 +38,14 @@ type CloudinaryImageItem = {
     url: string;
     publicId: string;
 };
+
+function isTypographyKey(v: unknown): v is (typeof TYPO_OPTIONS)[number] {
+    return typeof v === "string" && (TYPO_OPTIONS as readonly string[]).includes(v);
+}
+
+function clampTypographyKey(v: unknown, fallback: (typeof TYPO_OPTIONS)[number] = "system") {
+    return isTypographyKey(v) ? v : fallback;
+}
 
 type Align = "start" | "center" | "end";
 function toAlign(v: string): Align {
@@ -185,9 +193,14 @@ export function BusinessHeaderEditor({
         toOverlayPosition(initialHeaderOverlayPosition ?? "none")
     );
 
+    const [titleTypography, setTitleTypography] = useState(clampTypographyKey(initialTitleTypography, "system"));
+    const [headlineTypography, setHeadlineTypography] = useState(clampTypographyKey(initialHeadlineTypography, "system"));
+    const [categoryTypography, setCategoryTypography] = useState(clampTypographyKey(initialCategoryTypography, "system"));
+
+
     // title style
     const [titleColor, setTitleColor] = useState(clampHex(initialTitleColor ?? "#ffffff", "#ffffff"));
-    const [titleTypography, setTitleTypography] = useState(initialTitleTypography ?? "system");
+    //const [titleTypography, setTitleTypography] = useState(initialTitleTypography ?? "system");
     const [titleTypoFamily, setTitleTypoFamily] = useState("system");
     const [titleTextSize, setTitleTextSize] = useState<number>(initialTitleTextSize ?? 24);
     const [titleTextSizeState, setTitleTextSizeState] = useState(sizeNumberToTextPx(initialTitleTextSize ?? 24));
@@ -195,7 +208,7 @@ export function BusinessHeaderEditor({
 
     // headline style
     const [headlineColor, setHeadlineColor] = useState(clampHex(initialHeadlineColor ?? "#d1d5db", "#d1d5db"));
-    const [headlineTypography, setHeadlineTypography] = useState(initialHeadlineTypography ?? "system");
+    //const [headlineTypography, setHeadlineTypography] = useState(initialHeadlineTypography ?? "system");
     const [headlineTypoFamily, setHeadlineTypoFamily] = useState("system");
     const [headlineTextSize, setHeadlineTextSize] = useState<number>(initialHeadlineTextSize ?? 16);
     const [headlineTextSizeState, setHeadlineTextSizeState] = useState(sizeNumberToTextPx(initialHeadlineTextSize ?? 16));
@@ -203,7 +216,7 @@ export function BusinessHeaderEditor({
 
     // category style
     const [categoryColor, setCategoryColor] = useState(clampHex(initialCategoryColor ?? "#9ca3af", "#9ca3af"));
-    const [categoryTypography, setCategoryTypography] = useState(initialCategoryTypography ?? "system");
+    //const [categoryTypography, setCategoryTypography] = useState(initialCategoryTypography ?? "system");
     const [categoryTypoFamily, setCategoryTypoFamily] = useState("system");
     const [categoryTextSize, setCategoryTextSize] = useState<number>(initialCategoryTextSize ?? 12);
     const [categoryTextSizeState, setCategoryTextSizeState] = useState(sizeNumberToTextPx(initialCategoryTextSize ?? 12));
@@ -297,9 +310,10 @@ export function BusinessHeaderEditor({
     }, [headerHeight]);
 
     // font families
-    useEffect(() => setTitleTypoFamily(previewFontFamily(titleTypography)), [titleTypography]);
-    useEffect(() => setHeadlineTypoFamily(previewFontFamily(headlineTypography)), [headlineTypography]);
-    useEffect(() => setCategoryTypoFamily(previewFontFamily(categoryTypography)), [categoryTypography]);
+    useEffect(() => setTitleTypoFamily(resolveFontFamily(titleTypography)), [titleTypography]);
+    useEffect(() => setHeadlineTypoFamily(resolveFontFamily(headlineTypography)), [headlineTypography]);
+    useEffect(() => setCategoryTypoFamily(resolveFontFamily(categoryTypography)), [categoryTypography]);
+
 
     async function patchHeaderBgImageId(nextId: number | null) {
         setStatusImg(null);
@@ -807,24 +821,21 @@ export function BusinessHeaderEditor({
                                 className="h-7 w-10 bg-transparent border-0 p-0"
                             />
                         </label>
-
                         <label className="text-xs text-slate-400">
                             Title font family
                             <select
                                 className="mt-1 w-full rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-                                style={{ fontFamily: titleTypoFamily }}
+                                style={{ fontFamily: resolveFontFamily(titleTypography) }}
                                 value={titleTypography}
-                                onChange={(e) => setTitleTypography(e.target.value)}
+                                onChange={(e) => setTitleTypography(clampTypographyKey(e.target.value, "system"))}
                             >
                                 {TYPO_OPTIONS.map((opt) => (
-                                    <option key={opt} value={opt} style={{ fontFamily: previewFontFamily(opt) }}>
+                                    <option key={opt} value={opt} style={{ fontFamily: resolveFontFamily(opt) }}>
                                         {opt}
                                     </option>
                                 ))}
                             </select>
                         </label>
-
-
 
                         <label className="text-xs text-slate-400">
                             Title font size
@@ -872,24 +883,21 @@ export function BusinessHeaderEditor({
                                 className="h-7 w-10 bg-transparent border-0 p-0"
                             />
                         </label>
-
                         <label className="text-xs text-slate-400">
                             Headline font family
                             <select
                                 className="mt-1 w-full rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-                                style={{ fontFamily: headlineTypoFamily }}
+                                style={{ fontFamily: resolveFontFamily(headlineTypography) }}
                                 value={headlineTypography}
-                                onChange={(e) => setHeadlineTypography(e.target.value)}
+                                onChange={(e) => setHeadlineTypography(clampTypographyKey(e.target.value, "system"))}
                             >
                                 {TYPO_OPTIONS.map((opt) => (
-                                    <option key={opt} value={opt} style={{ fontFamily: previewFontFamily(opt) }}>
+                                    <option key={opt} value={opt} style={{ fontFamily: resolveFontFamily(opt) }}>
                                         {opt}
                                     </option>
                                 ))}
                             </select>
                         </label>
-
-
 
                         <label className="text-xs text-slate-400">
                             Headline font size
@@ -937,24 +945,21 @@ export function BusinessHeaderEditor({
                                 className="h-7 w-10 bg-transparent border-0 p-0"
                             />
                         </label>
-
                         <label className="text-xs text-slate-400">
                             Category font family
                             <select
                                 className="mt-1 w-full rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-                                style={{ fontFamily: categoryTypoFamily }}
+                                style={{ fontFamily: resolveFontFamily(categoryTypography) }}
                                 value={categoryTypography}
-                                onChange={(e) => setCategoryTypography(e.target.value)}
+                                onChange={(e) => setCategoryTypography(clampTypographyKey(e.target.value, "system"))}
                             >
                                 {TYPO_OPTIONS.map((opt) => (
-                                    <option key={opt} value={opt} style={{ fontFamily: previewFontFamily(opt) }}>
+                                    <option key={opt} value={opt} style={{ fontFamily: resolveFontFamily(opt) }}>
                                         {opt}
                                     </option>
                                 ))}
                             </select>
                         </label>
-
-
 
                         <label className="text-xs text-slate-400">
                             Category font size

@@ -4,39 +4,26 @@
 import React, { useMemo } from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-
 import type { BusinessNavItem } from "@/types/business";
 
 function safeStr(v: any, fallback = ""): string {
     const s = typeof v === "string" ? v.trim() : "";
     return s || fallback;
 }
-
 function safeBool(v: any, fallback = true): boolean {
     if (typeof v === "boolean") return v;
     return fallback;
 }
-
 function safeNum(v: any, fallback = 0): number {
     const n = Number(v);
     return Number.isFinite(n) ? n : fallback;
 }
-
 function normalizeActiveKey(v: any): string {
     return safeStr(v, "").trim();
 }
-
-/**
- * Regla: activeTab debe ser un slug (home/contacto/productos/...)
- */
 function tabKey(item: BusinessNavItem): string {
     return item.slug;
 }
-
-/**
- * Regla: SIEMPRE navegar por slug.
- * Ej: contacto => /b/<businessSlug>/contacto
- */
 function tabHref(businessSlug: string, item: BusinessNavItem): string {
     return `/b/${businessSlug}/${item.slug}`;
 }
@@ -54,17 +41,13 @@ export function BusinessTabs({
 }) {
     const items = useMemo(() => {
         const base = Array.isArray(nav) ? nav : [];
-
-        // solo permitimos pages que existan realmente (para evitar links rotos)
         const pageSlugs = new Set((pages ?? []).map((p) => safeStr(p.slug)));
 
         return base
             .filter(Boolean)
             .filter((x) => safeBool((x as any).visible, true))
             .filter((x) => {
-                // home/contact siempre ok
-                if (x.kind !== "page") return true;
-                // page: debe existir
+                if (x.kind !== "page") return true; // home ok
                 return pageSlugs.has(safeStr(x.slug));
             })
             .slice()
@@ -74,16 +57,11 @@ export function BusinessTabs({
     const activeKey = normalizeActiveKey(activeTab);
 
     return (
-        <div
-            className="flex flex-row flex-wrap p-2 w-full gap-[var(--b-hr-bgp)]"
-            style={{ justifyContent: "var(--b-hr-ban)" }}
-        >
+        <div className="flex flex-row flex-wrap p-2 w-full gap-[var(--b-hr-bgp)]" style={{ justifyContent: "var(--b-hr-ban)" }}>
             {items.map((item) => {
                 const key = tabKey(item);
                 const isActive = key === activeKey;
-
                 const common = "px-2 py-0 rounded-[var(--b-hr-brs)] transition select-none";
-
                 const className = cn(
                     common,
                     isActive
@@ -91,12 +69,10 @@ export function BusinessTabs({
                         : "bg-[var(--b-hr-bbg)] border-[var(--b-hr-bbcr)] text-[var(--b-hr-bcr)] hover:bg-[var(--b-hr-bbhr)]"
                 );
 
-                const href = tabHref(slug, item);
-
                 return (
                     <Link
                         key={key}
-                        href={href}
+                        href={tabHref(slug, item)}
                         className={className}
                         style={{
                             borderWidth: "var(--b-hr-bbr)",

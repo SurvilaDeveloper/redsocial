@@ -33,7 +33,41 @@ export interface ImagesSwiperSitesProps {
     // - "height": se ajusta al alto del contenedor (el padre debe tener altura definida)
     fit?: SwiperFit;
 }
-
+/**
+ * ImagesSwiperSites
+ * -----------------------------------------------------------------------------
+ * Carrusel horizontal de imágenes con soporte para:
+ * - Drag (mouse y touch)
+ * - Flechas de navegación
+ * - Navegación inferior configurable
+ * - Modo controlado o no controlado
+ *
+ * Props:
+ * - id?: string
+ *   Identificador opcional del contenedor.
+ *
+ * - mediaMap: Record<number, { id, url, publicId }>
+ *   Fuente de imágenes. Se transforma internamente en un array estable.
+ *
+ * - navigation?: "thumbnails" | "dots" | "numbers" | "none"
+ *   Tipo de navegación inferior. Default: "thumbnails".
+ *
+ * - currentSlide?: number
+ *   Índice actual del slide (modo controlado).
+ *
+ * - onSlideChange?: (index: number) => void
+ *   Callback al cambiar de slide.
+ *
+ * - fit?: "width" | "height"
+ *   Define cómo se dimensiona el carrusel:
+ *     • "width" (default): el ancho del contenedor manda.
+ *     • "height": el alto del contenedor padre manda (requiere altura definida).
+ *
+ * Notas:
+ * - El track se mueve con translateX según el ancho del contenedor.
+ * - Clampa automáticamente índices inválidos si cambia la cantidad de imágenes.
+ * - Renderiza placeholder cuando no hay imágenes.
+ */
 export const ImagesSwiperSites: React.FC<ImagesSwiperSitesProps> = ({
     id,
     mediaMap,

@@ -26,21 +26,13 @@ function createSection(kind: Kind, businessName?: string): BusinessSection {
     const id = uuid();
 
     if (kind === "hero") {
-        return {
-            id,
-            kind,
-            data: { title: businessName || "Título", subtitle: "Subtítulo", align: "left" },
-        };
+        return { id, kind, data: { title: businessName || "Título", subtitle: "Subtítulo", align: "left" } };
     }
     if (kind === "text") {
         return { id, kind, data: { title: "Sección", body: "Escribí acá..." } };
     }
     if (kind === "features") {
-        return {
-            id,
-            kind,
-            data: { title: "Características", items: [{ title: "Item 1", text: "Descripción" }], columns: 2 },
-        };
+        return { id, kind, data: { title: "Características", items: [{ title: "Item 1", text: "Descripción" }], columns: 2 } };
     }
     if (kind === "gallery") {
         return { id, kind, data: { title: "Galería", images: [], columns: 3, width: "100%", minWidth: "512px" } };
@@ -49,21 +41,23 @@ function createSection(kind: Kind, businessName?: string): BusinessSection {
         return {
             id,
             kind,
+            data: { title: "Destacados", type: "product", items: [{ title: "Item 1", listingId: 0, text: "" }] },
+        };
+    }
+
+    // ✅ NUEVO
+    if (kind === "contactForm") {
+        return {
+            id,
+            kind,
             data: {
-                title: "Destacados",
-                type: "product", // "product" | "service"
-                items: [
-                    { title: "Item 1", listingId: 0, text: "" }, // listingId num
-                ],
+                title: "Contacto",
+                description: "Completá el formulario y el dueño del negocio recibirá un email para responderte.",
             },
         };
     }
 
-    return {
-        id,
-        kind: "cta",
-        data: { title: "Llamado a la acción", text: "Mensaje", buttonText: "Contactar", href: "" },
-    };
+    return { id, kind: "cta", data: { title: "Llamado a la acción", text: "Mensaje", buttonText: "Contactar", href: "" } };
 }
 
 export function BusinessSectionsEditor({
@@ -116,26 +110,6 @@ export function BusinessSectionsEditor({
     function replaceSection(id: string, next: BusinessSection) {
         set(sections.map((s) => (s.id === id ? next : s)));
     }
-
-    /* const allMediaIds = React.useMemo(() => {
-         const out: number[] = [];
- 
-         for (const s of sections) {
-             if (s.kind === "gallery") {
-                 const imgs = (s.data as any)?.images ?? [];
-                 for (const row of imgs) {
-                     const id = Number(row?.mediaId);
-                     if (Number.isFinite(id) && id > 0) out.push(id);
-                 }
-             }
-         }
- 
-         return out;
-     }, [sections]);
- 
-     console.log("allMediaIds BusinessSectionsEditor():", allMediaIds);
-     const { mediaMap } = useMediaByIds(allMediaIds);
-     console.log("mediaMap BusinessSectionsEditor():", mediaMap);*/
     return (
         <div className={cn("grid gap-4", showPreview ? "grid-cols-1 lg:grid-cols-2" : "grid-cols-1")}>
             {/* Panel editor */}
@@ -149,6 +123,8 @@ export function BusinessSectionsEditor({
                         <AddBtn label="Galería" onClick={() => add("gallery")} />
                         <AddBtn label="Productivo" onClick={() => add("productive")} />
                         <AddBtn label="CTA" onClick={() => add("cta")} />
+                        <AddBtn label="Contacto (form)" onClick={() => add("contactForm")} />
+
                     </div>
 
                     {localError && <div className="mt-3 text-sm text-red-300">{localError}</div>}
@@ -256,6 +232,8 @@ function labelForKind(kind: Kind) {
     if (kind === "features") return "Features";
     if (kind === "gallery") return "Galería";
     if (kind === "productive") return "Productivo";
+    if (kind === "contactForm") return "Contacto (form)";
+
     return "CTA";
 }
 
@@ -823,6 +801,23 @@ function SectionEditor({
         );
     }
 
+    if (section.kind === "contactForm") {
+        const d = section.data;
+        return (
+            <div className="flex flex-col gap-2">
+                <Field label="Título (opcional)">
+                    <Input value={d.title ?? ""} onChange={(v) => onUpdate({ title: v })} />
+                </Field>
+                <Field label="Descripción (opcional)">
+                    <Textarea value={d.description ?? ""} onChange={(v) => onUpdate({ description: v })} />
+                </Field>
+
+                <div className="text-xs text-slate-500">
+                    En público esta sección renderiza el formulario real.
+                </div>
+            </div>
+        );
+    }
 
     if (section.kind === "cta") {
         const d = section.data;

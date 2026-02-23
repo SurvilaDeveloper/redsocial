@@ -134,6 +134,8 @@ export type TemplateThemeConfig = {
         ttse: string;
         tatt: string;
         cbcr: string;
+        cbr: string;//card border NUEVO
+        cbrcr: string;//card border color NUEVO
         crs: string;
     };
 
@@ -166,6 +168,10 @@ export type TemplateThemeConfig = {
         br: string;
         bcr: string;
         rs: string;
+        cbgcr: string; // card background color
+        cbr: string; // card border
+        cbrcr: string; // card border color
+        crs: string; //card radius
         tcr: string;
         tty: string;
         yyse: string;
@@ -179,6 +185,37 @@ export type TemplateThemeConfig = {
         itxtse: string;
         itxatt: string;
     };
+    contact: {
+        bgcr: string;
+        br: string;
+        bcr: string;
+        rs: string;
+
+        lcr: string;
+        lty: string;
+        ltse: string;
+
+        ibgcr: string;
+        ibr: string;
+        ibcr: string;
+        irs: string;
+        icr: string;
+
+        ipcr: string; // placeholder
+        ifcr: string; // focus border
+
+        btbg: string;
+        btbgHv: string;
+        btbr: string;
+        btbrcr: string;
+        btrs: string;
+
+        btcr: string;
+        btty: string;
+        bttse: string;
+        btan: string; // start|center|end
+    };
+
 
     components: { button: { variant: string }; card: { shadow: string } };
 };
@@ -272,6 +309,8 @@ const PRESETS: Record<Exclude<TemplateThemePresetId, "userPreset">, TemplateThem
             ttse: "16px",
             tatt: "start",
             cbcr: "#000000",
+            cbr: "1px", //card border NUEVO
+            cbrcr: "#111111", //card border color NUEVO
             crs: "12px",
         },
 
@@ -304,6 +343,10 @@ const PRESETS: Record<Exclude<TemplateThemePresetId, "userPreset">, TemplateThem
             br: "1px",
             bcr: "#1f2937",
             rs: "16px",
+            cbgcr: "#000000",   // card background color Nuevo
+            cbr: "1px",         // card border nuevo
+            cbrcr: "#dddddd",   // card border color Nuevo
+            crs: "6px",         //card radius Nuevo
             tcr: "#ffffff",
             tty: "system",
             yyse: "16px",
@@ -316,6 +359,36 @@ const PRESETS: Record<Exclude<TemplateThemePresetId, "userPreset">, TemplateThem
             itxty: "system",
             itxtse: "12px",
             itxatt: "start",
+        },
+        contact: {
+            bgcr: "#0f172a",
+            br: "1px",
+            bcr: "#1f2937",
+            rs: "16px",
+
+            lcr: "#cbd5e1",
+            lty: "system",
+            ltse: "12px",
+
+            ibgcr: "#000000",
+            ibr: "1px",
+            ibcr: "#1f2937",
+            irs: "12px",
+            icr: "#e5e7eb",
+
+            ipcr: "rgba(148,163,184,0.75)", // slate-400-ish
+            ifcr: "rgba(148,163,184,0.9)",
+
+            btbg: "#22c55e",
+            btbgHv: "#16a34a",
+            btbr: "1px",
+            btbrcr: "#34d399",
+            btrs: "12px",
+
+            btcr: "#052e16",
+            btty: "system",
+            bttse: "14px",
+            btan: "start",
         },
 
         components: { button: { variant: "solid" }, card: { shadow: "soft" } },
@@ -404,6 +477,8 @@ const PRESETS: Record<Exclude<TemplateThemePresetId, "userPreset">, TemplateThem
             ttse: "16px",
             tatt: "start",
             cbcr: "#000000",
+            cbr: "1px", //card border NUEVO
+            cbrcr: "#111111", //card border color NUEVO
             crs: "14px",
         },
 
@@ -436,6 +511,10 @@ const PRESETS: Record<Exclude<TemplateThemePresetId, "userPreset">, TemplateThem
             br: "1px",
             bcr: "rgba(255,255,255,0.12)",
             rs: "18px",
+            cbgcr: "#000000",   // card background color Nuevo
+            cbr: "1px",         // card border nuevo
+            cbrcr: "#dddddd",   // card border color Nuevo
+            crs: "6px",         //card radius Nuevo
             tcr: "#ffffff",
             tty: "system",
             yyse: "16px",
@@ -449,6 +528,37 @@ const PRESETS: Record<Exclude<TemplateThemePresetId, "userPreset">, TemplateThem
             itxtse: "12px",
             itxatt: "start",
         },
+        contact: {
+            bgcr: "transparent",
+            br: "1px",
+            bcr: "rgba(255,255,255,0.12)",
+            rs: "18px",
+
+            lcr: "#cbd5e1",
+            lty: "system",
+            ltse: "12px",
+
+            ibgcr: "rgba(0,0,0,0.4)",
+            ibr: "1px",
+            ibcr: "rgba(255,255,255,0.12)",
+            irs: "14px",
+            icr: "#e5e7eb",
+
+            ipcr: "rgba(148,163,184,0.75)",
+            ifcr: "rgba(255,255,255,0.25)",
+
+            btbg: "#ffffff",
+            btbgHv: "rgba(255,255,255,0.9)",
+            btbr: "1px",
+            btbrcr: "rgba(255,255,255,0.3)",
+            btrs: "999px",
+
+            btcr: "#0b1220",
+            btty: "system",
+            bttse: "14px",
+            btan: "start",
+        },
+
 
         components: { button: { variant: "ghost" }, card: { shadow: "none" } },
     },
@@ -565,6 +675,8 @@ export function templateThemeToCssVars(t: TemplateThemeConfig): Record<string, s
         "--t-gy-ttse": t.gallery.ttse,
         "--t-gy-tatt": t.gallery.tatt,
         "--t-gy-cbcr": t.gallery.cbcr,
+        "--t-gy-cbr": t.gallery.cbr,//card border NUEVO
+        "--t-gy-cbrcr": t.gallery.cbrcr,//card border color NUEVO
         "--t-gy-crs": t.gallery.crs,
 
         // cta
@@ -595,6 +707,10 @@ export function templateThemeToCssVars(t: TemplateThemeConfig): Record<string, s
         "--t-pe-br": t.productive.br,
         "--t-pe-bcr": t.productive.bcr,
         "--t-pe-rs": t.productive.rs,
+        "--t-pe-cbgcr": t.productive.cbgcr,   // card background color Nuevo
+        "--t-pe-cbr": t.productive.cbr,         // card border nuevo
+        "--t-pe-cbrcr": t.productive.cbrcr,   // card border color Nuevo
+        "--t-pe-crs": t.productive.crs, // card border radius Nuevo
         "--t-pe-tcr": t.productive.tcr,
         "--t-pe-tty": resolveFontFamily(t.productive.tty),
         "--t-pe-yyse": t.productive.yyse,
@@ -607,5 +723,36 @@ export function templateThemeToCssVars(t: TemplateThemeConfig): Record<string, s
         "--t-pe-itxty": resolveFontFamily(t.productive.itxty),
         "--t-pe-itxtse": t.productive.itxtse,
         "--t-pe-itxatt": t.productive.itxatt,
+
+        // contact
+        "--t-co-bgcr": t.contact.bgcr,
+        "--t-co-br": t.contact.br,
+        "--t-co-bcr": t.contact.bcr,
+        "--t-co-rs": t.contact.rs,
+
+        "--t-co-lcr": t.contact.lcr,
+        "--t-co-lty": resolveFontFamily(t.contact.lty),
+        "--t-co-ltse": t.contact.ltse,
+
+        "--t-co-ibgcr": t.contact.ibgcr,
+        "--t-co-ibr": t.contact.ibr,
+        "--t-co-ibcr": t.contact.ibcr,
+        "--t-co-irs": t.contact.irs,
+        "--t-co-icr": t.contact.icr,
+
+        "--t-co-ipcr": t.contact.ipcr,
+        "--t-co-ifcr": t.contact.ifcr,
+
+        "--t-co-btbg": t.contact.btbg,
+        "--t-co-btbgHv": t.contact.btbgHv,
+        "--t-co-btbr": t.contact.btbr,
+        "--t-co-btbrcr": t.contact.btbrcr,
+        "--t-co-btrs": t.contact.btrs,
+
+        "--t-co-btcr": t.contact.btcr,
+        "--t-co-btty": resolveFontFamily(t.contact.btty),
+        "--t-co-bttse": t.contact.bttse,
+        "--t-co-btan": t.contact.btan,
+
     };
 }

@@ -1,4 +1,4 @@
-//src/components/site-templates/sections/TemplateSectionRenderer.tsx
+// src/components/site-templates/sections/TemplateSectionRenderer.tsx
 "use client";
 
 import React from "react";
@@ -7,6 +7,11 @@ import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 import type { BusinessPageContent, BusinessSection } from "@/types/business-sections";
+
+import { Mail } from "lucide-react";
+
+// ✅ Ajustá este import si tu componente está en otra ruta
+import { TemplateContactSection } from "@/components/site-templates/TemplateContactSection";
 
 function safeInt(v: any) {
     const n = Number(v);
@@ -39,6 +44,54 @@ function SectionView({
     section: BusinessSection;
     templateId: string;
 }) {
+    // ✅ CONTACT FORM (Template: preview/fake) — imita BusinessSectionRenderer
+    if (section.kind === "contactForm") {
+        const title = (section as any)?.data?.title?.trim() || "Contacto";
+        const desc =
+            (section as any)?.data?.description?.trim() ||
+            "Completá el formulario y el dueño del negocio recibirá un email para responderte.";
+
+        // Caso "equivalente" al businessSlug faltante: en templates siempre es demo,
+        // pero dejamos un fallback si no hay templateId por cualquier razón.
+        if (!templateId) {
+            return (
+                <Card className="bg-slate-950 border border-slate-800 p-5 rounded-2xl">
+                    <div className="flex items-center gap-2 text-slate-300">
+                        <Mail size={16} className="opacity-80" />
+                        <span className="font-medium">{title}</span>
+                    </div>
+                    <p className="mt-2 text-sm text-slate-400">{desc}</p>
+                    <p className="mt-3 text-xs text-slate-500">(Demo: falta templateId para renderizar la vista previa.)</p>
+                </Card>
+            );
+        }
+
+        return (
+            <div className="flex flex-col gap-4">
+                {/* Header (imitando el BusinessSectionRenderer: look negro y copy similar) */}
+                <Card className="p-5 rounded-2xl"
+                    style={{
+                        background: "var(--t-co-bgcr)",
+                        borderWidth: "var(--t-co-br)" as any,
+                        borderStyle: "solid",
+                        borderColor: "var(--t-co-bcr)",
+                        borderRadius: "var(--t-co-rs)",
+                        color: "var(--t-co-lcr)",
+                        fontFamily: "var(--t-co-lty)",
+                    }}>
+                    <div className="flex items-center gap-2">
+                        <Mail size={16} className="opacity-80" />
+                        <span className="font-medium">{title}</span>
+                    </div>
+                    <p className="mt-2 text-sm">{desc}</p>
+                </Card>
+
+                {/* Form fake/interactivo (no envía nada) */}
+                <TemplateContactSection showHint={false} />
+            </div>
+        );
+    }
+
     if (section.kind === "hero") {
         const { title, subtitle } = (section as any).data;
 
@@ -303,7 +356,10 @@ function SectionView({
                                 <div
                                     key={idx}
                                     className="overflow-hidden border border-slate-500 bg-[var(--t-gy-cbcr)]"
-                                    style={{ borderRadius: "var(--t-gy-crs)" }}
+                                    style={{
+                                        border: "var(--t-gy-cbr) solid var(--t-gy-cbrcr)",
+                                        borderRadius: "var(--t-gy-crs)",
+                                    }}
                                 >
                                     {/* eslint-disable-next-line @next/next/no-img-element */}
                                     <img
@@ -352,16 +408,16 @@ function SectionView({
                 <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     {(items ?? []).map((it: any, idx: number) => {
                         const thumb = (typeof it?.thumbUrl === "string" && it.thumbUrl.trim()) || null;
-                        const href = "#";
 
                         return (
-                            <Link
+                            <div
                                 key={`${it.listingId}-${idx}`}
-                                href={href}
-                                className={cn(
-                                    "block rounded-xl border border-slate-800 bg-slate-900 overflow-hidden",
-                                    "opacity-80 pointer-events-none"
-                                )}
+                                className={cn("block overflow-hidden", "opacity-80 pointer-events-none")}
+                                style={{
+                                    backgroundColor: "var(--t-pe-cbgcr)",
+                                    border: "var(--t-pe-cbr) solid var(--t-pe-cbrcr)",
+                                    borderRadius: "var(--t-pe-crs)",
+                                }}
                                 title="Demo (sin detalle)"
                             >
                                 <div className="w-full h-[150px] bg-slate-950 border-b border-slate-800 flex items-center justify-center overflow-hidden">
@@ -400,11 +456,9 @@ function SectionView({
                                         </div>
                                     )}
 
-                                    <div className="mt-3 text-[11px] text-slate-500">
-                                        #{safeInt(it.listingId) ?? "—"} · demo
-                                    </div>
+                                    <div className="mt-3 text-[11px] text-slate-500">#{safeInt(it.listingId) ?? "—"} · demo</div>
                                 </div>
-                            </Link>
+                            </div>
                         );
                     })}
                 </div>
@@ -475,5 +529,3 @@ function SectionView({
 
     return null;
 }
-
-

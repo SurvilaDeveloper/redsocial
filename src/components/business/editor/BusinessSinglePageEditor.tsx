@@ -1,4 +1,4 @@
-//src/components/business/editor/BusinessSinglePageEditor.tsx
+// src/components/business/editor/BusinessSinglePageEditor.tsx
 "use client";
 
 import React, { useMemo, useState, useTransition } from "react";
@@ -23,11 +23,13 @@ function normalizeSlug(s: string) {
         .slice(0, 80);
 }
 
+/**
+ * ✅ Ahora "contacto" NO es reservado.
+ * Reservados reales: home (porque es sitio), y los legacy si querés mantenerlos.
+ */
 function isReservedSlug(slug: string) {
     return ["home", "products", "services", "wall", "contact"].includes(slug);
 }
-
-//type Status = null | { ok: boolean; msg: string };
 
 type Props = {
     mode: "create" | "edit";
@@ -60,12 +62,8 @@ export function BusinessSinglePageEditor({
     const [pending, startTransition] = useTransition();
     const [status, setStatus] = useState<null | { ok: boolean; msg: string; issues?: { path: string; message: string }[] }>(null);
 
-
     const normalizedSlug = useMemo(() => normalizeSlug(slug), [slug]);
-    const publicHref = useMemo(
-        () => `/b/${businessSlug}/${normalizedSlug || ""}`,
-        [businessSlug, normalizedSlug]
-    );
+    const publicHref = useMemo(() => `/b/${businessSlug}/${normalizedSlug || ""}`, [businessSlug, normalizedSlug]);
 
     const backToBusinessHref = `/studio/business/${businessId}`;
     const backToPagesHref = `/studio/business/${businessId}/pages`;
@@ -77,7 +75,9 @@ export function BusinessSinglePageEditor({
 
         if (!title.trim()) return setStatus({ ok: false, msg: "Título requerido." });
         if (!s) return setStatus({ ok: false, msg: "Slug requerido." });
-        if (isReservedSlug(s)) return setStatus({ ok: false, msg: "Slug reservado." });
+
+        // ✅ contacto es permitido; solo bloqueamos reservados reales
+        if (isReservedSlug(s) && s !== "contacto") return setStatus({ ok: false, msg: "Slug reservado." });
 
         if (mode === "edit" && !pageId) {
             return setStatus({ ok: false, msg: "pageId inválido para edición." });
@@ -100,17 +100,14 @@ export function BusinessSinglePageEditor({
 
                 if (!res.ok) {
                     const data = await res.json().catch(() => ({}));
-
                     const issues: Array<{ path?: string; message?: string }> = Array.isArray(data?.issues) ? data.issues : [];
                     const extra =
                         issues.length > 0
                             ? " · " + issues.slice(0, 3).map((i) => `${i.path || "?"}: ${i.message || "Invalid"}`).join(" | ")
                             : "";
-
                     setStatus({ ok: false, msg: (data?.error || "No se pudo guardar.") + extra });
                     return;
                 }
-
 
                 const data = await res.json().catch(() => ({}));
                 setSlug(s);
@@ -136,12 +133,9 @@ export function BusinessSinglePageEditor({
 
     return (
         <div className="min-h-dvh bg-slate-950 text-slate-100">
-            {/* Header consistente con HomeEditor */}
             <div className="border-b border-slate-800 bg-gradient-to-b from-slate-950 to-slate-900">
                 <div className="mx-auto w-full max-w-6xl px-3 py-6">
-                    <div className="text-xl font-semibold">
-                        {mode === "create" ? "Crear página" : "Editar página"}
-                    </div>
+                    <div className="text-xl font-semibold">{mode === "create" ? "Crear página" : "Editar página"}</div>
                     <div className="text-sm text-slate-400 mt-1">
                         Negocio: <span className="text-slate-200">{businessName}</span>
                     </div>
@@ -184,16 +178,6 @@ export function BusinessSinglePageEditor({
                                 </>
                             )}
                         </Button>
-                        {status && !status.ok && status.issues?.length ? (
-                            <div className="mt-2 text-xs text-red-300 space-y-1">
-                                {status.issues.slice(0, 8).map((i, idx) => (
-                                    <div key={idx}>
-                                        <span className="text-red-200">{i.path}:</span> {i.message}
-                                    </div>
-                                ))}
-                            </div>
-                        ) : null}
-
 
                         <Link
                             href={publicHref}
@@ -207,38 +191,22 @@ export function BusinessSinglePageEditor({
                             Ver público
                         </Link>
 
-                        {/* navegación contextual */}
-                        <Link
-                            href={backToPagesHref}
-                            className="inline-flex items-center px-3 py-2 text-sm rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-800"
-                        >
+                        <Link href={backToPagesHref} className="inline-flex items-center px-3 py-2 text-sm rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-800">
                             Volver a páginas
                         </Link>
 
-                        <Link
-                            href={backToBusinessHref}
-                            className="inline-flex items-center px-3 py-2 text-sm rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-800"
-                        >
+                        <Link href={backToBusinessHref} className="inline-flex items-center px-3 py-2 text-sm rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-800">
                             Volver
                         </Link>
 
-                        {status && (
-                            <span className={cn("text-sm", status.ok ? "text-emerald-300" : "text-red-300")}>
-                                {status.msg}
-                            </span>
-                        )}
+                        {status && <span className={cn("text-sm", status.ok ? "text-emerald-300" : "text-red-300")}>{status.msg}</span>}
                     </div>
                 </div>
             </div>
 
             <main className="mx-auto w-full max-w-6xl px-3 py-6">
                 <Card className="bg-slate-950 border-slate-800 p-4 rounded-2xl">
-                    <BusinessSectionsEditor
-                        value={content}
-                        onChange={setContent}
-                        businessName={businessName}
-                        showPreview
-                    />
+                    <BusinessSectionsEditor value={content} onChange={setContent} businessName={businessName} showPreview />
                 </Card>
             </main>
         </div>

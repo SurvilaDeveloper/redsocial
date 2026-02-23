@@ -1,5 +1,7 @@
-//src/components/business/BusinessSiteHeader.tsx
+// src/components/business/BusinessSiteHeader.tsx
 "use client";
+
+import { resolveFontFamily } from "@/lib/fonts/families";
 
 type OverlayPosition = "left" | "center" | "right" | "none";
 
@@ -91,14 +93,8 @@ export function BusinessSiteHeader({
     const overlayOpacity = overlayPct / 100;
 
     // ✅ Define el tipo de overlay horizontal
-    // - none/undefined/null: negro parejo
-    // - left:    (negro, negro, transparente)
-    // - center:  (transparente, negro, transparente)
-    // - right:   (transparente, negro, negro)
     const overlayPos: OverlayPosition = headerOverlayPosition ?? "none";
 
-    // Usamos alpha=1 en el gradient y controlamos intensidad con `opacity: overlayOpacity`.
-    // Así no tenés que recalcular rgba() por stop.
     const overlayBackgroundImage =
         overlayPos === "left"
             ? "linear-gradient(to right, #000 0%, #000 55%, transparent 100%)"
@@ -135,13 +131,8 @@ export function BusinessSiteHeader({
                                 <div
                                     className="absolute inset-0"
                                     style={{
-                                        // Si overlayPosition es none -> negro parejo
-                                        backgroundColor:
-                                            overlayPos === "none" ? "#000" : undefined,
-
-                                        // Si overlayPosition es left/center/right -> gradiente horizontal
+                                        backgroundColor: overlayPos === "none" ? "#000" : undefined,
                                         backgroundImage: overlayBackgroundImage,
-
                                         opacity: overlayOpacity,
                                     }}
                                 />
@@ -156,7 +147,7 @@ export function BusinessSiteHeader({
                             color: titleColor,
                             fontSize: titleSize,
                             justifyContent: titleAlignText,
-                            fontFamily: titleTypography,
+                            fontFamily: resolveFontFamily(titleTypography ?? "system"),
                         }}
                     >
                         {name}
@@ -169,7 +160,7 @@ export function BusinessSiteHeader({
                                 color: headlineColor,
                                 fontSize: headlineSize,
                                 justifyContent: headlineAlignText,
-                                fontFamily: headlineTypography,
+                                fontFamily: resolveFontFamily(headlineTypography ?? "system"),
                             }}
                         >
                             {headline}
@@ -183,7 +174,7 @@ export function BusinessSiteHeader({
                                 color: categoryColor,
                                 fontSize: categorySize,
                                 justifyContent: categoryAlignText,
-                                fontFamily: categoryTypography,
+                                fontFamily: resolveFontFamily(categoryTypography ?? "system"),
                             }}
                         >
                             {category}
@@ -194,4 +185,3 @@ export function BusinessSiteHeader({
         </div>
     );
 }
-

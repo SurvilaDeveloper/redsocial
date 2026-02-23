@@ -1,7 +1,7 @@
 // src/types/business.ts
 import type { BusinessPageContent } from "@/types/business-sections";
 
-export type BusinessNavKind = "home" | "page" | "contact";
+export type BusinessNavKind = "home" | "page";
 export type HeaderOverlayPosition = "left" | "center" | "right" | "none";
 
 /**
@@ -10,7 +10,6 @@ export type HeaderOverlayPosition = "left" | "center" | "right" | "none";
  */
 export type BusinessNavItem =
     | { kind: "home"; slug: "home"; title: string; order: number; visible: boolean }
-    | { kind: "contact"; slug: "contacto"; title: string; order: number; visible: boolean }
     | { kind: "page"; slug: string; title: string; order: number; visible: boolean };
 
 export type BusinessPageDTO = {
@@ -64,12 +63,13 @@ export type BusinessSiteDTO = {
     nav: BusinessNavItem[];
     homeContent: BusinessPageContent;
 
-    // ✅ NUEVO: preset activo en el sitio público
+    // preset activo en el sitio público
     themePreset: string;
 
     // userPreset guardado (si existe). En público NO manda, manda themePreset.
     themeConfig: any;
 
-    showContactForm: boolean;
-    contactEmailExists: boolean;
+    // ⛔️ ya NO es necesario forzar contacto por flag
+    // showContactForm: boolean;
+    // contactEmailExists: boolean;
 };

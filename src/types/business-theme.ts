@@ -93,12 +93,18 @@ export type BusinessThemeConfig = {
         br: string;
         bcr: string;
         rs: string;
+
         tcr: string;
         tty: string;
         ttse: string;
         tatt: string;
-        cbcr: string;
-        crs: string;
+
+        cbcr: string; //card bg
+
+        cbr: string; //card border NUEVO
+        cbrcr: string; //card border color NUEVO
+
+        crs: string;    //card radius
     };
 
     cta: {
@@ -135,6 +141,11 @@ export type BusinessThemeConfig = {
         bcr: string;
         rs: string;
 
+        cbgcr: string; // card background color
+        cbr: string; // card border
+        cbrcr: string; // card border color
+        crs: string; //card radius
+
         tcr: string;
         tty: string;
         yyse: string;
@@ -150,6 +161,35 @@ export type BusinessThemeConfig = {
         itxtse: string;
         itxatt: string;
     };
+    contact: {
+        bgcr: string;     // background (card)
+        br: string;       // border width
+        bcr: string;      // border color
+        rs: string;       // radius
+
+        lcr: string;      // label color
+        lty: string;      // label typography
+        ltse: string;     // label size
+
+        icr: string;      // input text color
+        ibgcr: string;    // input background
+        ibr: string;      // input border width
+        ibcr: string;     // input border color
+        irs: string;      // input radius
+        ipcr: string;     // placeholder color
+        ifcr: string;     // focus border color
+
+        btbg: string;     // button bg
+        btbgv: string;    // button bg hover
+        btbr: string;     // button border width
+        btbrcr: string;   // button border color
+        btrs: string;     // button radius
+        btcr: string;     // button text color
+        btty: string;     // button typography
+        bttse: string;    // button text size
+        btan: string;     // button align
+    };
+
 };
 
 export const THEME_PRESETS: Record<DefaultThemePresetId, BusinessThemeConfig> = {
@@ -234,6 +274,10 @@ export const THEME_PRESETS: Record<DefaultThemePresetId, BusinessThemeConfig> = 
             ttse: "16px",
             tatt: "start",
             cbcr: "#000000",
+
+            cbr: "1px", //card border NUEVO
+            cbrcr: "#111111", //card border color NUEVO
+
             crs: "6px",
         },
         cta: {
@@ -264,6 +308,12 @@ export const THEME_PRESETS: Record<DefaultThemePresetId, BusinessThemeConfig> = 
             br: "1px",
             bcr: "#dddddd",
             rs: "8px",
+
+            cbgcr: "#000000",   // card background color Nuevo
+            cbr: "1px",         // card border nuevo
+            cbrcr: "#dddddd",   // card border color Nuevo
+            crs: "6px",         //card radius Nuevo
+
             tcr: "#dddddd",
             tty: "system",
             yyse: "20px",
@@ -277,6 +327,35 @@ export const THEME_PRESETS: Record<DefaultThemePresetId, BusinessThemeConfig> = 
             itxtse: "16px",
             itxatt: "start",
         },
+        contact: {
+            bgcr: "#000000",
+            br: "1px",
+            bcr: "#1f2937",
+            rs: "16px",
+
+            lcr: "#cbd5e1",
+            lty: "system",
+            ltse: "12px",
+
+            icr: "#e5e7eb",
+            ibgcr: "#000000",
+            ibr: "1px",
+            ibcr: "#1f2937",
+            irs: "12px",
+            ipcr: "#64748b",
+            ifcr: "#475569",
+
+            btbg: "#05966922",
+            btbgv: "#05966933",
+            btbr: "1px",
+            btbrcr: "#10b98166",
+            btrs: "12px",
+            btcr: "#a7f3d0",
+            btty: "system",
+            bttse: "16px",
+            btan: "start",
+        },
+
     },
 
     // ✅ inventados para pruebas
@@ -361,6 +440,8 @@ export const THEME_PRESETS: Record<DefaultThemePresetId, BusinessThemeConfig> = 
             ttse: "16px",
             tatt: "start",
             cbcr: "#0f172a",
+            cbr: "1px", //card border NUEVO
+            cbrcr: "#111111", //card border color NUEVO
             crs: "12px",
         },
         cta: {
@@ -391,6 +472,11 @@ export const THEME_PRESETS: Record<DefaultThemePresetId, BusinessThemeConfig> = 
             br: "1px",
             bcr: "#1e293b",
             rs: "16px",
+            cbgcr: "#000000",   // card background color Nuevo
+            cbr: "1px",         // card border nuevo
+            cbrcr: "#dddddd",   // card border color Nuevo
+            crs: "6px",         //card radius Nuevo
+
             tcr: "#e0f2fe",
             tty: "system",
             yyse: "22px",
@@ -404,6 +490,35 @@ export const THEME_PRESETS: Record<DefaultThemePresetId, BusinessThemeConfig> = 
             itxtse: "16px",
             itxatt: "start",
         },
+        contact: {
+            bgcr: "#000000",
+            br: "1px",
+            bcr: "#1f2937",
+            rs: "16px",
+
+            lcr: "#cbd5e1",
+            lty: "system",
+            ltse: "12px",
+
+            icr: "#e5e7eb",
+            ibgcr: "#000000",
+            ibr: "1px",
+            ibcr: "#1f2937",
+            irs: "12px",
+            ipcr: "#64748b",
+            ifcr: "#475569",
+
+            btbg: "#05966922",
+            btbgv: "#05966933",
+            btbr: "1px",
+            btbrcr: "#10b98166",
+            btrs: "12px",
+            btcr: "#a7f3d0",
+            btty: "system",
+            bttse: "16px",
+            btan: "start",
+        },
+
     },
 
     bold: {
@@ -487,6 +602,8 @@ export const THEME_PRESETS: Record<DefaultThemePresetId, BusinessThemeConfig> = 
             ttse: "16px",
             tatt: "start",
             cbcr: "#1f1f1f",
+            cbr: "1px", //card border NUEVO
+            cbrcr: "#111111", //card border color NUEVO
             crs: "4px",
         },
         cta: {
@@ -517,6 +634,11 @@ export const THEME_PRESETS: Record<DefaultThemePresetId, BusinessThemeConfig> = 
             br: "2px",
             bcr: "#ffffff",
             rs: "4px",
+            cbgcr: "#000000",   // card background color Nuevo
+            cbr: "1px",         // card border nuevo
+            cbrcr: "#dddddd",   // card border color Nuevo
+            crs: "6px",         //card radius Nuevo
+
             tcr: "#ffffff",
             tty: "system",
             yyse: "24px",
@@ -530,6 +652,35 @@ export const THEME_PRESETS: Record<DefaultThemePresetId, BusinessThemeConfig> = 
             itxtse: "16px",
             itxatt: "start",
         },
+        contact: {
+            bgcr: "#000000",
+            br: "1px",
+            bcr: "#1f2937",
+            rs: "16px",
+
+            lcr: "#cbd5e1",
+            lty: "system",
+            ltse: "12px",
+
+            icr: "#e5e7eb",
+            ibgcr: "#000000",
+            ibr: "1px",
+            ibcr: "#1f2937",
+            irs: "12px",
+            ipcr: "#64748b",
+            ifcr: "#475569",
+
+            btbg: "#05966922",
+            btbgv: "#05966933",
+            btbr: "1px",
+            btbrcr: "#10b98166",
+            btrs: "12px",
+            btcr: "#a7f3d0",
+            btty: "system",
+            bttse: "16px",
+            btan: "start",
+        },
+
     },
 
     minimal: {
@@ -613,6 +764,8 @@ export const THEME_PRESETS: Record<DefaultThemePresetId, BusinessThemeConfig> = 
             ttse: "14px",
             tatt: "start",
             cbcr: "#111111",
+            cbr: "1px", //card border NUEVO
+            cbrcr: "#111111", //card border color NUEVO
             crs: "14px",
         },
         cta: {
@@ -643,6 +796,11 @@ export const THEME_PRESETS: Record<DefaultThemePresetId, BusinessThemeConfig> = 
             br: "0px",
             bcr: "#000000",
             rs: "18px",
+            cbgcr: "#000000",   // card background color Nuevo
+            cbr: "1px",         // card border nuevo
+            cbrcr: "#dddddd",   // card border color Nuevo
+            crs: "6px",         //card radius Nuevo
+
             tcr: "#f9fafb",
             tty: "system",
             yyse: "20px",
@@ -656,6 +814,35 @@ export const THEME_PRESETS: Record<DefaultThemePresetId, BusinessThemeConfig> = 
             itxtse: "14px",
             itxatt: "start",
         },
+        contact: {
+            bgcr: "#000000",
+            br: "1px",
+            bcr: "#1f2937",
+            rs: "16px",
+
+            lcr: "#cbd5e1",
+            lty: "system",
+            ltse: "12px",
+
+            icr: "#e5e7eb",
+            ibgcr: "#000000",
+            ibr: "1px",
+            ibcr: "#1f2937",
+            irs: "12px",
+            ipcr: "#64748b",
+            ifcr: "#475569",
+
+            btbg: "#05966922",
+            btbgv: "#05966933",
+            btbr: "1px",
+            btbrcr: "#10b98166",
+            btrs: "12px",
+            btcr: "#a7f3d0",
+            btty: "system",
+            bttse: "16px",
+            btan: "start",
+        },
+
     },
 };
 
@@ -733,6 +920,12 @@ export function mergeTheme(
             ...(base?.productive ?? {}),
             ...(override?.productive ?? {}),
         },
+        contact: {
+            ...presetBase.contact,
+            ...(base?.contact ?? {}),
+            ...(override?.contact ?? {}),
+        },
+
     };
 }
 

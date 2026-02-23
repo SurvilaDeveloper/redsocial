@@ -3,7 +3,7 @@
 
 import React, { useMemo } from "react";
 import Link from "next/link";
-import { LayoutGrid, Mail } from "lucide-react";
+import { LayoutGrid } from "lucide-react";
 
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -13,7 +13,6 @@ import type { BusinessDTO, BusinessSiteDTO, BusinessPageDTO } from "@/types/busi
 import { TemplateTabs } from "@/components/site-templates/TemplateTabs";
 import { TemplateSiteHeader } from "@/components/site-templates/TemplateSiteHeader";
 import { TemplateSectionRenderer } from "@/components/site-templates/sections/TemplateSectionRenderer";
-import { TemplateContactSection } from "@/components/site-templates/TemplateContactSection";
 
 export function TemplateSiteView({
     templateId,
@@ -38,7 +37,6 @@ export function TemplateSiteView({
 
     const current = useMemo(() => {
         if (tab === "home") return { kind: "home" as const };
-        if (tab === "contacto") return { kind: "contact" as const };
 
         const page = pages.find((p) => p.slug === tab);
         if (page) return { kind: "page" as const, page };
@@ -60,21 +58,10 @@ export function TemplateSiteView({
                             : "lg:w-[83%] w-full";
 
     return (
-        <div
-            className="flex flex-row items-center justify-center w-screen"
-            style={{ backgroundColor: business.surfaceBgColor }}
-        >
-            <div
-                className={cn(widthPCent, "min-h-dvh text-slate-100 relative pb-6")}
-                style={{ backgroundColor: business.bgColor }}
-            >
+        <div className="flex flex-row items-center justify-center w-screen" style={{ backgroundColor: business.surfaceBgColor }}>
+            <div className={cn(widthPCent, "min-h-dvh text-slate-100 relative pb-6")} style={{ backgroundColor: business.bgColor }}>
                 <div className="bg-black sticky top-0 z-50 w-full">
-                    <TemplateTabs
-                        templateId={templateId}
-                        nav={sortedNav as any}
-                        activeTab={tab}
-                        pages={pages as any}
-                    />
+                    <TemplateTabs templateId={templateId} nav={sortedNav as any} activeTab={tab} pages={pages as any} />
                 </div>
 
                 {(business.name || business.headline || business.category) && (
@@ -108,10 +95,7 @@ export function TemplateSiteView({
                     {current.kind === "home" && (
                         <div className="flex flex-col gap-4">
                             {site.homeContent?.length ? (
-                                <TemplateSectionRenderer
-                                    sections={site.homeContent}
-                                    templateId={templateId}
-                                />
+                                <TemplateSectionRenderer sections={site.homeContent} templateId={templateId} />
                             ) : (
                                 <Card className="bg-slate-950 border-slate-800 p-5 rounded-2xl">
                                     <div className="flex items-center gap-2 text-slate-200">
@@ -127,42 +111,11 @@ export function TemplateSiteView({
                     )}
 
                     {current.kind === "page" && (
-                        <Card className="p-5 border-none"
-                            style={{ backgroundColor: business.bgColor }}
-                        >
-                            {/*<div className="text-lg font-semibold">{current.page.title}</div>*/}
+                        <Card className="border-none" style={{ backgroundColor: business.bgColor }}>
                             <div className="mt-4">
-                                <TemplateSectionRenderer
-                                    sections={current.page.content}
-                                    templateId={templateId}
-                                />
+                                <TemplateSectionRenderer sections={current.page.content} templateId={templateId} />
                             </div>
                         </Card>
-                    )}
-
-                    {current.kind === "contact" && (
-                        <div className="flex flex-col gap-4">
-                            <Card className="bg-slate-950 border-slate-800 p-5 rounded-2xl">
-                                <div className="text-lg font-semibold">Contacto</div>
-                                <p className="mt-2 text-sm text-slate-400">
-                                    Este es un sitio de ejemplo (template). El contacto real se habilita al aplicarlo a un negocio.
-                                </p>
-                            </Card>
-
-                            {site.showContactForm && site.contactEmailExists ? (
-                                <TemplateContactSection />
-                            ) : (
-                                <Card className="bg-slate-950 border-slate-800 p-5 rounded-2xl">
-                                    <div className="flex items-center gap-2 text-slate-300">
-                                        <Mail size={16} className="opacity-80" />
-                                        <span>Formulario deshabilitado</span>
-                                    </div>
-                                    <p className="mt-2 text-sm text-slate-400">
-                                        Este template no tiene configurado el contacto por email.
-                                    </p>
-                                </Card>
-                            )}
-                        </div>
                     )}
 
                     {current.kind === "notfound" && (
@@ -172,10 +125,7 @@ export function TemplateSiteView({
                                 Este tab no existe. Revisá la navegación del template.
                             </p>
                             <div className="mt-4">
-                                <Link
-                                    href={`/t/${templateId}/home`}
-                                    className="text-sm text-emerald-300 hover:text-emerald-200"
-                                >
+                                <Link href={`/t/${templateId}/home`} className="text-sm text-emerald-300 hover:text-emerald-200">
                                     Volver al inicio
                                 </Link>
                             </div>
@@ -186,4 +136,3 @@ export function TemplateSiteView({
         </div>
     );
 }
-

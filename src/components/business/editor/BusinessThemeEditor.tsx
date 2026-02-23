@@ -355,6 +355,8 @@ const UI_SECTIONS: Record<Exclude<keyof BusinessThemeConfig, "preset">, SectionD
                 subtitle: "color de fondo y redondeo de las tarjetas",
                 fields: [
                     { key: "cbcr", label: "Gallery card background color", kind: "color" },
+                    { key: "cbr", label: "Gallery card border", kind: "text", placeholder: "1px", normalize: (v) => clampText(v, "1px"), pxPreset: "border" },
+                    { key: "cbrcr", label: "Gallery card border color", kind: "color" },
                     { key: "crs", label: "Gallery card radius", kind: "text", placeholder: "6px", normalize: (v) => clampText(v, "8px"), pxPreset: "radius" },
                 ],
             },
@@ -466,6 +468,16 @@ const UI_SECTIONS: Record<Exclude<keyof BusinessThemeConfig, "preset">, SectionD
                 ],
             },
             {
+                title: "Tarjeta",
+                subtitle: "Fondo, borde, radio.",
+                fields: [
+                    { key: "cbgcr", label: "Productive card background color", kind: "color" },
+                    { key: "cbr", label: "Productive card border", kind: "text", placeholder: "1px", normalize: (v) => clampText(v, "1px"), pxPreset: "border" },
+                    { key: "cbrcr", label: "Productive card border color", kind: "color" },
+                    { key: "crs", label: "Productive card radius", kind: "text", placeholder: "6px", normalize: (v) => clampText(v, "6px"), pxPreset: "radius" },
+                ],
+            },
+            {
                 title: "Título",
                 subtitle: "Encabezado de la sección.",
                 fields: [
@@ -497,7 +509,59 @@ const UI_SECTIONS: Record<Exclude<keyof BusinessThemeConfig, "preset">, SectionD
             },
         ],
     },
-
+    contact: {
+        title: "Contacto",
+        subtitle: "Formulario de contacto (card, inputs, labels, botón).",
+        groups: [
+            {
+                title: "Contenedor",
+                subtitle: "Fondo, borde y radio del bloque.",
+                fields: [
+                    { key: "bgcr", label: "Contact background color", kind: "color" },
+                    { key: "br", label: "Contact border", kind: "text", placeholder: "1px", normalize: (v) => clampText(v, "1px"), pxPreset: "border" },
+                    { key: "bcr", label: "Contact border color", kind: "color" },
+                    { key: "rs", label: "Contact radius", kind: "text", placeholder: "16px", normalize: (v) => clampText(v, "16px"), pxPreset: "radius" },
+                ],
+            },
+            {
+                title: "Labels",
+                subtitle: "Color y tipografía de labels.",
+                fields: [
+                    { key: "lcr", label: "Label color", kind: "color" },
+                    { key: "lty", label: "Label typography", kind: "select", options: TYPO_OPTIONS, isFont: true },
+                    { key: "ltse", label: "Label size", kind: "text", placeholder: "12px", normalize: (v) => clampTextAllowEmpty(v), isFontSize: true },
+                ],
+            },
+            {
+                title: "Inputs",
+                subtitle: "Inputs + textarea.",
+                fields: [
+                    { key: "icr", label: "Input text color", kind: "color" },
+                    { key: "ibgcr", label: "Input background", kind: "color" },
+                    { key: "ibr", label: "Input border", kind: "text", placeholder: "1px", normalize: (v) => clampText(v, "1px"), pxPreset: "border" },
+                    { key: "ibcr", label: "Input border color", kind: "color" },
+                    { key: "irs", label: "Input radius", kind: "text", placeholder: "12px", normalize: (v) => clampText(v, "12px"), pxPreset: "radius" },
+                    { key: "ipcr", label: "Placeholder color", kind: "color" },
+                    { key: "ifcr", label: "Focus border color", kind: "color" },
+                ],
+            },
+            {
+                title: "Botón",
+                subtitle: "Estilo del botón enviar.",
+                fields: [
+                    { key: "btbg", label: "Button background", kind: "color" },
+                    { key: "btbgv", label: "Button hover background", kind: "color" },
+                    { key: "btbr", label: "Button border", kind: "text", placeholder: "1px", normalize: (v) => clampText(v, "1px"), pxPreset: "border" },
+                    { key: "btbrcr", label: "Button border color", kind: "color" },
+                    { key: "btrs", label: "Button radius", kind: "text", placeholder: "12px", normalize: (v) => clampText(v, "12px"), pxPreset: "radius" },
+                    { key: "btcr", label: "Button text color", kind: "color" },
+                    { key: "btty", label: "Button typography", kind: "select", options: TYPO_OPTIONS, isFont: true },
+                    { key: "bttse", label: "Button text size", kind: "text", placeholder: "16px", normalize: (v) => clampTextAllowEmpty(v), isFontSize: true },
+                    { key: "btan", label: "Button align", kind: "select", options: ALIGN_OPTIONS },
+                ],
+            },
+        ],
+    },
     components: {
         title: "Componentes",
         subtitle: "Variantes globales para botones y cards.",
@@ -1010,14 +1074,7 @@ export function BusinessThemeEditor({
                         {/* Secciones */}
                         {(
                             [
-                                "header",
-                                "hero",
-                                "features",
-                                "gallery",
-                                "text",
-                                "cta",
-                                "productive",
-                                "components",
+                                "header", "hero", "features", "gallery", "text", "cta", "productive", "contact", "components",
                             ] as (keyof typeof UI_SECTIONS)[]
                         ).map((sectionKey) => {
                             const s = UI_SECTIONS[sectionKey];
