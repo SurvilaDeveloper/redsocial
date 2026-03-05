@@ -3,13 +3,24 @@
 
 import React, { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
-import { ExternalLink, Loader2, Save, RotateCcw } from "lucide-react";
+import {
+    ExternalLink,
+    Loader2,
+    Save,
+    RotateCcw,
+    ChevronDown,
+    ChevronUp,
+} from "lucide-react";
 
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-import type { BusinessThemeConfig, ThemePresetId, DefaultThemePresetId } from "@/types/business-theme";
+import type {
+    BusinessThemeConfig,
+    ThemePresetId,
+    DefaultThemePresetId,
+} from "@/types/business-theme";
 import { DEFAULT_PRESETS, THEME_PRESETS, mergeTheme } from "@/types/business-theme";
 
 import { previewFontFamily } from "@/lib/fonts/families";
@@ -174,28 +185,51 @@ function GroupBlock({
     );
 }
 
-function SectionBlock({
+function CollapsibleSectionBlock({
+    sectionKey,
     title,
     subtitle,
     right,
+    open,
+    onToggle,
     children,
 }: {
+    sectionKey: string;
     title: string;
     subtitle?: string;
     right?: React.ReactNode;
+    open: boolean;
+    onToggle: () => void;
     children: React.ReactNode;
 }) {
     return (
         <div className="rounded-2xl border border-slate-800 bg-slate-900/30 p-4">
             <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                    <div className="font-medium">{title}</div>
-                    {subtitle ? <div className="text-sm text-slate-400 mt-1">{subtitle}</div> : null}
-                </div>
+                <button
+                    type="button"
+                    onClick={onToggle}
+                    className="group flex min-w-[240px] flex-1 items-start gap-3 text-left"
+                    aria-expanded={open}
+                    aria-controls={`section-${sectionKey}`}
+                >
+                    <span className="mt-0.5 text-slate-300 group-hover:text-slate-100">
+                        {open ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                    </span>
+
+                    <span className="block">
+                        <span className="block font-medium text-slate-100">{title}</span>
+                        {subtitle ? <span className="block text-sm text-slate-400 mt-1">{subtitle}</span> : null}
+                    </span>
+                </button>
+
                 {right ? <div className="shrink-0">{right}</div> : null}
             </div>
 
-            <div className="mt-4 grid gap-4">{children}</div>
+            {open ? (
+                <div id={`section-${sectionKey}`} className="mt-4 flex flex-col items-center justify-center max-w-2xl gap-4">
+                    {children}
+                </div>
+            ) : null}
         </div>
     );
 }
@@ -203,7 +237,10 @@ function SectionBlock({
 /**
  * Config explícita: secciones -> subgrupos -> fields
  */
-const UI_SECTIONS: Record<Exclude<keyof BusinessThemeConfig, "preset">, SectionDef> = {
+const UI_SECTIONS: Record<
+    Exclude<keyof BusinessThemeConfig, "preset">,
+    SectionDef
+> = {
     header: {
         title: "Barra de navegación",
         subtitle: "Estilo de la barra de navegación (pestañas).",
@@ -419,7 +456,6 @@ const UI_SECTIONS: Record<Exclude<keyof BusinessThemeConfig, "preset">, SectionD
                 subtitle: "Tipografía, tamaño, color y alineación.",
                 fields: [
                     { key: "ticr", label: "CTA title color", kind: "color" },
-                    // ✅ ojo: en tu UI tenías "tiy" pero en el type es "tity"
                     { key: "tity", label: "CTA title typography", kind: "select", options: TYPO_OPTIONS, isFont: true },
                     { key: "titse", label: "CTA title size", kind: "text", placeholder: "16px", normalize: (v) => clampTextAllowEmpty(v), isFontSize: true },
                     { key: "tiatt", label: "CTA title align text", kind: "select", options: ALIGN_OPTIONS },
@@ -509,6 +545,7 @@ const UI_SECTIONS: Record<Exclude<keyof BusinessThemeConfig, "preset">, SectionD
             },
         ],
     },
+
     contact: {
         title: "Contacto",
         subtitle: "Formulario de contacto (card, inputs, labels, botón).",
@@ -562,6 +599,7 @@ const UI_SECTIONS: Record<Exclude<keyof BusinessThemeConfig, "preset">, SectionD
             },
         ],
     },
+
     components: {
         title: "Componentes",
         subtitle: "Variantes globales para botones y cards.",
@@ -604,11 +642,12 @@ function buildThemeForPreset(
 ): BusinessThemeConfig {
     if (preset === "userPreset") {
         if (userPreset) return mergeTheme({ ...userPreset, preset: "userPreset" });
-        // si todavía no existe, caemos a classic pero marcado como userPreset (para completar)
         return mergeTheme({ ...(THEME_PRESETS.classic as any), preset: "userPreset" });
     }
     return mergeTheme(THEME_PRESETS[preset]);
 }
+
+type SectionKey = keyof typeof UI_SECTIONS;
 
 export function BusinessThemeEditor({
     businessId,
@@ -651,15 +690,44 @@ export function BusinessThemeEditor({
         return base;
     }, []);
 
+    const sectionOrder = useMemo(
+        () =>
+            [
+                "header",
+                "hero",
+                "features",
+                "gallery",
+                "text",
+                "cta",
+                "productive",
+                "contact",
+                "components",
+            ] as SectionKey[],
+        []
+    );
+
+    // ✅ colapsables (sin persistencia)
+    const [openSections, setOpenSections] = useState<Record<string, boolean>>(() =>
+        Object.fromEntries(sectionOrder.map((k) => [String(k), true]))
+    );
+
+    function toggleSection(k: SectionKey) {
+        const key = String(k);
+        setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }));
+    }
+
+    function expandAllSections() {
+        setOpenSections(Object.fromEntries(sectionOrder.map((k) => [String(k), true])));
+    }
+
+    function collapseAllSections() {
+        setOpenSections(Object.fromEntries(sectionOrder.map((k) => [String(k), false])));
+    }
+
     function selectPreset(next: ThemePresetId) {
-        // si el usuario está editando un default y aún no guardó, al cambiar preset descartamos esa intención
         setDirtyDefaultToUserPreset(false);
-
         setPresetState(next);
-
-        // al elegir un preset, el form se actualiza a sus valores
         setTheme(buildThemeForPreset(next, userPreset));
-
         setStatus(null);
     }
 
@@ -726,10 +794,6 @@ export function BusinessThemeEditor({
     async function save() {
         setStatus(null);
 
-        // ✅ Decide qué guardar:
-        // - Si estaba en default y tocó algo => se crea/actualiza userPreset y se activa userPreset
-        // - Si estaba en userPreset => se actualiza themeConfig y sigue activo userPreset
-        // - Si estaba en default y NO tocó nada => solo se actualiza themePreset (no toca themeConfig)
         const shouldWriteUserPreset =
             preset === "userPreset" || (isDefaultPreset(preset) && dirtyDefaultToUserPreset);
 
@@ -757,7 +821,6 @@ export function BusinessThemeEditor({
                     return;
                 }
 
-                // ✅ actualizar estado local post-save
                 if (shouldWriteUserPreset) {
                     const saved = { ...theme, preset: "userPreset" } as BusinessThemeConfig;
                     setUserPreset(saved);
@@ -765,7 +828,6 @@ export function BusinessThemeEditor({
                     setTheme(mergeTheme(saved));
                     setDirtyDefaultToUserPreset(false);
                 } else {
-                    // solo preset default guardado
                     setPresetState(nextPresetToDb);
                     setTheme(buildThemeForPreset(nextPresetToDb, userPreset));
                     setDirtyDefaultToUserPreset(false);
@@ -779,7 +841,6 @@ export function BusinessThemeEditor({
     }
 
     function renderField(sectionKey: keyof typeof UI_SECTIONS, def: FieldDef) {
-        // components con path
         if (sectionKey === "components") {
             const path = def.key as "button.variant" | "card.shadow";
             const value =
@@ -992,7 +1053,26 @@ export function BusinessThemeEditor({
                                 <ExternalLink size={16} className="mr-2 opacity-80" />
                                 Ver público
                             </Link>
+
                             <BackToStudioBusiness label="Volver" />
+
+                            {/* Expand / Collapse all */}
+                            <button
+                                type="button"
+                                onClick={expandAllSections}
+                                className="inline-flex items-center px-3 py-2 text-sm rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-800"
+                                title="Expandir todas las secciones"
+                            >
+                                Expandir todo
+                            </button>
+                            <button
+                                type="button"
+                                onClick={collapseAllSections}
+                                className="inline-flex items-center px-3 py-2 text-sm rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-800"
+                                title="Colapsar todas las secciones"
+                            >
+                                Colapsar todo
+                            </button>
 
                             {/* Toggle compact mode */}
                             <button
@@ -1030,7 +1110,7 @@ export function BusinessThemeEditor({
 
             <main className="mx-auto w-full max-w-6xl px-3 py-6">
                 <Card className="bg-slate-950 border-slate-800 p-4 rounded-2xl">
-                    <div className="grid gap-4">
+                    <div className="grid grid-cols-1 gap-4">
                         {/* Presets */}
                         <div className="rounded-2xl border border-slate-800 bg-slate-900/30 p-4">
                             <div className="font-medium">Preset</div>
@@ -1041,7 +1121,6 @@ export function BusinessThemeEditor({
                             <div className="mt-3 flex flex-wrap gap-2">
                                 {presetButtons.map((p) => {
                                     const active = preset === p;
-
                                     const disabled = p === "userPreset" ? !userPresetEnabled : false;
 
                                     return (
@@ -1071,22 +1150,23 @@ export function BusinessThemeEditor({
                             </div>
                         </div>
 
-                        {/* Secciones */}
-                        {(
-                            [
-                                "header", "hero", "features", "gallery", "text", "cta", "productive", "contact", "components",
-                            ] as (keyof typeof UI_SECTIONS)[]
-                        ).map((sectionKey) => {
+                        {/* Secciones colapsables */}
+                        {sectionOrder.map((sectionKey) => {
                             const s = UI_SECTIONS[sectionKey];
                             const allFields = getAllFieldsOfSection(sectionKey);
 
+                            const isOpen = openSections[String(sectionKey)] ?? true;
+
                             return (
-                                <SectionBlock
+                                <CollapsibleSectionBlock
                                     key={sectionKey}
+                                    sectionKey={String(sectionKey)}
                                     title={s.title}
                                     subtitle={compactMode ? `${s.subtitle ?? ""} (compacto)` : s.subtitle}
+                                    open={isOpen}
+                                    onToggle={() => toggleSection(sectionKey)}
                                     right={
-                                        <>
+                                        <div className="flex flex-wrap gap-2">
                                             <Button
                                                 onClick={save}
                                                 disabled={pending}
@@ -1104,6 +1184,7 @@ export function BusinessThemeEditor({
                                                     </>
                                                 )}
                                             </Button>
+
                                             <Button
                                                 type="button"
                                                 variant="outline"
@@ -1114,11 +1195,10 @@ export function BusinessThemeEditor({
                                                 <RotateCcw size={16} className="mr-2 opacity-80" />
                                                 Reset sección
                                             </Button>
-                                        </>
-
+                                        </div>
                                     }
                                 >
-                                    {!compactMode && (
+                                    {!compactMode ? (
                                         <>
                                             {s.groups.map((g) => (
                                                 <GroupBlock
@@ -1130,9 +1210,7 @@ export function BusinessThemeEditor({
                                                 </GroupBlock>
                                             ))}
                                         </>
-                                    )}
-
-                                    {compactMode && (
+                                    ) : (
                                         <div className="rounded-2xl border border-slate-800 bg-slate-950/40 p-4">
                                             <div className="text-xs text-slate-400">
                                                 Todos los campos de{" "}
@@ -1143,7 +1221,7 @@ export function BusinessThemeEditor({
                                             </div>
                                         </div>
                                     )}
-                                </SectionBlock>
+                                </CollapsibleSectionBlock>
                             );
                         })}
                     </div>

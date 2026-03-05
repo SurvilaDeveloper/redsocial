@@ -253,8 +253,6 @@ model User {
   @@map("user")
 }
 
-// prisma/schema.prisma
-
 model Curriculum {
   id      Int     @id @default(autoincrement())
   userId  Int     @unique

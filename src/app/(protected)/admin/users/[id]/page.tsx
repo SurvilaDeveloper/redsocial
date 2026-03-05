@@ -88,7 +88,7 @@ export default async function AdminUserDetailPage({
                     followers: true,
                     following: true,
                     productListings: true,
-                    curricula: true,
+                    curricula: true, ///////////////////// CREO QUE ESTA MAL
                     curriculumMedias: true,
                     trustedDevices: true,
                     securityLogs: true,
