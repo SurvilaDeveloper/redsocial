@@ -26,6 +26,392 @@ type WallContext = {
     showInFeedLoading?: boolean;
 };
 
+/* ===========================
+ *  Link embeds helpers
+ * =========================== */
+
+type EmbedInfo = {
+    url: string; // url original encontrada
+    embedUrl: string; // url lista para iframe
+    provider: "youtube" | "vimeo" | "twitch" | "spotify" | "tiktok" | "instagram";
+};
+
+function extractUrls(text: string): string[] {
+    if (!text) return [];
+    const re = /(?:https?:\/\/|www\.)[^\s<>()]+/gi;
+    const matches = text.match(re) ?? [];
+    const normalized = matches.map((u) => (u.startsWith("www.") ? `https://${u}` : u));
+    return Array.from(new Set(normalized));
+}
+
+function safeUrl(u: string): URL | null {
+    try {
+        return new URL(u);
+    } catch {
+        return null;
+    }
+}
+
+function youtubeIdFrom(url: URL): string | null {
+    const host = url.hostname.replace(/^www\./, "");
+
+    if (host === "youtu.be") {
+        const id = url.pathname.split("/").filter(Boolean)[0];
+        return id || null;
+    }
+
+    if (host === "youtube.com" || host === "m.youtube.com") {
+        const v = url.searchParams.get("v");
+        if (v) return v;
+
+        const parts = url.pathname.split("/").filter(Boolean);
+        if (parts[0] === "shorts" && parts[1]) return parts[1];
+        if (parts[0] === "embed" && parts[1]) return parts[1];
+    }
+
+    if (host === "youtube-nocookie.com") {
+        const parts = url.pathname.split("/").filter(Boolean);
+        if (parts[0] === "embed" && parts[1]) return parts[1];
+    }
+
+    return null;
+}
+
+function vimeoIdFrom(url: URL): string | null {
+    const host = url.hostname.replace(/^www\./, "");
+    if (host !== "vimeo.com" && host !== "player.vimeo.com") return null;
+
+    const parts = url.pathname.split("/").filter(Boolean);
+
+    if (host === "player.vimeo.com") {
+        const idx = parts.indexOf("video");
+        const id = idx >= 0 ? parts[idx + 1] : null;
+        return id && /^\d+$/.test(id) ? id : null;
+    }
+
+    const id = parts[0];
+    return id && /^\d+$/.test(id) ? id : null;
+}
+
+function getTwitchParent(): string {
+    // Twitch exige parent=tu-dominio. Como esto es "use client", window existe.
+    try {
+        const h = window.location.hostname;
+        return h || "localhost";
+    } catch {
+        return "localhost";
+    }
+}
+
+function toEmbed(rawUrl: string): EmbedInfo | null {
+    const url = safeUrl(rawUrl);
+    if (!url) return null;
+
+    const host = url.hostname.replace(/^www\./, "");
+
+    /* ---------------- YouTube ---------------- */
+    const yid = youtubeIdFrom(url);
+    if (yid) {
+        return {
+            url: rawUrl,
+            embedUrl: `https://www.youtube-nocookie.com/embed/${encodeURIComponent(yid)}?rel=0&modestbranding=1`,
+            provider: "youtube",
+        };
+    }
+
+    /* ---------------- Vimeo ---------------- */
+    const vid = vimeoIdFrom(url);
+    if (vid) {
+        return {
+            url: rawUrl,
+            embedUrl: `https://player.vimeo.com/video/${encodeURIComponent(vid)}`,
+            provider: "vimeo",
+        };
+    }
+
+    /* ---------------- Twitch ---------------- */
+    // - Canal: https://www.twitch.tv/<channel>
+    // - Video: https://www.twitch.tv/videos/<id>
+    if (host === "twitch.tv") {
+        const parts = url.pathname.split("/").filter(Boolean);
+
+        if (parts.length === 1) {
+            const channel = parts[0];
+            return {
+                url: rawUrl,
+                embedUrl: `https://player.twitch.tv/?channel=${encodeURIComponent(channel)}&parent=${encodeURIComponent(
+                    getTwitchParent()
+                )}`,
+                provider: "twitch",
+            };
+        }
+
+        if (parts[0] === "videos" && parts[1]) {
+            return {
+                url: rawUrl,
+                embedUrl: `https://player.twitch.tv/?video=v${encodeURIComponent(parts[1])}&parent=${encodeURIComponent(
+                    getTwitchParent()
+                )}`,
+                provider: "twitch",
+            };
+        }
+    }
+
+    /* ---------------- Spotify ---------------- */
+    // https://open.spotify.com/track/...
+    // https://open.spotify.com/playlist/...
+    // => https://open.spotify.com/embed/track/...
+    if (host === "open.spotify.com") {
+        const path = url.pathname; // /track/... /playlist/... /album/... /episode/... /show/...
+        return {
+            url: rawUrl,
+            embedUrl: `https://open.spotify.com/embed${path}`,
+            provider: "spotify",
+        };
+    }
+
+    /* ---------------- TikTok ---------------- */
+    // https://www.tiktok.com/@user/video/<id>
+    // => https://www.tiktok.com/embed/v2/<id>
+    if (host === "tiktok.com" || host.endsWith(".tiktok.com")) {
+        const parts = url.pathname.split("/").filter(Boolean);
+        const idx = parts.indexOf("video");
+        if (idx !== -1 && parts[idx + 1]) {
+            const id = parts[idx + 1];
+            return {
+                url: rawUrl,
+                embedUrl: `https://www.tiktok.com/embed/v2/${encodeURIComponent(id)}`,
+                provider: "tiktok",
+            };
+        }
+    }
+
+    /* ---------------- Instagram ---------------- */
+    // https://www.instagram.com/p/<code>/
+    // https://www.instagram.com/reel/<code>/
+    // https://www.instagram.com/tv/<code>/
+    // => .../<type>/<code>/embed
+    if (host === "instagram.com") {
+        const parts = url.pathname.split("/").filter(Boolean);
+        const type = parts[0];
+        const code = parts[1];
+
+        if ((type === "p" || type === "reel" || type === "tv") && code) {
+            return {
+                url: rawUrl,
+                embedUrl: `https://www.instagram.com/${type}/${encodeURIComponent(code)}/embed`,
+                provider: "instagram",
+            };
+        }
+    }
+
+    return null;
+}
+
+function linkifyText(
+    text: string
+): Array<{ type: "text"; value: string } | { type: "link"; value: string }> {
+    if (!text) return [{ type: "text", value: "" }];
+
+    const re = /((?:https?:\/\/|www\.)[^\s<>()]+)/gi;
+    const parts: Array<{ type: "text" | "link"; value: string }> = [];
+
+    let lastIndex = 0;
+    let m: RegExpExecArray | null;
+
+    while ((m = re.exec(text)) !== null) {
+        const start = m.index;
+        const end = start + m[0].length;
+
+        if (start > lastIndex) {
+            parts.push({ type: "text", value: text.slice(lastIndex, start) });
+        }
+        parts.push({ type: "link", value: m[0] });
+        lastIndex = end;
+    }
+
+    if (lastIndex < text.length) {
+        parts.push({ type: "text", value: text.slice(lastIndex) });
+    }
+
+    return parts;
+}
+
+function LinkifiedDescription({
+    text,
+    onToggleExpand,
+    className,
+    maxEmbeds = 2,
+}: {
+    text: string;
+    onToggleExpand: () => void;
+    className?: string;
+    maxEmbeds?: number;
+}) {
+    const urls = useMemo(() => extractUrls(text), [text]);
+
+    const embeds = useMemo(() => {
+        if (!urls.length) return [];
+
+        const e = toEmbed(urls[0]); // ✅ solo el primer link
+        return e ? [e] : [];
+    }, [urls]);
+
+    const tokens = useMemo(() => linkifyText(text), [text]);
+
+    // --- viewport pause: remount iframe cuando sale del viewport ---
+    const hostRefs = useRef<Record<string, HTMLDivElement | null>>({});
+    const [reloadNonce, setReloadNonce] = useState<Record<string, number>>({});
+
+    useEffect(() => {
+        if (!embeds.length) return;
+
+        const obs = new IntersectionObserver(
+            (entries) => {
+                for (const entry of entries) {
+                    const el = entry.target as HTMLDivElement;
+                    const id = el.dataset.embedId;
+                    if (!id) continue;
+
+                    // Si sale del viewport -> force remount (corta reproducción)
+                    if (!entry.isIntersecting) {
+                        setReloadNonce((prev) => ({ ...prev, [id]: (prev[id] ?? 0) + 1 }));
+                    }
+                }
+            },
+            {
+                root: null,
+                // “sale del viewport” cuando no hay nada visible.
+                threshold: 0,
+                // un pequeño margen para cortar un poquito antes
+                rootMargin: "0px 0px -15% 0px",
+            }
+        );
+
+        // observar todos los contenedores actuales
+        for (const e of embeds) {
+            const id = e.embedUrl; // id estable por embed
+            const node = hostRefs.current[id];
+            if (node) obs.observe(node);
+        }
+
+        return () => obs.disconnect();
+    }, [embeds]);
+
+    const ratioPaddingTop = (provider: EmbedInfo["provider"]) => {
+        if (provider === "spotify") return "0";
+        return "56.25%"; // 16:9
+    };
+
+    const fixedHeight = (provider: EmbedInfo["provider"]) => {
+        if (provider === "spotify") return 152;
+        if (provider === "instagram") return 480;
+        if (provider === "tiktok") return 560;
+        return null;
+    };
+
+    return (
+        <div className="mt-2">
+            <pre
+                onClick={onToggleExpand}
+                title="Click para ver completo / contraer"
+                className={
+                    className ??
+                    "text-gray-200 w-full whitespace-pre-wrap break-words cursor-pointer select-none"
+                }
+            >
+                {tokens.map((t, idx) => {
+                    if (t.type === "text") return <React.Fragment key={idx}>{t.value}</React.Fragment>;
+
+                    const href = t.value.startsWith("www.") ? `https://${t.value}` : t.value;
+
+                    return (
+                        <a
+                            key={idx}
+                            href={href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()} // no expand/collapse al clickear link
+                            className="underline text-sky-300 hover:text-sky-200"
+                        >
+                            {t.value}
+                        </a>
+                    );
+                })}
+            </pre>
+
+            {embeds.length > 0 && (
+                <div className="mt-3 flex flex-col gap-3">
+                    {embeds.map((e) => {
+                        const id = e.embedUrl; // id estable por embed detectado
+                        const nonce = reloadNonce[id] ?? 0;
+                        const h = fixedHeight(e.provider);
+                        const pad = ratioPaddingTop(e.provider);
+
+                        // clave que cambia cuando el embed sale del viewport
+                        const iframeKey = `${id}::${nonce}`;
+
+                        return (
+                            <div
+                                key={id}
+                                ref={(node) => {
+                                    hostRefs.current[id] = node;
+                                }}
+                                data-embed-id={id}
+                                className="w-full overflow-hidden rounded-xl border border-slate-800 bg-black"
+                            >
+                                {h ? (
+                                    <div className="w-full">
+                                        <iframe
+                                            key={iframeKey}
+                                            className="h-full w-full"
+                                            style={{ height: h }}
+                                            src={e.embedUrl}
+                                            title={`embed-${e.provider}`}
+                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                            allowFullScreen
+                                            loading="lazy"
+                                        />
+                                    </div>
+                                ) : (
+                                    <div className="relative w-full" style={{ paddingTop: pad }}>
+                                        <iframe
+                                            key={iframeKey}
+                                            className="absolute inset-0 h-full w-full"
+                                            src={e.embedUrl}
+                                            title={`embed-${e.provider}`}
+                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                            allowFullScreen
+                                            loading="lazy"
+                                        />
+                                    </div>
+                                )}
+
+                                <div className="px-3 py-2 text-[11px] text-slate-300">
+                                    Preview:{" "}
+                                    <a
+                                        href={e.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="underline hover:text-slate-100"
+                                        onClick={(ev) => ev.stopPropagation()}
+                                    >
+                                        {e.url}
+                                    </a>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
+        </div>
+    );
+}
+
+/* ===========================
+ *  PostCard
+ * =========================== */
+
 export function PostCard({
     session,
     post,
@@ -80,7 +466,9 @@ export function PostCard({
     const [actionPostId, setActionPostId] = useState<number | null>(null);
 
     const [enableToViewState, setEnableToViewState] = useState<EnableToView | null | undefined>(enableToView);
-    const [showOwnerPanelState, setShowOwnerPanelState] = useState<boolean | undefined>(showOwnerPanel ? showOwnerPanel : true);
+    const [showOwnerPanelState, setShowOwnerPanelState] = useState<boolean | undefined>(
+        showOwnerPanel ? showOwnerPanel : true
+    );
     const [selectedViewModeState, setSelectedViewModeState] = useState<number>(selectedViewMode ? selectedViewMode : 0);
 
     const [shareOpen, setShareOpen] = useState(false);
@@ -101,7 +489,6 @@ export function PostCard({
             // noop
         }
     };
-
 
     // Dedupe: no spamear "view" si re-renderiza el detail
     const viewedRef = useRef<Record<number, boolean>>({});
@@ -189,15 +576,11 @@ export function PostCard({
         const postId = currentPost.id;
         const t0 = performance.now();
 
-        // si querés: opcional “ping” inmediato (sin dwell) NO lo recomiendo si ya mandás al cerrar
-        // void trackInterestEvent({ postId, type: "view" });
-
         return () => {
             const dwellMs = Math.max(0, Math.round(performance.now() - t0));
             void trackInterestEvent({ postId, type: "view", dwellMs });
         };
     }, [variant, currentPost?.id, sessionUserId]);
-
 
     const canCreatePostComment = Boolean(session?.user?.id) && newComment.trim().length > 0 && !commentLoading;
 
@@ -626,13 +1009,13 @@ export function PostCard({
                                 postId={currentPost.id}
                             />
 
-                            <pre
-                                onClick={() => setShowFullDesc((v) => !v)}
-                                title={showFullDesc ? "Click para contraer" : "Click para ver completo"}
+                            {/* ✅ Descripción con links + embeds */}
+                            <LinkifiedDescription
+                                text={shownDesc}
+                                onToggleExpand={() => setShowFullDesc((v) => !v)}
                                 className="mt-2 text-gray-200 w-full whitespace-pre-wrap break-words cursor-pointer select-none"
-                            >
-                                {shownDesc}
-                            </pre>
+                                maxEmbeds={2}
+                            />
 
                             <div className="mt-2 flex flex-row items-center gap-3">
                                 {enableToViewState?.likes && (

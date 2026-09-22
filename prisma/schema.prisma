@@ -5,7 +5,7 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   //url      = env("DATABASE_URL")
 }
 
@@ -41,14 +41,16 @@ model Account {
   providerAccountId        String    @db.VarChar(100)
   refresh_token            String?   @db.Text
   refresh_token_expires_in Int?
-  scope                    String?
-  session_state            String?
+  scope                    String?   @db.VarChar(255)
+  session_state            String?   @db.VarChar(255)
   token_type               String?
   updatedAt                DateTime?
-  active                   Int?      @default(1) @db.TinyInt
-  user                     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  active                   Int?      @default(1)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId], map: "Account_provider_providerAccountId_key")
+  @@index([userId])
   @@map("account")
 }
 
@@ -139,7 +141,7 @@ model User {
   createdAt                 DateTime?         @default(now())
   updatedAt                 DateTime?
   deletedAt                 DateTime?
-  active                    Int?              @default(1) @db.TinyInt
+  active                    Int?              @default(1)
 
   // Información de perfil extendida
   bio         String?   @db.VarChar(500)
@@ -166,8 +168,8 @@ model User {
   occupation       String? @db.VarChar(100)
   company          String? @db.VarChar(100)
   dataVerifiedCode String? @db.VarChar(31)
-  dataVerified     Int?    @default(0) @db.TinyInt
-  visibility       Int?    @default(1) @db.TinyInt
+  dataVerified     Int?    @default(0)
+  visibility       Int?    @default(1)
 
   // Configuraciones de seguridad
   twoFactorEnabled    Boolean?  @default(false)
@@ -249,7 +251,11 @@ model User {
   userProductiveKeywords       UserProductiveKeywords[]
   userProductiveProfile        UserProductiveProfile?
   businesses                   Business[]
+  cloudinaryImages             CloudinaryImage[]
 
+  @@index([countryId])
+  @@index([provinceId])
+  @@index([cityId])
   @@map("user")
 }
 
@@ -367,7 +373,7 @@ model UserContentEvent {
   postId    Int
   type      ContentEventType
   weight    Int              @default(1)
-  dwellMs   Int? // opcional: para views "con tiempo"
+  dwellMs   Int?
   createdAt DateTime         @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -375,6 +381,7 @@ model UserContentEvent {
 
   @@index([userId, createdAt])
   @@index([postId])
+  @@index([postId, createdAt])
   @@index([userId, type, createdAt])
 }
 
@@ -468,13 +475,15 @@ model UserProductiveProfile {
 model CloudinaryImage {
   id Int @id @default(autoincrement())
 
-  userId   Int? // nullable si luego borrás usuarios
+  userId Int?
+  user   User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
   url      String
   publicId String @unique
 
-  createdAt          DateTime   @default(now())
-  deletedAt          DateTime?
-  // ✅ back relation (no obligatorio, pero prolijo)
+  createdAt DateTime  @default(now())
+  deletedAt DateTime?
+
   businessesHeaderBg Business[] @relation("BusinessHeaderBgImage")
 
   @@index([userId])
@@ -484,8 +493,8 @@ model Friendship {
   id              Int      @id @default(autoincrement())
   friend_one      Int
   friend_two      Int
-  friend_request  Int      @default(0) @db.TinyInt
-  friend_response Int      @default(0) @db.TinyInt
+  friend_request  Int      @default(0)
+  friend_response Int      @default(0)
   createdAt       DateTime @default(now())
 
   friendOne User @relation("FriendshipOne", fields: [friend_one], references: [id], onDelete: Cascade)
@@ -493,6 +502,7 @@ model Friendship {
 
   @@unique([friend_one, friend_two])
   @@index([friend_one])
+  @@index([friend_two])
   @@map("friendship")
 }
 
@@ -500,12 +510,12 @@ model Post {
   id          Int       @id @default(autoincrement())
   title       String?   @db.VarChar(100)
   description String?   @db.VarChar(1000)
-  imagenumber Int?      @default(1) @db.TinyInt
+  imagenumber Int?      @default(1)
   createdAt   DateTime? @default(now())
   deletedAt   DateTime?
   authorId    Int       @map("user_id")
-  active      Int?      @default(1) @db.TinyInt
-  visibility  Int?      @default(1) @db.TinyInt
+  active      Int?      @default(1)
+  visibility  Int?      @default(1)
 
   author User @relation("PostAuthor", fields: [authorId], references: [id], onDelete: Cascade)
 
@@ -518,6 +528,10 @@ model Post {
   userContentEvents UserContentEvent[]
   postKeywords      PostKeywords?
 
+  @@index([authorId])
+  @@index([authorId, createdAt])
+  @@index([visibility, active])
+  @@index([createdAt])
   @@map("post")
 }
 
@@ -530,13 +544,10 @@ enum WallEntryType {
 model WallEntry {
   id Int @id @default(autoincrement())
 
-  // creación real de la fila (auditoría)
   createdAt DateTime @default(now())
+  eventAt   DateTime @default(now())
 
-  // momento del evento (timeline): PUBLISHED / SHARED / PINNED
-  eventAt DateTime @default(now())
-
-  active Int? @default(1) @db.TinyInt
+  active Int? @default(1)
 
   wallUserId Int
   wallUser   User @relation("WallOwner", fields: [wallUserId], references: [id], onDelete: Cascade)
@@ -551,17 +562,14 @@ model WallEntry {
 
   showInFeed Boolean @default(false)
 
-  // visibilidad “en este muro”
-  visibility Int? @default(1) @db.TinyInt
+  visibility Int? @default(1)
 
-  // 1 sola acción por combinación: (muro, actor, post, tipo)
-  // Para PINNED: te asegura 1 solo pin por post en tu muro (actor=vos).
   @@unique([wallUserId, actorUserId, postId, type], map: "uq_wall_entry_action")
-  // indices para timeline
   @@index([wallUserId, eventAt])
   @@index([wallUserId, createdAt])
   @@index([postId])
   @@index([showInFeed, eventAt])
+  @@index([actorUserId])
   @@map("wall_entry")
 }
 
@@ -575,6 +583,8 @@ model Follow {
   following User @relation("UserFollowing", fields: [followingId], references: [id], onDelete: Cascade)
 
   @@unique([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
   @@map("follow")
 }
 
@@ -603,7 +613,7 @@ model ImageComment {
   comment      String                 @db.VarChar(127)
   createdAt    DateTime               @default(now())
   image_id     Int
-  active       Int?                   @default(1) @db.TinyInt
+  active       Int?                   @default(1)
   who_comments Int
   image        Image                  @relation(fields: [image_id], references: [id], onDelete: Cascade)
   user         User                   @relation(fields: [who_comments], references: [id], onDelete: Cascade)
@@ -619,7 +629,7 @@ model ImageCommentResponse {
   response         String                       @db.VarChar(127)
   createdAt        DateTime                     @default(now())
   image_comment_id Int
-  active           Int?                         @default(1) @db.TinyInt
+  active           Int?                         @default(1)
   who_responses    Int
   image_comment    ImageComment                 @relation(fields: [image_comment_id], references: [id], onDelete: Cascade)
   user             User                         @relation(fields: [who_responses], references: [id], onDelete: Cascade)
@@ -634,7 +644,7 @@ model PostComment {
   comment      String                @db.VarChar(127)
   createdAt    DateTime              @default(now())
   post_id      Int
-  active       Int?                  @default(1) @db.TinyInt
+  active       Int?                  @default(1)
   who_comments Int
   post         Post                  @relation(fields: [post_id], references: [id], onDelete: Cascade)
   user         User                  @relation(fields: [who_comments], references: [id], onDelete: Cascade)
@@ -650,7 +660,7 @@ model PostCommentResponse {
   response        String                      @db.VarChar(127)
   createdAt       DateTime                    @default(now())
   post_comment_id Int
-  active          Int?                        @default(1) @db.TinyInt
+  active          Int?                        @default(1)
   who_responses   Int
   post_comment    PostComment                 @relation(fields: [post_comment_id], references: [id], onDelete: Cascade)
   user            User                        @relation(fields: [who_responses], references: [id], onDelete: Cascade)
@@ -661,20 +671,23 @@ model PostCommentResponse {
 }
 
 model Image {
-  id            Int            @id @default(autoincrement())
-  description   String?        @db.VarChar(1000)
-  imageUrl      String?        @db.VarChar(255)
-  imagePublicId String?
-  createdAt     DateTime       @default(now())
+  id            Int      @id @default(autoincrement())
+  description   String?  @db.VarChar(1000)
+  imageUrl      String?  @db.VarChar(255)
+  imagePublicId String?  @db.VarChar(255)
+  createdAt     DateTime @default(now())
   post_id       Int
-  active        Int?           @default(1) @db.TinyInt
-  index         Int            @default(1) @db.TinyInt
-  post          Post           @relation(fields: [post_id], references: [id], onDelete: Cascade)
-  comments      ImageComment[]
-  image_like    ImageLike[]
-  image_unlike  ImageUnlike[]
+  active        Int?     @default(1)
+  index         Int      @default(1)
+
+  post Post @relation(fields: [post_id], references: [id], onDelete: Cascade)
+
+  comments     ImageComment[]
+  image_like   ImageLike[]
+  image_unlike ImageUnlike[]
 
   @@unique([post_id, index])
+  @@index([post_id])
   @@map("image")
 }
 
@@ -688,6 +701,8 @@ model PostLike {
   post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
 
   @@unique([userId, postId])
+  @@index([userId, postId])
+  @@index([postId])
   @@map("post_like")
 }
 
@@ -701,6 +716,8 @@ model PostUnlike {
   post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
 
   @@unique([userId, postId])
+  @@index([userId, postId])
+  @@index([postId])
   @@map("post_unlike")
 }
 
@@ -714,6 +731,8 @@ model ImageLike {
   image Image @relation(fields: [imageId], references: [id], onDelete: Cascade)
 
   @@unique([userId, imageId])
+  @@index([userId, imageId])
+  @@index([imageId])
   @@map("image_like")
 }
 
@@ -727,6 +746,8 @@ model ImageUnlike {
   image Image @relation(fields: [imageId], references: [id], onDelete: Cascade)
 
   @@unique([userId, imageId])
+  @@index([userId, imageId])
+  @@index([imageId])
   @@map("image_unlike")
 }
 
@@ -895,7 +916,7 @@ model Business {
   category String? @db.VarChar(80)
 
   status    BusinessStatus @default(active)
-  active    Int?           @default(1) @db.TinyInt
+  active    Int?           @default(1)
   deletedAt DateTime?
 
   //Estilos
@@ -909,23 +930,23 @@ model Business {
   headerBgColor String               @default("#222222") @db.VarChar(20)
 
   // ✅ NUEVO: overlay del header (0..100). Si es 0, es como si no existiera.
-  headerOpacityOverlay  Int                   @default(0) @db.TinyInt
+  headerOpacityOverlay  Int                   @default(0)
   // ✅ NUEVO: posición del overlay (gradiente horizontal) o none para overlay parejo
   headerOverlayPosition HeaderOverlayPosition @default(none)
 
   titleColor      String            @default("#cccccc") @db.VarChar(20)
   titleTypography String            @default("system") @db.VarChar(100)
-  titleTextSize   Int               @default(24) @db.TinyInt
+  titleTextSize   Int               @default(24)
   titleAlignText  BusinessAlignText @default(center)
 
   headlineColor      String            @default("#cccccc") @db.VarChar(20)
   headlineTypography String            @default("system") @db.VarChar(100)
-  headlineTextSize   Int               @default(20) @db.TinyInt
+  headlineTextSize   Int               @default(20)
   headlineAlignText  BusinessAlignText @default(center)
 
   categoryColor      String            @default("#cccccc") @db.VarChar(20)
   categoryTypography String            @default("system") @db.VarChar(100)
-  categoryTextSize   Int               @default(20) @db.TinyInt
+  categoryTextSize   Int               @default(20)
   categoryAlignText  BusinessAlignText @default(center)
 
   // ✅ NUEVO: imagen de fondo del header (si existe, pisa el color)
@@ -989,7 +1010,7 @@ model BusinessPage {
   title   String @db.VarChar(100)
   content Json
 
-  active    Int?      @default(1) @db.TinyInt
+  active    Int?      @default(1)
   deletedAt DateTime?
 
   createdAt DateTime @default(now())
@@ -1043,12 +1064,12 @@ model ProductListing {
   currency       String?  @db.VarChar(3)
   clarifications String?  @db.VarChar(500)
 
-  medianumber Int?      @default(0) @db.TinyInt
+  medianumber Int?      @default(0)
   createdAt   DateTime  @default(now())
   deletedAt   DateTime?
   user_id     Int
-  active      Int?      @default(1) @db.TinyInt
-  visibility  Int?      @default(1) @db.TinyInt
+  active      Int?      @default(1)
+  visibility  Int?      @default(1)
 
   user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
@@ -1079,8 +1100,8 @@ model ProductListingMedia {
 
   createdAt          DateTime @default(now())
   product_listing_id Int
-  active             Int?     @default(1) @db.TinyInt
-  index              Int?     @db.TinyInt
+  active             Int?     @default(1)
+  index              Int?
 
   listing ProductListing              @relation(fields: [product_listing_id], references: [id], onDelete: Cascade)
   likes   ProductListingMediaLike[]
@@ -1096,7 +1117,7 @@ model ProductListingComment {
   comment            String   @db.VarChar(255)
   createdAt          DateTime @default(now())
   product_listing_id Int
-  active             Int?     @default(1) @db.TinyInt
+  active             Int?     @default(1)
   who_comments       Int
 
   listing ProductListing                @relation(fields: [product_listing_id], references: [id], onDelete: Cascade)
@@ -1209,12 +1230,12 @@ model ServiceListing {
   modality        String? @db.VarChar(50) // "online", "presencial", "híbrido"
   location        String? @db.VarChar(255) // zona/barrio/ciudad
 
-  medianumber Int?      @default(0) @db.TinyInt
+  medianumber Int?      @default(0)
   createdAt   DateTime  @default(now())
   deletedAt   DateTime?
   user_id     Int
-  active      Int?      @default(1) @db.TinyInt
-  visibility  Int?      @default(1) @db.TinyInt
+  active      Int?      @default(1)
+  visibility  Int?      @default(1)
 
   user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
@@ -1245,8 +1266,8 @@ model ServiceListingMedia {
 
   createdAt          DateTime @default(now())
   service_listing_id Int
-  active             Int?     @default(1) @db.TinyInt
-  index              Int?     @db.TinyInt
+  active             Int?     @default(1)
+  index              Int?
 
   listing ServiceListing              @relation(fields: [service_listing_id], references: [id], onDelete: Cascade)
   likes   ServiceListingMediaLike[]
@@ -1262,7 +1283,7 @@ model ServiceListingComment {
   comment            String   @db.VarChar(255)
   createdAt          DateTime @default(now())
   service_listing_id Int
-  active             Int?     @default(1) @db.TinyInt
+  active             Int?     @default(1)
   who_comments       Int
 
   listing ServiceListing                @relation(fields: [service_listing_id], references: [id], onDelete: Cascade)

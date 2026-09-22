@@ -15,10 +15,8 @@ const AutoResizeTextarea: React.FC<Props> = ({ value, onChange, style, ...rest }
         const el = ref.current;
         if (!el) return;
 
-        // resetear altura para recálculo
-        el.style.height = "0px";
-        const scrollHeight = el.scrollHeight;
-        el.style.height = scrollHeight + "px";
+        el.style.height = "auto";
+        el.style.height = `${el.scrollHeight}px`;
     }, [value]);
 
     return (

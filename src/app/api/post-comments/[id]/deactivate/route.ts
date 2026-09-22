@@ -27,14 +27,14 @@ export async function POST(
             id: true,
             active: true,
             who_comments: true,
-            post: { select: { user_id: true } }, // dueño del post
+            post: { select: { authorId: true } }, // dueño del post
         },
     });
 
     if (!comment) return NextResponse.json({ error: "Not found" }, { status: 404 });
     if ((comment.active ?? 1) !== 1) return NextResponse.json({ ok: true, already: true });
 
-    const isPostOwner = comment.post.user_id === sessionUserId;
+    const isPostOwner = comment.post.authorId === sessionUserId;
     const isCommentOwner = comment.who_comments === sessionUserId;
 
     if (!isPostOwner && !isCommentOwner) {
