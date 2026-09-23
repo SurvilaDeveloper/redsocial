@@ -19,6 +19,7 @@ import {
 
 import { PostCard } from "./postCard/PostCard";
 import { ShareWithFriendModal } from "./share/ShareWithFriendModal";
+import { isOwnOriginalPublishedWallEntry } from "@/lib/wall-entry-rules";
 
 const WALL_VISIBILITY_OPTIONS = [
     { value: 1, label: "Público" },
@@ -157,16 +158,13 @@ export function WallEntryCard({
     const isPinned = meta.type === "PINNED";
 
     // Publicación original propia:
-    // PUBLISHED + actor = dueño del muro = autor del post.
-    // En este caso Post.active ya controla Mostrar/Ocultar, por lo que
-    // no mostramos además el toggle redundante de WallEntry.active.
-    const isOwnOriginalPublishedEntry =
-        meta.type === "PUBLISHED" &&
-        actorUserId != null &&
-        wallUserId != null &&
-        postAuthorId != null &&
-        actorUserId === wallUserId &&
-        actorUserId === postAuthorId;
+    // Post.active / Post.visibility son la única fuente de verdad.
+    const isOwnOriginalPublishedEntry = isOwnOriginalPublishedWallEntry({
+        type: meta.type,
+        wallUserId,
+        actorUserId,
+        postAuthorId,
+    });
 
     const headerVerb = isShared ? "compartió" : isPinned ? "fijó" : "publicó";
 
@@ -414,10 +412,9 @@ export function WallEntryCard({
                     )}
 
                     {/* Controles del dueño del muro */}
-                    {isWallOwnerViewing && wallEntryId != null && (
+                    {isWallOwnerViewing && wallEntryId != null && !isOwnOriginalPublishedEntry && (
                         <>
-                            {!isOwnOriginalPublishedEntry && (
-                                <button
+                            <button
                                     type="button"
                                     onClick={() => setEntryActive(entryActiveState === 1 ? 0 : 1)}
                                     disabled={wallActionLoading}
@@ -429,8 +426,7 @@ export function WallEntryCard({
                                     }
                                 >
                                     {entryActiveState === 1 ? <EyeOffIcon size={12} /> : <EyeIcon size={12} />}
-                                </button>
-                            )}
+                            </button>
 
                             {/* Menú visibilidad (estilo OwnerToolbar) */}
                             <div className="relative ml-auto">

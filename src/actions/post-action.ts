@@ -11,8 +11,29 @@ import { RelationshipState } from "@/lib/relationship-state";
 
 import { upsertPostKeywords } from "@/lib/interests/postKeywords";
 import cloudinary from "@/lib/cloudinary";
+import type { Prisma } from "@prisma/client";
 
 type ImagePayload = { url: string; publicId: string } | null;
+
+async function normalizeOwnPublishedWallEntry(
+    tx: Prisma.TransactionClient,
+    postId: number,
+    authorId: number
+) {
+    await tx.wallEntry.updateMany({
+        where: {
+            postId,
+            type: "PUBLISHED",
+            wallUserId: authorId,
+            actorUserId: authorId,
+        },
+        data: {
+            active: 1,
+            visibility: 1,
+            showInFeed: true,
+        },
+    });
+}
 
 async function deleteCloudinaryImages(publicIds: string[]) {
     const uniquePublicIds = Array.from(
@@ -240,6 +261,9 @@ export const updatePost = async (
                 },
             });
 
+            // La entrada PUBLISHED propia es estructural: siempre queda canónica.
+            await normalizeOwnPublishedWallEntry(tx, postId, actorUserId);
+
             const existingMain = await tx.image.findFirst({
                 where: { post_id: postId, index: 0 },
                 select: {
@@ -351,26 +375,86 @@ export const updatePost = async (
 };
 
 export const updatePostActive = async (postId: number, value: number) => {
+    const session = await auth();
+    if (!session?.user?.id) return { error: "No logged user." };
+
+    const userId = Number(session.user.id);
+
+    if (!Number.isFinite(postId) || (value !== 0 && value !== 1)) {
+        return { error: "Invalid data." };
+    }
+
     try {
-        await prisma.post.update({
-            where: { id: postId },
-            data: { active: value },
+        await prisma.$transaction(async (tx) => {
+            const post = await tx.post.findUnique({
+                where: { id: postId },
+                select: { id: true, authorId: true },
+            });
+
+            if (!post || post.authorId !== userId) {
+                throw new Error("Forbidden");
+            }
+
+            await tx.post.update({
+                where: { id: postId },
+                data: { active: value },
+            });
+
+            // Post.active decide si el contenido está activo.
+            // Su WallEntry PUBLISHED propia no debe bloquearlo por otro lado.
+            await normalizeOwnPublishedWallEntry(tx, postId, userId);
         });
+
         return { success: true };
     } catch (error) {
+        if ((error as Error)?.message === "Forbidden") {
+            return { error: "Forbidden" };
+        }
+
         console.error("Error al actualizar (active) del post:", error);
         return { error: "Error al actualizar (active) del post" };
     }
 };
 
 export const updatePostVisibility = async (postId: number, value: number) => {
+    const session = await auth();
+    if (!session?.user?.id) return { error: "No logged user." };
+
+    const userId = Number(session.user.id);
+
+    if (
+        !Number.isFinite(postId) ||
+        (value !== 1 && value !== 2 && value !== 3 && value !== 4)
+    ) {
+        return { error: "Invalid data." };
+    }
+
     try {
-        await prisma.post.update({
-            where: { id: postId },
-            data: { visibility: value },
+        await prisma.$transaction(async (tx) => {
+            const post = await tx.post.findUnique({
+                where: { id: postId },
+                select: { id: true, authorId: true },
+            });
+
+            if (!post || post.authorId !== userId) {
+                throw new Error("Forbidden");
+            }
+
+            await tx.post.update({
+                where: { id: postId },
+                data: { visibility: value },
+            });
+
+            // Post.visibility es la única visibilidad del contenido original propio.
+            await normalizeOwnPublishedWallEntry(tx, postId, userId);
         });
+
         return { success: true };
     } catch (error) {
+        if ((error as Error)?.message === "Forbidden") {
+            return { error: "Forbidden" };
+        }
+
         console.error("Error al actualizar (visibility) del post:", error);
         return { error: "Error al actualizar (visibility) del post" };
     }
@@ -383,19 +467,35 @@ export const softDeletePost = async (postId: number) => {
     try {
         const userId = Number(session.user.id);
 
-        await prisma.post.update({
-            where: {
-                id: postId,
-                authorId: userId,
-            },
-            data: {
-                deletedAt: new Date(),
-                active: 0,
-            },
+        await prisma.$transaction(async (tx) => {
+            const post = await tx.post.findUnique({
+                where: { id: postId },
+                select: { id: true, authorId: true },
+            });
+
+            if (!post || post.authorId !== userId) {
+                throw new Error("Forbidden");
+            }
+
+            await tx.post.update({
+                where: { id: postId },
+                data: {
+                    deletedAt: new Date(),
+                    active: 0,
+                },
+            });
+
+            // La WallEntry propia sigue siendo estructural y canónica.
+            // El post no aparece porque Post.active=0/deletedAt!=null.
+            await normalizeOwnPublishedWallEntry(tx, postId, userId);
         });
 
         return { success: true };
     } catch (error) {
+        if ((error as Error)?.message === "Forbidden") {
+            return { error: "Forbidden" };
+        }
+
         console.error("Error en softDeletePost:", error);
         return { error: "Error eliminando post." };
     }
@@ -408,18 +508,35 @@ export const restorePost = async (postId: number) => {
     try {
         const userId = Number(session.user.id);
 
-        await prisma.post.update({
-            where: {
-                id: postId,
-                authorId: userId,
-            },
-            data: {
-                deletedAt: null,
-            },
+        await prisma.$transaction(async (tx) => {
+            const post = await tx.post.findUnique({
+                where: { id: postId },
+                select: { id: true, authorId: true },
+            });
+
+            if (!post || post.authorId !== userId) {
+                throw new Error("Forbidden");
+            }
+
+            await tx.post.update({
+                where: { id: postId },
+                data: {
+                    // Restaurar NO vuelve a publicar automáticamente:
+                    // active permanece en 0 hasta que el dueño lo active.
+                    deletedAt: null,
+                },
+            });
+
+            // Reparamos cualquier estado viejo contradictorio de la WallEntry.
+            await normalizeOwnPublishedWallEntry(tx, postId, userId);
         });
 
         return { success: true };
     } catch (error) {
+        if ((error as Error)?.message === "Forbidden") {
+            return { error: "Forbidden" };
+        }
+
         console.error("Error en restorePost:", error);
         return { error: "Error restaurando post." };
     }
