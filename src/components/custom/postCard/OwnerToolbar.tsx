@@ -98,7 +98,6 @@ export function OwnerToolbar({
         return (
             <div className="mb-2 flex flex-row flex-wrap items-center gap-2 w-full text-red-200 bg-[rgb(64,20,20)] px-3 py-2 rounded-md border border-red-700/40">
                 <div className="text-xs font-semibold flex-1 min-w-[220px]">
-                    Este post está restaurado pero permanece oculto.
                     No aparecerá en el feed hasta que lo actives manualmente.
                 </div>
 

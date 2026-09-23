@@ -2,17 +2,47 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import auth from "@/auth";
+import { canViewerSeePost } from "@/lib/posts/can-view-post";
 
 type Body = {
     postId?: number | string;
-    // opcional: si querés setear visibilidad al pin al crearlo/actualizarlo
     visibility?: 1 | 2 | 3 | 4;
 };
 
-function toPostId(v: unknown): number | null {
-    const n = typeof v === "string" ? Number(v) : typeof v === "number" ? v : NaN;
+function toPostId(value: unknown): number | null {
+    const n =
+        typeof value === "string"
+            ? Number(value)
+            : typeof value === "number"
+                ? value
+                : NaN;
+
     if (!Number.isFinite(n) || n <= 0) return null;
     return Math.floor(n);
+}
+
+async function getVisiblePostForUser(postId: number, viewerId: number) {
+    const post = await prisma.post.findFirst({
+        where: {
+            id: postId,
+            active: 1,
+            deletedAt: null,
+        },
+        select: {
+            id: true,
+            authorId: true,
+            visibility: true,
+        },
+    });
+
+    if (!post) return null;
+
+    const canView = await canViewerSeePost(prisma, viewerId, {
+        authorId: post.authorId,
+        visibility: post.visibility as PostVisibility,
+    });
+
+    return canView ? post : null;
 }
 
 export const runtime = "nodejs";
@@ -21,58 +51,69 @@ export async function POST(req: Request) {
     const session = await auth();
     const viewerId = session?.user?.id != null ? Number(session.user.id) : null;
 
-    if (viewerId == null) {
-        return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    if (!viewerId) {
+        return NextResponse.json(
+            { success: false, error: "Unauthorized" },
+            { status: 401 }
+        );
     }
 
-    let body: Body | null = null;
-    try {
-        body = (await req.json()) as Body;
-    } catch {
-        return NextResponse.json({ success: false, error: "Invalid JSON" }, { status: 400 });
-    }
-
+    const body = (await req.json().catch(() => null)) as Body | null;
     const postId = toPostId(body?.postId);
+
     if (postId == null) {
-        return NextResponse.json({ success: false, error: "Invalid postId" }, { status: 400 });
+        return NextResponse.json(
+            { success: false, error: "Invalid postId" },
+            { status: 400 }
+        );
     }
 
-    // Opcional: si mandás visibility, la normalizamos a 1..4
+    const post = await getVisiblePostForUser(postId, viewerId);
+
+    if (!post) {
+        return NextResponse.json(
+            { success: false, error: "Post not found or not visible" },
+            { status: 404 }
+        );
+    }
+
     const nextVisibility =
-        body?.visibility === 1 || body?.visibility === 2 || body?.visibility === 3 || body?.visibility === 4
+        body?.visibility === 1 ||
+        body?.visibility === 2 ||
+        body?.visibility === 3 ||
+        body?.visibility === 4
             ? body.visibility
             : undefined;
 
-    // Validar que el post exista y no esté borrado/inactivo
-    const post = await prisma.post.findUnique({
-        where: { id: postId },
-        select: { id: true, active: true, deletedAt: true },
-    });
+    const uniqueWhere = {
+        wallUserId_actorUserId_postId_type: {
+            wallUserId: viewerId,
+            actorUserId: viewerId,
+            postId,
+            type: "PINNED" as const,
+        },
+    };
 
-    if (!post || post.deletedAt || (post.active ?? 1) !== 1) {
-        return NextResponse.json({ success: false, error: "Post not found" }, { status: 404 });
-    }
-
-    const now = new Date();
-
-    // Un solo PINNED por (wallUserId, actorUserId, postId, type).
-    // Como el pin es "en mi muro" y lo hago yo, wallUserId=viewerId y actorUserId=viewerId.
     try {
-        const wallEntry = await prisma.wallEntry.upsert({
-            where: {
-                wallUserId_actorUserId_postId_type: {
-                    wallUserId: viewerId,
-                    actorUserId: viewerId,
-                    postId,
-                    type: "PINNED",
-                },
+        const existing = await prisma.wallEntry.findUnique({
+            where: uniqueWhere,
+            select: {
+                id: true,
+                active: true,
             },
+        });
+
+        const now = new Date();
+
+        const wallEntry = await prisma.wallEntry.upsert({
+            where: uniqueWhere,
             update: {
-                // ✅ el comportamiento pedido:
-                // si existe, actualizar eventAt sin tocar createdAt
-                eventAt: now,
                 active: 1,
-                ...(nextVisibility != null ? { visibility: nextVisibility } : {}),
+                showInFeed: false,
+                eventAt: now,
+                ...(nextVisibility != null
+                    ? { visibility: nextVisibility }
+                    : {}),
             },
             create: {
                 wallUserId: viewerId,
@@ -81,9 +122,8 @@ export async function POST(req: Request) {
                 type: "PINNED",
                 active: 1,
                 visibility: nextVisibility ?? 1,
-                showInFeed: false, // lo dejé conservador (después lo podés toggle en otro endpoint/UI)
+                showInFeed: false,
                 eventAt: now,
-                // createdAt lo pone Prisma con default(now())
             },
             select: {
                 id: true,
@@ -99,16 +139,62 @@ export async function POST(req: Request) {
             },
         });
 
-        return NextResponse.json({ success: true, wallEntry });
-    } catch (e: any) {
-        // Si el nombre del unique compuesto no coincide (depende de tu schema/prisma client),
-        // acá te va a tirar error. En ese caso te lo ajusto con el nombre exacto que te genere Prisma.
+        return NextResponse.json({
+            success: true,
+            pinned: true,
+            alreadyPinned: Boolean(existing && (existing.active ?? 1) === 1),
+            wallEntry,
+        });
+    } catch (error) {
+        console.error("wall/pin POST failed:", error);
         return NextResponse.json(
-            { success: false, error: "Failed to pin", detail: String(e?.message ?? e) },
+            { success: false, error: "Failed to pin" },
             { status: 500 }
         );
     }
 }
 
+export async function DELETE(req: Request) {
+    const session = await auth();
+    const viewerId = session?.user?.id != null ? Number(session.user.id) : null;
 
+    if (!viewerId) {
+        return NextResponse.json(
+            { success: false, error: "Unauthorized" },
+            { status: 401 }
+        );
+    }
 
+    const body = (await req.json().catch(() => null)) as Body | null;
+    const postId = toPostId(body?.postId);
+
+    if (postId == null) {
+        return NextResponse.json(
+            { success: false, error: "Invalid postId" },
+            { status: 400 }
+        );
+    }
+
+    try {
+        const deleted = await prisma.wallEntry.deleteMany({
+            where: {
+                wallUserId: viewerId,
+                actorUserId: viewerId,
+                postId,
+                type: "PINNED",
+            },
+        });
+
+        return NextResponse.json({
+            success: true,
+            pinned: false,
+            removed: deleted.count > 0,
+        });
+    } catch (error) {
+        console.error("wall/pin DELETE failed:", error);
+        return NextResponse.json(
+            { success: false, error: "Failed to unpin" },
+            { status: 500 }
+        );
+    }
+}

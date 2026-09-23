@@ -97,7 +97,32 @@ export function WallEntryCard({
     const [wallActionLoading, setWallActionLoading] = useState(false);
 
     const [pinLoading, setPinLoading] = useState(false);
-    const [pinnedState, setPinnedState] = useState<null | { ok: boolean; eventAt?: string; entryId?: number }>(null);
+
+    const initiallyPinnedByViewer =
+        meta?.type === "PINNED" &&
+        sessionUserId != null &&
+        Number(meta?.wallUserId) === sessionUserId &&
+        Number(meta?.actorUserId) === sessionUserId;
+
+    const [pinnedState, setPinnedState] = useState<null | {
+        ok: boolean;
+        eventAt?: string;
+        entryId?: number;
+    }>(
+        initiallyPinnedByViewer
+            ? {
+                ok: true,
+                eventAt:
+                    typeof meta?.eventAt === "string"
+                        ? meta.eventAt
+                        : undefined,
+                entryId:
+                    typeof meta?.id === "number"
+                        ? meta.id
+                        : undefined,
+            }
+            : null
+    );
 
     // si no hay meta, render normal
     if (!meta) {
@@ -272,34 +297,70 @@ export function WallEntryCard({
         }
     }
 
-    async function pinInMyWall() {
+    async function togglePinInMyWall() {
         if (sessionUserId == null) return;
 
+        const wasPinned = pinnedState?.ok === true;
+        const previousState = pinnedState;
         const optimisticEventAt = new Date().toISOString();
-        setPinnedState({ ok: true, eventAt: optimisticEventAt });
+
         setPinLoading(true);
+
+        if (wasPinned) {
+            setPinnedState({ ok: false });
+        } else {
+            setPinnedState({
+                ok: true,
+                eventAt: optimisticEventAt,
+            });
+        }
 
         try {
             const res = await fetch("/api/wall/pin", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ postId: post?.id }),
+                method: wasPinned ? "DELETE" : "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    postId: post?.id,
+                }),
             });
+
             const data = await res.json().catch(() => null);
 
             if (!res.ok || !data?.success) {
-                setPinnedState({ ok: false });
+                setPinnedState(previousState);
                 return;
             }
 
-            const we = data.wallEntry;
+            if (wasPinned) {
+                setPinnedState({ ok: false });
+
+                // Si estamos viendo la tarjeta PINNED del muro propio,
+                // recargamos para que reaparezca, si corresponde, su
+                // entrada normal del timeline.
+                if (isPinned && isWallOwnerViewing) {
+                    window.location.reload();
+                }
+
+                return;
+            }
+
+            const wallEntry = data.wallEntry;
+
             setPinnedState({
                 ok: true,
-                entryId: typeof we?.id === "number" ? we.id : undefined,
-                eventAt: typeof we?.eventAt === "string" ? we.eventAt : optimisticEventAt,
+                entryId:
+                    typeof wallEntry?.id === "number"
+                        ? wallEntry.id
+                        : undefined,
+                eventAt:
+                    typeof wallEntry?.eventAt === "string"
+                        ? wallEntry.eventAt
+                        : optimisticEventAt,
             });
         } catch {
-            setPinnedState({ ok: false });
+            setPinnedState(previousState);
         } finally {
             setPinLoading(false);
         }
@@ -381,16 +442,27 @@ export function WallEntryCard({
                         </button>
                     )}
 
-                    {/* Fijar en mi muro (logueado) */}
+                    {/* Fijar / desfijar en mi muro (logueado) */}
                     {sessionUserId != null && (
                         <button
                             type="button"
-                            onClick={pinInMyWall}
+                            onClick={togglePinInMyWall}
                             disabled={pinLoading}
                             className={btnBase}
-                            title="Fijar este post en mi muro"
+                            title={
+                                pinnedState?.ok
+                                    ? "Desfijar este post de mi muro"
+                                    : "Fijar este post en mi muro"
+                            }
                         >
-                            <Pin size={12} />
+                            <Pin
+                                size={12}
+                                className={
+                                    pinnedState?.ok
+                                        ? "text-amber-400"
+                                        : undefined
+                                }
+                            />
                         </button>
                     )}
 
