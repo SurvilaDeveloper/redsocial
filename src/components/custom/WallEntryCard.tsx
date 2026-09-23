@@ -155,6 +155,19 @@ export function WallEntryCard({
 
     const isShared = meta.type === "SHARED";
     const isPinned = meta.type === "PINNED";
+
+    // Publicación original propia:
+    // PUBLISHED + actor = dueño del muro = autor del post.
+    // En este caso Post.active ya controla Mostrar/Ocultar, por lo que
+    // no mostramos además el toggle redundante de WallEntry.active.
+    const isOwnOriginalPublishedEntry =
+        meta.type === "PUBLISHED" &&
+        actorUserId != null &&
+        wallUserId != null &&
+        postAuthorId != null &&
+        actorUserId === wallUserId &&
+        actorUserId === postAuthorId;
+
     const headerVerb = isShared ? "compartió" : isPinned ? "fijó" : "publicó";
 
     const showHeader = isThirdParty || isPinned;
@@ -403,17 +416,21 @@ export function WallEntryCard({
                     {/* Controles del dueño del muro */}
                     {isWallOwnerViewing && wallEntryId != null && (
                         <>
-                            <button
-                                type="button"
-                                onClick={() => setEntryActive(entryActiveState === 1 ? 0 : 1)}
-                                disabled={wallActionLoading}
-                                title={entryActiveState === 1 ? "Ocultar en mi muro" : "Mostrar en mi muro"}
-                                className={
-                                    entryActiveState === 1 ? `${btnBase} hover:bg-red-800` : `${btnBase} hover:bg-green-800`
-                                }
-                            >
-                                {entryActiveState === 1 ? <EyeOffIcon size={12} /> : <EyeIcon size={12} />}
-                            </button>
+                            {!isOwnOriginalPublishedEntry && (
+                                <button
+                                    type="button"
+                                    onClick={() => setEntryActive(entryActiveState === 1 ? 0 : 1)}
+                                    disabled={wallActionLoading}
+                                    title={entryActiveState === 1 ? "Ocultar en mi muro" : "Mostrar en mi muro"}
+                                    className={
+                                        entryActiveState === 1
+                                            ? `${btnBase} hover:bg-red-800`
+                                            : `${btnBase} hover:bg-green-800`
+                                    }
+                                >
+                                    {entryActiveState === 1 ? <EyeOffIcon size={12} /> : <EyeIcon size={12} />}
+                                </button>
+                            )}
 
                             {/* Menú visibilidad (estilo OwnerToolbar) */}
                             <div className="relative ml-auto">
