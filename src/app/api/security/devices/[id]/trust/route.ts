@@ -24,17 +24,26 @@ import { prisma } from "@/lib/prisma";
  * - revokedAt = null (vuelve a estar "activo")
  * - lastUsedAt = now (marca actividad para UI / auditoría básica)
  */
-export async function POST(_: Request, { params }: { params: { id: string } }) {
+export async function POST(
+    _: Request,
+    { params }: { params: Promise<{ id: string }> }
+) {
     const session = await auth();
+
     if (!session?.user?.id) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const { id } = await params;
+
     const userId = Number(session.user.id);
-    const deviceId = Number(params.id);
+    const deviceId = Number(id);
 
     if (!Number.isFinite(deviceId)) {
-        return NextResponse.json({ error: "deviceId inválido" }, { status: 400 });
+        return NextResponse.json(
+            { error: "deviceId inválido" },
+            { status: 400 }
+        );
     }
 
     // Solo podés "confiar" dispositivos tuyos y que estén revocados
@@ -63,4 +72,3 @@ export async function POST(_: Request, { params }: { params: { id: string } }) {
 
     return NextResponse.json({ success: true });
 }
-

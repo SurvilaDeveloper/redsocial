@@ -1,7 +1,7 @@
 // src/components/cv/styles/CVTemplateSelect.tsx
 "use client";
 
-import type { CVTemplateId } from "@/components/cv/renderers/CVRendererSwitch";
+import type { CVTemplateId } from "@/types/cv";
 import {
     Select,
     SelectContent,
@@ -47,6 +47,3 @@ export function CVTemplateSelect({
         </Select>
     );
 }
-
-
-

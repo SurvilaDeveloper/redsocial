@@ -9,7 +9,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-import type { CVStyleConfig, CVStyleElement } from "@/types/cvStyle";
+import type { CVStyleConfig, CVStyleElement } from "@/types/cv";
 
 const FONT_FAMILIES = ["sans-serif", "serif", "monospace", "cursive", "fantasy"] as const;
 const FONT_SIZES = ["12px", "14px", "16px", "18px", "20px", "24px"] as const;
@@ -54,13 +54,11 @@ export function CVFontsMenu({
                 </button>
             </DropdownMenuTrigger>
 
-
             <DropdownMenuContent
                 align="start"
                 sideOffset={10}
                 className="w-[min(28rem,calc(100vw-1.5rem))] h-[calc(100vh-72px)] rounded-lg border border-slate-700 bg-slate-950 text-slate-100 shadow-xl p-4 space-y-4 overflow-y-scroll"
             >
-                {/* Toggle showDocTitle */}
                 <div className="flex items-center justify-between gap-3 rounded-md border border-slate-700 px-3 py-2">
                     <div className="text-sm">Mostrar título del documento</div>
                     <input
@@ -74,11 +72,12 @@ export function CVFontsMenu({
                     />
                 </div>
 
-                {/* Styles */}
                 <div className="space-y-3">
                     {styleKeys.map((key) => (
                         <div key={key} className="flex items-center gap-2">
-                            <div className="capitalize w-28 text-sm text-slate-300 max-w-[80px] lg:max-w-full">{key}:</div>
+                            <div className="capitalize w-28 text-sm text-slate-300 max-w-[80px] lg:max-w-full">
+                                {key}:
+                            </div>
 
                             <select
                                 value={styleConfig[key].fontFamily}

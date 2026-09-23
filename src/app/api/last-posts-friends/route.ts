@@ -1,136 +1,125 @@
+// src/app/api/last-posts-friends/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import auth from "@/auth";
 
 export async function GET(req: NextRequest) {
-    const session = await auth()
-    const { searchParams } = new URL(req.url);
-    const page = parseInt(searchParams.get("page") || "1", 10);
-    const pageSize = 2;
-    if (session) {
-        const xxx = await prisma.user.findMany({
-            where: {
-                AND: [
-                    {
-                        friendsInitiated: {
-                            some: {
-                                friend_two: parseInt(session.user.id),
-                                friend_request: 1,
-                                friend_response: 1, // A es el que inició la amistad y la solicitud fue aceptada
-                            },
-                        },
-                    },
-                    {
-                        friendsReceived: {
-                            some: {
-                                friend_one: parseInt(session.user.id),
-                                friend_request: 1,
-                                friend_response: 1, // A es el que inició la amistad y la solicitud fue aceptada
-                            },
-                        },
-                    },
+    const session = await auth();
 
-
-
-                ],
-            }
-        })
+    if (!session?.user?.id) {
+        return NextResponse.json(
+            { error: "There is not session" },
+            { status: 401 }
+        );
     }
-    if (session) {
-        const postsReq = await prisma.post.findMany({
-            where: {
-                user: {
 
-                    AND: [
-                        {
-                            friendsInitiated: {
-                                some: {
-                                    friend_two: parseInt(session.user.id),
-                                    friend_request: 1,
-                                    friend_response: 1, // A es el que inició la amistad y la solicitud fue aceptada
-                                },
-                            },
-                        },
-                        {
-                            friendsReceived: {
-                                some: {
-                                    friend_one: parseInt(session.user.id),
-                                    friend_request: 1,
-                                    friend_response: 1, // A es el que inició la amistad y la solicitud fue aceptada
-                                },
-                            },
-                        },
+    const viewerId = Number(session.user.id);
 
+    if (!Number.isFinite(viewerId)) {
+        return NextResponse.json(
+            { error: "Invalid session user id" },
+            { status: 400 }
+        );
+    }
 
+    const { searchParams } = new URL(req.url);
+    const rawPage = Number.parseInt(searchParams.get("page") || "1", 10);
+    const page = Number.isFinite(rawPage) && rawPage > 0 ? rawPage : 1;
+    const pageSize = 2;
 
-                    ],
+    // La tabla Friendship guarda la relación entre dos usuarios.
+    // Tomamos ambas direcciones y deduplicamos IDs para no depender de
+    // cómo haya sido creada históricamente cada amistad.
+    const friendships = await prisma.friendship.findMany({
+        where: {
+            friend_request: 1,
+            friend_response: 1,
+            OR: [
+                { friend_one: viewerId },
+                { friend_two: viewerId },
+            ],
+        },
+        select: {
+            friend_one: true,
+            friend_two: true,
+        },
+    });
 
+    const friendIds = Array.from(
+        new Set(
+            friendships
+                .map((friendship) =>
+                    friendship.friend_one === viewerId
+                        ? friendship.friend_two
+                        : friendship.friend_one
+                )
+                .filter((id) => id !== viewerId)
+        )
+    );
 
-                },
-                active: 1,
+    if (friendIds.length === 0) {
+        return NextResponse.json({ allPosts: [] });
+    }
 
+    const postsReq = await prisma.post.findMany({
+        where: {
+            authorId: {
+                in: friendIds,
             },
-            orderBy: { createdAt: "desc" },
-            skip: (page - 1) * pageSize,
-            take: pageSize,
-            include: {
-                user: true,
-                images: true,
-            },
-        });
-        const posts = postsReq.map(async (post) => {
-            const images = await prisma.image.findMany({
-                where: { post_id: post.id },
-            });
-            const user = await prisma.user.findUnique({
-                where: { id: post.user_id }
-            })
-            let followingRel = null;
-            let followedRel = null;
-            let following = false;
-            let isFollower = false;
+            active: 1,
+        },
+        orderBy: {
+            createdAt: "desc",
+        },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+        include: {
+            author: true,
+            images: true,
+        },
+    });
 
-            if (session) {
-                followingRel = await prisma.follow.findFirst({
+    const resolvedPosts = await Promise.all(
+        postsReq.map(async (post) => {
+            const [followingRel, followedRel] = await Promise.all([
+                prisma.follow.findFirst({
                     where: {
-                        followerId: parseInt(session.user.id),
-                        followingId: post.user_id
-                    }
-                })
-                followedRel = await prisma.follow.findFirst({
+                        followerId: viewerId,
+                        followingId: post.authorId,
+                    },
+                }),
+                prisma.follow.findFirst({
                     where: {
-                        followerId: post.user_id,
-                        followingId: parseInt(session.user.id)
-                    }
-                })
-            }
-
-            following = !!followingRel;
-            isFollower = !!followedRel;
+                        followerId: post.authorId,
+                        followingId: viewerId,
+                    },
+                }),
+            ]);
 
             const relations = {
-                following: following,
-                isFollower: isFollower,
-                isFriend: false // Luego desarrollaré la consulta pa isFriend
-            }
-            return {
-                ...post,
-                relations,
-                images,
-                userData: {
-                    id: user?.id,
-                    name: user?.name,
-                    imageUrl: user?.imageUrl,
-                    imagePublicId: user?.imagePublicId
-                }
+                following: Boolean(followingRel),
+                isFollower: Boolean(followedRel),
+                isFriend: true,
             };
-        });
 
-        const resolvedPosts = await Promise.all(posts);
+            // El schema actual llama `author` a la relación de Post con User.
+            // Conservamos `user` en la respuesta para no romper el contrato
+            // histórico de este endpoint.
+            const { author, ...postData } = post;
 
-        return NextResponse.json({ allPosts: resolvedPosts });
+            return {
+                ...postData,
+                user: author,
+                relations,
+                userData: {
+                    id: author.id,
+                    name: author.name,
+                    imageUrl: author.imageUrl,
+                    imagePublicId: author.imagePublicId,
+                },
+            };
+        })
+    );
 
-    }
-    return NextResponse.json({ error: "There is not session" })
-
+    return NextResponse.json({ allPosts: resolvedPosts });
 }

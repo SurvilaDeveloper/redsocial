@@ -15,7 +15,6 @@ export type PostNoViewReason =
     | "post_hidden"
     | "invalid_visibility";
 
-
 export type PostApiOk = PostModel & {
     images: ImageModel[];
     relations: PostRelations;
@@ -23,10 +22,16 @@ export type PostApiOk = PostModel & {
     reason: null;
 };
 
+/**
+ * `/api/post` mantiene `user_id` como nombre legacy en la respuesta
+ * cuando el post no puede verse, aunque el modelo Prisma actual expone
+ * esa columna como `authorId`.
+ */
 export type PostApiNoView = Pick<
     PostModel,
-    "id" | "title" | "createdAt" | "visibility" | "active" | "user_id"
+    "id" | "title" | "createdAt" | "visibility" | "active"
 > & {
+    user_id: PostModel["authorId"];
     relations: PostRelations;
     canView: false;
     reason: PostNoViewReason;

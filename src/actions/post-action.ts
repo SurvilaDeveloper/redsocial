@@ -10,8 +10,40 @@ import { getSocialRelations } from "@/lib/social-relations";
 import { RelationshipState } from "@/lib/relationship-state";
 
 import { upsertPostKeywords } from "@/lib/interests/postKeywords";
+import cloudinary from "@/lib/cloudinary";
 
 type ImagePayload = { url: string; publicId: string } | null;
+
+async function deleteCloudinaryImages(publicIds: string[]) {
+    const uniquePublicIds = Array.from(
+        new Set(
+            publicIds
+                .map((publicId) => publicId.trim())
+                .filter((publicId) => publicId.length > 0)
+        )
+    );
+
+    if (uniquePublicIds.length === 0) return;
+
+    const results = await Promise.allSettled(
+        uniquePublicIds.map((publicId) =>
+            cloudinary.uploader.destroy(publicId, {
+                resource_type: "image",
+                invalidate: true,
+            })
+        )
+    );
+
+    results.forEach((result, index) => {
+        if (result.status === "rejected") {
+            console.error(
+                "Cloudinary cleanup failed:",
+                uniquePublicIds[index],
+                result.reason
+            );
+        }
+    });
+}
 
 async function canPublishOnWall(opts: {
     actorUserId: number;
@@ -161,10 +193,10 @@ export const updatePost = async (
     if (!parsed.success) return { error: "Invalid data." };
 
     const actorUserId = Number(session.user.id);
+    const publicIdsToDelete = new Set<string>();
 
     try {
         await prisma.$transaction(async (tx) => {
-            // Solo el autor puede editar
             const post = await tx.post.findUnique({
                 where: { id: postId },
                 select: { id: true, authorId: true },
@@ -174,27 +206,32 @@ export const updatePost = async (
                 throw new Error("Forbidden");
             }
 
-            // borrar imágenes seleccionadas
-            await Promise.all(
-                (imagesToDelete ?? []).map(async (img) => {
-                    if (!img) return;
+            for (const img of imagesToDelete ?? []) {
+                if (!img) continue;
 
-                    const found = await tx.image.findFirst({
-                        where: {
-                            post_id: postId,
-                            imageUrl: img.url,
-                            imagePublicId: img.publicId,
-                        },
-                        select: { id: true },
-                    });
+                const found = await tx.image.findFirst({
+                    where: {
+                        post_id: postId,
+                        imageUrl: img.url,
+                        imagePublicId: img.publicId,
+                    },
+                    select: {
+                        id: true,
+                        imagePublicId: true,
+                    },
+                });
 
-                    if (found?.id) {
-                        await tx.image.delete({ where: { id: found.id } });
-                    }
-                })
-            );
+                if (!found) continue;
 
-            // actualizar post
+                if (found.imagePublicId) {
+                    publicIdsToDelete.add(found.imagePublicId);
+                }
+
+                await tx.image.delete({
+                    where: { id: found.id },
+                });
+            }
+
             await tx.post.update({
                 where: { id: postId },
                 data: {
@@ -203,14 +240,23 @@ export const updatePost = async (
                 },
             });
 
-            // imagen principal index 0
             const existingMain = await tx.image.findFirst({
                 where: { post_id: postId, index: 0 },
-                select: { id: true },
+                select: {
+                    id: true,
+                    imagePublicId: true,
+                },
             });
 
             if (image) {
                 if (existingMain?.id) {
+                    if (
+                        existingMain.imagePublicId &&
+                        existingMain.imagePublicId !== image.publicId
+                    ) {
+                        publicIdsToDelete.add(existingMain.imagePublicId);
+                    }
+
                     await tx.image.update({
                         where: { id: existingMain.id },
                         data: {
@@ -231,15 +277,37 @@ export const updatePost = async (
                 }
             }
 
-            // accesorias index 1..n
             if (imagesAdded && imagesAdded.length > 0) {
                 for (let i = 0; i < imagesAdded.length; i++) {
                     const img = imagesAdded[i];
                     if (!img) continue;
 
+                    const imageIndex = i + 1;
+
+                    const existing = await tx.image.findFirst({
+                        where: {
+                            post_id: postId,
+                            index: imageIndex,
+                        },
+                        select: {
+                            id: true,
+                            imagePublicId: true,
+                        },
+                    });
+
+                    if (
+                        existing?.imagePublicId &&
+                        existing.imagePublicId !== img.publicId
+                    ) {
+                        publicIdsToDelete.add(existing.imagePublicId);
+                    }
+
                     await tx.image.upsert({
                         where: {
-                            post_id_index: { post_id: postId, index: i + 1 },
+                            post_id_index: {
+                                post_id: postId,
+                                index: imageIndex,
+                            },
                         },
                         update: {
                             imageUrl: img.url,
@@ -249,7 +317,7 @@ export const updatePost = async (
                         create: {
                             imageUrl: img.url,
                             imagePublicId: img.publicId,
-                            index: i + 1,
+                            index: imageIndex,
                             post_id: postId,
                         },
                     });
@@ -257,7 +325,8 @@ export const updatePost = async (
             }
         });
 
-        // ✅ precompute keywords (best-effort) después de la tx
+        await deleteCloudinaryImages(Array.from(publicIdsToDelete));
+
         try {
             await upsertPostKeywords(postId, {
                 titleWeight: 3,
@@ -272,7 +341,10 @@ export const updatePost = async (
 
         return { success: true };
     } catch (error) {
-        if ((error as any)?.message === "Forbidden") return { error: "Forbidden" };
+        if ((error as any)?.message === "Forbidden") {
+            return { error: "Forbidden" };
+        }
+
         console.error("Error en updatePost:", error);
         return { error: "error 500" };
     }
@@ -360,12 +432,34 @@ export const hardDeletePost = async (postId: number) => {
     try {
         const userId = Number(session.user.id);
 
-        await prisma.post.delete({
+        const post = await prisma.post.findFirst({
             where: {
                 id: postId,
                 authorId: userId,
             },
+            select: {
+                id: true,
+                images: {
+                    select: {
+                        imagePublicId: true,
+                    },
+                },
+            },
         });
+
+        if (!post) {
+            return { error: "Post no encontrado o sin permisos." };
+        }
+
+        const publicIds = post.images
+            .map((image) => image.imagePublicId)
+            .filter((publicId): publicId is string => Boolean(publicId));
+
+        await prisma.post.delete({
+            where: { id: post.id },
+        });
+
+        await deleteCloudinaryImages(publicIds);
 
         return { success: true };
     } catch (error) {

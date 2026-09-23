@@ -6,9 +6,10 @@
 ![React](https://img.shields.io/badge/React-19-61DAFB)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6)
 ![Prisma](https://img.shields.io/badge/Prisma-7-2D3748)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-4169E1)
 ![Status](https://img.shields.io/badge/status-active%20development-orange)
 
-**RedSocial** is a multi-module full-stack web application built with **Next.js, React, TypeScript, Prisma and MySQL/MariaDB**.
+**RedSocial** is a multi-module full-stack web application built with **Next.js, React, TypeScript, Prisma and PostgreSQL**.
 
 It started as a social-network project and evolved into a broader platform that combines:
 
@@ -54,7 +55,7 @@ The codebase currently demonstrates work across several full-stack areas:
 - credentials login and Google OAuth
 - bcrypt password hashing
 - JWT-based sessions
-- Prisma ORM with MySQL/MariaDB
+- Prisma ORM with PostgreSQL
 - server actions and REST-style route handlers
 - role-based access control
 - account/session invalidation through a `sessionVersion`
@@ -92,7 +93,7 @@ The codebase currently demonstrates work across several full-stack areas:
 ### Backend / data
 
 - **Prisma 7**
-- MySQL / MariaDB
+- PostgreSQL
 - Auth.js / NextAuth
 - bcryptjs
 - Zod
@@ -138,8 +139,8 @@ The codebase currently demonstrates work across several full-stack areas:
                         ▼
                  ┌─────────────┐
                  │   Prisma    │
-                 │ MySQL /     │
-                 │ MariaDB     │
+                 │ PostgreSQL  │
+                 │             │
                  └─────────────┘
 
 External services:
@@ -685,7 +686,7 @@ redsocial/
 ## Requirements
 
 - Node.js / npm
-- MySQL or MariaDB database
+- PostgreSQL database
 - Cloudinary account for media features
 - Resend configuration for email flows
 - Google OAuth credentials if Google login is enabled

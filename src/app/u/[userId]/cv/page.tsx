@@ -4,9 +4,6 @@ import { headers } from "next/headers";
 import { CVPreviewSheet } from "@/components/cv/CVPreviewSheet";
 import type { Curriculum } from "@/types/cv";
 
-type RemoteOk = { cv: Curriculum };
-type RemoteErr = { error: string };
-
 async function resolveBaseUrl() {
     // 1) Preferimos env si existe
     const envBase = (process.env.NEXT_PUBLIC_APP_URL ?? "").replace(/\/+$/, "");
@@ -44,9 +41,13 @@ async function getCv(userId: string): Promise<Curriculum | "forbidden" | null> {
     return data?.cv ?? null;
 }
 
-
-export default async function CVUserIdPage({ params }: { params: { userId: string } }) {
-    const cv = await getCv(params.userId);
+export default async function CVUserIdPage({
+    params,
+}: {
+    params: Promise<{ userId: string }>;
+}) {
+    const { userId } = await params;
+    const cv = await getCv(userId);
 
     if (cv === null) notFound();
 
@@ -67,4 +68,3 @@ export default async function CVUserIdPage({ params }: { params: { userId: strin
         </div>
     );
 }
-

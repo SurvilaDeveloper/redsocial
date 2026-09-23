@@ -23,10 +23,7 @@ import Link from "next/link";
 
 import Image from "next/image";
 import { cfg } from "@/config";
-import {
-    deletePostImage,
-    uploadPostImage,
-} from "@/lib/cloudinary-functions";
+import { uploadPostImage } from "@/lib/cloudinary-functions";
 
 
 // Usa el tipo de la imagen que ya está definido en Post (global.d.ts)
@@ -156,20 +153,6 @@ const EditPostForm = ({
                     console.error(err);
                     setError("Error al subir las imágenes accesorias");
                     return;
-                }
-            }
-
-            // Borrar imágenes en Cloudinary
-            if (imageToDelete.length > 0) {
-                for (let i = 0; i < imageToDelete.length; i++) {
-                    try {
-                        const res = await deletePostImage(imageToDelete[i]);
-                    } catch (err) {
-                        console.error(
-                            "Error al borrar imagen en Cloudinary:",
-                            err
-                        );
-                    }
                 }
             }
 
@@ -525,4 +508,3 @@ const EditPostForm = ({
 };
 
 export default EditPostForm;
-
