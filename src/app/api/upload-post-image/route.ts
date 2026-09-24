@@ -1,67 +1,57 @@
 // src/app/api/upload-post-image/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import sharp from "sharp";
-import { v2 as cloudinary } from "cloudinary";
+import auth from "@/auth";
+import {
+    ImageUploadValidationError,
+    assertRequestSizeIsReasonable,
+    createValidatedSharp,
+    uploadImageBufferToCloudinary,
+    validateAuthenticatedImageUpload,
+} from "@/lib/cloudinary-upload-security";
 
-// Config Cloudinary una sola vez
-cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME!,
-    api_key: process.env.CLOUDINARY_API_KEY!,
-    api_secret: process.env.CLOUDINARY_API_SECRET!,
-});
+export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
+    const session = await auth();
+
+    if (!session?.user?.id) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     try {
+        assertRequestSizeIsReasonable(req.headers.get("content-length"));
+
         const formData = await req.formData();
-        const file = formData.get("file");
+        const validated = await validateAuthenticatedImageUpload(
+            formData.get("file")
+        );
 
-        if (!(file instanceof Blob)) {
-            return NextResponse.json(
-                { error: "Archivo inválido" },
-                { status: 400 }
-            );
-        }
-
-        // 1) Blob -> Buffer
-        const arrayBuffer = await file.arrayBuffer();
-        const inputBuffer = Buffer.from(arrayBuffer);
-
-        // 2) Procesar con sharp (ajustá a gusto)
-        const processedBuffer = await sharp(inputBuffer)
-            .resize(256, null, { withoutEnlargement: true }) // máx 256px de ancho
-            .jpeg({ quality: 80 }) // compresión
+        const processedBuffer = await createValidatedSharp(
+            validated.inputBuffer
+        )
+            .rotate()
+            .resize(256, null, { withoutEnlargement: true })
+            .jpeg({ quality: 80, mozjpeg: true })
             .toBuffer();
 
-        // 3) Subir a Cloudinary (carpeta "posts", igual que en tu sign)
-        const uploadResult = await new Promise<{
-            secure_url: string;
-            public_id: string;
-        }>((resolve, reject) => {
-            const stream = cloudinary.uploader.upload_stream(
-                {
-                    folder: "posts", // 👈 misma carpeta que usás en cloudinary-sign
-                    resource_type: "image",
-                },
-                (error, result) => {
-                    if (error || !result) {
-                        return reject(error || new Error("Upload failed"));
-                    }
-                    resolve({
-                        secure_url: result.secure_url!,
-                        public_id: result.public_id!,
-                    });
-                }
-            );
-
-            stream.end(processedBuffer);
-        });
+        const uploadResult = await uploadImageBufferToCloudinary(
+            processedBuffer,
+            "posts"
+        );
 
         return NextResponse.json({
             url: uploadResult.secure_url,
             publicId: uploadResult.public_id,
         });
-    } catch (err) {
-        console.error("upload-post-image error:", err);
+    } catch (error) {
+        if (error instanceof ImageUploadValidationError) {
+            return NextResponse.json(
+                { error: error.message },
+                { status: error.status }
+            );
+        }
+
+        console.error("upload-post-image error:", error);
         return NextResponse.json(
             { error: "Error procesando/subiendo la imagen" },
             { status: 500 }
