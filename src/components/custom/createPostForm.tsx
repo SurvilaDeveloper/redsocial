@@ -22,7 +22,12 @@ import Link from "next/link";
 import Image from "next/image";
 
 import { cfg } from "@/config";
-import { uploadPostImage } from "@/lib/cloudinary-functions";
+import {
+    getCloudinaryUploadErrorMessage,
+    isCloudinaryUnauthorizedError,
+    uploadPostImage,
+    validateAuthenticatedImageFile,
+} from "@/lib/cloudinary-functions";
 import { createPost } from "@/actions/post-action";
 
 // 🆕 Prop para recibir la session desde la page
@@ -38,6 +43,7 @@ const CreatePostForm = ({ session }: CreatePostFormProps) => {
     const [previewSet, setPreviewSet] = useState<(string | null)[]>([]);
 
     const [error, setError] = useState<string | null>(null);
+    const [needsLogin, setNeedsLogin] = useState(false);
     const [isPending, startTransition] = useTransition();
     const router = useRouter();
 
@@ -53,23 +59,43 @@ const CreatePostForm = ({ session }: CreatePostFormProps) => {
         mode: "onChange",
     });
 
+    function acceptSelectedImage(
+        file: File,
+        input: HTMLInputElement
+    ) {
+        try {
+            validateAuthenticatedImageFile(file);
+            setError(null);
+            setNeedsLogin(false);
+            return true;
+        } catch (err) {
+            setError(
+                getCloudinaryUploadErrorMessage(
+                    err,
+                    "No se pudo usar ese archivo."
+                )
+            );
+            setNeedsLogin(false);
+            input.value = "";
+            return false;
+        }
+    }
+
     // ───────────────── Imagen principal ─────────────────
     const handleMainImageChange = (
         e: React.ChangeEvent<HTMLInputElement>
     ) => {
         const file = e.target.files?.[0] || null;
-        setMainImage(file);
+
+        if (!file) return;
+        if (!acceptSelectedImage(file, e.target)) return;
 
         if (mainPreview?.startsWith("blob:")) {
             URL.revokeObjectURL(mainPreview);
         }
 
-        if (file) {
-            const objectUrl = URL.createObjectURL(file);
-            setMainPreview(objectUrl);
-        } else {
-            setMainPreview(null);
-        }
+        setMainImage(file);
+        setMainPreview(URL.createObjectURL(file));
     };
 
     // ──────────────── Añadir nueva imagen accesoria ────────────────
@@ -77,11 +103,12 @@ const CreatePostForm = ({ session }: CreatePostFormProps) => {
         e: React.ChangeEvent<HTMLInputElement>
     ) => {
         const file = e.target.files?.[0];
-        if (file) {
-            const objectUrl = URL.createObjectURL(file);
-            setImageSet((prev) => [...prev, file]);
-            setPreviewSet((prev) => [...prev, objectUrl]);
-        }
+        if (!file) return;
+        if (!acceptSelectedImage(file, e.target)) return;
+
+        const objectUrl = URL.createObjectURL(file);
+        setImageSet((prev) => [...prev, file]);
+        setPreviewSet((prev) => [...prev, objectUrl]);
     };
 
     // ──────────────── Cambiar una imagen accesoria existente ────────────────
@@ -89,24 +116,25 @@ const CreatePostForm = ({ session }: CreatePostFormProps) => {
         e: React.ChangeEvent<HTMLInputElement>,
         index: number
     ) {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        if (!acceptSelectedImage(file, e.target)) return;
+
         if (previewSet[index]) {
             URL.revokeObjectURL(previewSet[index] as string);
         }
 
-        const file = e.target.files?.[0];
-        if (file) {
-            const objectUrl = URL.createObjectURL(file);
-            setImageSet((prev) => {
-                const newImages = [...prev];
-                newImages[index] = file;
-                return newImages;
-            });
-            setPreviewSet((prev) => {
-                const newPreviews = [...prev];
-                newPreviews[index] = objectUrl;
-                return newPreviews;
-            });
-        }
+        const objectUrl = URL.createObjectURL(file);
+        setImageSet((prev) => {
+            const newImages = [...prev];
+            newImages[index] = file;
+            return newImages;
+        });
+        setPreviewSet((prev) => {
+            const newPreviews = [...prev];
+            newPreviews[index] = objectUrl;
+            return newPreviews;
+        });
     }
 
     // ──────────────── Eliminar una imagen accesoria ────────────────
@@ -131,6 +159,7 @@ const CreatePostForm = ({ session }: CreatePostFormProps) => {
     // ──────────────── Submit ────────────────
     async function onSubmit(values: z.infer<typeof postSchema>) {
         setError(null);
+        setNeedsLogin(false);
 
         startTransition(async () => {
             let mainImageUrl: { url: string; publicId: string } | null = null;
@@ -143,7 +172,15 @@ const CreatePostForm = ({ session }: CreatePostFormProps) => {
                     mainImageUrl = await uploadPostImage(mainImage);
                 } catch (err) {
                     console.error(err);
-                    setError("Error al subir la imagen principal");
+                    setError(
+                        getCloudinaryUploadErrorMessage(
+                            err,
+                            "Error al subir la imagen principal"
+                        )
+                    );
+                    setNeedsLogin(
+                        isCloudinaryUnauthorizedError(err)
+                    );
                     return;
                 }
             }
@@ -163,7 +200,15 @@ const CreatePostForm = ({ session }: CreatePostFormProps) => {
                     }
                 } catch (err) {
                     console.error(err);
-                    setError("Error al subir las imágenes accesorias");
+                    setError(
+                        getCloudinaryUploadErrorMessage(
+                            err,
+                            "Error al subir las imágenes accesorias"
+                        )
+                    );
+                    setNeedsLogin(
+                        isCloudinaryUnauthorizedError(err)
+                    );
                     return;
                 }
             }
@@ -178,6 +223,9 @@ const CreatePostForm = ({ session }: CreatePostFormProps) => {
             if (response?.error) {
                 console.error("Error al crear el post:", response.error);
                 setError(response.error);
+                setNeedsLogin(
+                    response.error === "No logged user."
+                );
             } else {
                 router.push("/");
             }
@@ -234,7 +282,7 @@ const CreatePostForm = ({ session }: CreatePostFormProps) => {
                             <FormControl>
                                 <Input
                                     type="file"
-                                    accept="image/*"
+                                    accept="image/jpeg,image/png,image/webp"
                                     onChange={handleMainImageChange}
                                     className="text-xs file:text-xs file:px-2 file:py-1 file:rounded file:border-0 file:bg-slate-700 file:text-slate-100 bg-slate-900 border-slate-700 text-slate-200"
                                 />
@@ -302,7 +350,7 @@ const CreatePostForm = ({ session }: CreatePostFormProps) => {
                                         <FormControl>
                                             <Input
                                                 type="file"
-                                                accept="image/*"
+                                                accept="image/jpeg,image/png,image/webp"
                                                 onChange={(e) =>
                                                     changeImageAdded(e, index)
                                                 }
@@ -340,7 +388,7 @@ const CreatePostForm = ({ session }: CreatePostFormProps) => {
                             <FormControl>
                                 <Input
                                     type="file"
-                                    accept="image/*"
+                                    accept="image/jpeg,image/png,image/webp"
                                     onChange={handleAddedImageChange}
                                     className="hidden"
                                 />
@@ -359,7 +407,7 @@ const CreatePostForm = ({ session }: CreatePostFormProps) => {
                             <FormMessage className="mt-2 bg-red-900/60 text-red-200 px-3 py-2 rounded">
                                 {error}
                             </FormMessage>
-                            {error === "No logged user." && (
+                            {needsLogin && (
                                 <Link
                                     href="/login"
                                     className="inline-block mt-1 text-xs text-sky-300 hover:text-sky-200 underline"

@@ -19,7 +19,12 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "../ui/textarea";
 
 import { createPost } from "@/actions/post-action";
-import { uploadPostImage } from "@/lib/cloudinary-functions";
+import {
+    getCloudinaryUploadErrorMessage,
+    isCloudinaryUnauthorizedError,
+    uploadPostImage,
+    validateAuthenticatedImageFile,
+} from "@/lib/cloudinary-functions";
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
@@ -40,6 +45,7 @@ const PostFormWall = ({ wallUserId, canPublish }: Props) => {
     const [image, setImage] = useState<File | null>(null);
     const [preview, setPreview] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [needsLogin, setNeedsLogin] = useState(false);
     const [expanded, setExpanded] = useState<boolean>(false);
 
     const [isPending, startTransition] = useTransition();
@@ -71,22 +77,42 @@ const PostFormWall = ({ wallUserId, canPublish }: Props) => {
         if (preview?.startsWith("blob:")) URL.revokeObjectURL(preview);
         setImage(null);
         setPreview(null);
+        setError(null);
+        setNeedsLogin(false);
         if (fileInputRef.current) fileInputRef.current.value = "";
     };
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0] || null;
 
-        if (preview?.startsWith("blob:")) URL.revokeObjectURL(preview);
+        if (!file) {
+            clearImage();
+            return;
+        }
+
+        try {
+            validateAuthenticatedImageFile(file);
+        } catch (err) {
+            setError(
+                getCloudinaryUploadErrorMessage(
+                    err,
+                    "No se pudo usar ese archivo."
+                )
+            );
+            setNeedsLogin(false);
+            e.target.value = "";
+            return;
+        }
+
+        setError(null);
+        setNeedsLogin(false);
+
+        if (preview?.startsWith("blob:")) {
+            URL.revokeObjectURL(preview);
+        }
 
         setImage(file);
-
-        if (file) {
-            const url = URL.createObjectURL(file);
-            setPreview(url);
-        } else {
-            setPreview(null);
-        }
+        setPreview(URL.createObjectURL(file));
     };
 
     useEffect(() => {
@@ -97,6 +123,7 @@ const PostFormWall = ({ wallUserId, canPublish }: Props) => {
 
     async function onSubmit(values: z.infer<typeof postSchema>) {
         setError(null);
+        setNeedsLogin(false);
 
         startTransition(async () => {
             let imageUrl: { url: string; publicId: string } | null = null;
@@ -104,8 +131,17 @@ const PostFormWall = ({ wallUserId, canPublish }: Props) => {
             if (image) {
                 try {
                     imageUrl = await uploadPostImage(image);
-                } catch {
-                    setError("Error al subir la imagen");
+                } catch (err) {
+                    console.error(err);
+                    setError(
+                        getCloudinaryUploadErrorMessage(
+                            err,
+                            "Error al subir la imagen"
+                        )
+                    );
+                    setNeedsLogin(
+                        isCloudinaryUnauthorizedError(err)
+                    );
                     return;
                 }
             }
@@ -115,6 +151,9 @@ const PostFormWall = ({ wallUserId, canPublish }: Props) => {
 
             if (response?.error) {
                 setError(response.error);
+                setNeedsLogin(
+                    response.error === "No logged user."
+                );
                 return;
             }
 
@@ -252,7 +291,7 @@ const PostFormWall = ({ wallUserId, canPublish }: Props) => {
                                         <Input
                                             ref={fileInputRef}
                                             type="file"
-                                            accept="image/*"
+                                            accept="image/jpeg,image/png,image/webp"
                                             onChange={handleImageChange}
                                             className="hidden"
                                         />
@@ -318,11 +357,19 @@ const PostFormWall = ({ wallUserId, canPublish }: Props) => {
                             )}
 
                             {error && (
-                                <div className="mt-2 text-xs text-red-400">
+                                <div
+                                    role="alert"
+                                    className="mt-2 rounded-md border border-red-900/70 bg-red-950/40 px-3 py-2 text-xs text-red-300"
+                                >
                                     <p>{error}</p>
-                                    <Link href="/login" className="underline text-red-300">
-                                        {cfg.TEXTS.acceder}
-                                    </Link>
+                                    {needsLogin && (
+                                        <Link
+                                            href="/login"
+                                            className="mt-1 inline-block underline text-sky-300 hover:text-sky-200"
+                                        >
+                                            {cfg.TEXTS.acceder}
+                                        </Link>
+                                    )}
                                 </div>
                             )}
 

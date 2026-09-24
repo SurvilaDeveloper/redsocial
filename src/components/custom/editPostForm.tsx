@@ -23,7 +23,12 @@ import Link from "next/link";
 
 import Image from "next/image";
 import { cfg } from "@/config";
-import { uploadPostImage } from "@/lib/cloudinary-functions";
+import {
+    getCloudinaryUploadErrorMessage,
+    isCloudinaryUnauthorizedError,
+    uploadPostImage,
+    validateAuthenticatedImageFile,
+} from "@/lib/cloudinary-functions";
 
 
 // Usa el tipo de la imagen que ya está definido en Post (global.d.ts)
@@ -74,6 +79,7 @@ const EditPostForm = ({
         { url: string; publicId: string }[]
     >([]);
     const [error, setError] = useState<string | null>(null);
+    const [needsLogin, setNeedsLogin] = useState(false);
     const imagesAumountRef = useRef<number>(0);
     const [isPending, startTransition] = useTransition();
     const router = useRouter();
@@ -87,23 +93,43 @@ const EditPostForm = ({
         mode: "onChange",
     });
 
+    function acceptSelectedImage(
+        file: File,
+        input: HTMLInputElement
+    ) {
+        try {
+            validateAuthenticatedImageFile(file);
+            setError(null);
+            setNeedsLogin(false);
+            return true;
+        } catch (err) {
+            setError(
+                getCloudinaryUploadErrorMessage(
+                    err,
+                    "No se pudo usar ese archivo."
+                )
+            );
+            setNeedsLogin(false);
+            input.value = "";
+            return false;
+        }
+    }
+
     // Imagen principal
     const handleImageChange = (
         e: React.ChangeEvent<HTMLInputElement>
     ) => {
         const file = e.target.files?.[0] || null;
-        setImage(file);
+
+        if (!file) return;
+        if (!acceptSelectedImage(file, e.target)) return;
 
         if (preview?.startsWith("blob:")) {
             URL.revokeObjectURL(preview);
         }
 
-        if (file) {
-            const objectUrl = URL.createObjectURL(file);
-            setPreview(objectUrl);
-        } else {
-            setPreview(null);
-        }
+        setImage(file);
+        setPreview(URL.createObjectURL(file));
     };
 
     // Imagen accesoria nueva
@@ -111,15 +137,18 @@ const EditPostForm = ({
         e: React.ChangeEvent<HTMLInputElement>
     ) => {
         const file = e.target.files?.[0];
-        if (file) {
-            const objectUrl = URL.createObjectURL(file);
-            setImageSet((prev) => [...prev, file]);
-            setPreviewSet((prev) => [...prev, objectUrl]);
-        }
+        if (!file) return;
+        if (!acceptSelectedImage(file, e.target)) return;
+
+        const objectUrl = URL.createObjectURL(file);
+        setImageSet((prev) => [...prev, file]);
+        setPreviewSet((prev) => [...prev, objectUrl]);
     };
 
     async function onSubmit(values: z.infer<typeof postSchema>) {
         setError(null);
+        setNeedsLogin(false);
+
         startTransition(async () => {
             let imageUrl: { url: string; publicId: string } | null = null;
             const imageAddedUrls: ({ url: string; publicId: string } | null)[] =
@@ -131,7 +160,15 @@ const EditPostForm = ({
                     imageUrl = await uploadPostImage(image);
                 } catch (err) {
                     console.error(err);
-                    setError("Error al subir la imagen principal");
+                    setError(
+                        getCloudinaryUploadErrorMessage(
+                            err,
+                            "Error al subir la imagen principal"
+                        )
+                    );
+                    setNeedsLogin(
+                        isCloudinaryUnauthorizedError(err)
+                    );
                     return;
                 }
             }
@@ -151,7 +188,15 @@ const EditPostForm = ({
                     }
                 } catch (err) {
                     console.error(err);
-                    setError("Error al subir las imágenes accesorias");
+                    setError(
+                        getCloudinaryUploadErrorMessage(
+                            err,
+                            "Error al subir las imágenes accesorias"
+                        )
+                    );
+                    setNeedsLogin(
+                        isCloudinaryUnauthorizedError(err)
+                    );
                     return;
                 }
             }
@@ -171,6 +216,9 @@ const EditPostForm = ({
                     response.error
                 );
                 setError(response.error);
+                setNeedsLogin(
+                    response.error === "No logged user."
+                );
             } else {
                 router.push("/mywall");
             }
@@ -197,24 +245,25 @@ const EditPostForm = ({
         e: React.ChangeEvent<HTMLInputElement>,
         index: number
     ) {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        if (!acceptSelectedImage(file, e.target)) return;
+
         if (previewSet[index]) {
             URL.revokeObjectURL(previewSet[index] as string);
         }
 
-        const file = e.target.files?.[0];
-        if (file) {
-            const objectUrl = URL.createObjectURL(file);
-            setImageSet((prev) => {
-                const newImages = [...prev];
-                newImages[index] = file;
-                return newImages;
-            });
-            setPreviewSet((prev) => {
-                const newPreviews = [...prev];
-                newPreviews[index] = objectUrl;
-                return newPreviews;
-            });
-        }
+        const objectUrl = URL.createObjectURL(file);
+        setImageSet((prev) => {
+            const newImages = [...prev];
+            newImages[index] = file;
+            return newImages;
+        });
+        setPreviewSet((prev) => {
+            const newPreviews = [...prev];
+            newPreviews[index] = objectUrl;
+            return newPreviews;
+        });
     }
 
     function removeSavedImageAdded(
@@ -271,7 +320,7 @@ const EditPostForm = ({
                             <FormControl>
                                 <Input
                                     type="file"
-                                    accept="image/*"
+                                    accept="image/jpeg,image/png,image/webp"
                                     onChange={handleImageChange}
                                     className="text-xs file:text-xs file:px-2 file:py-1 file:rounded file:border-0 file:bg-slate-700 file:text-slate-100 bg-slate-900 border-slate-700 text-slate-200"
                                 />
@@ -366,7 +415,7 @@ const EditPostForm = ({
                                             <FormControl>
                                                 <Input
                                                     type="file"
-                                                    accept="image/*"
+                                                    accept="image/jpeg,image/png,image/webp"
                                                     onChange={(e) =>
                                                         changeImageAdded(e, index)
                                                     }
@@ -420,7 +469,7 @@ const EditPostForm = ({
                                             <FormControl>
                                                 <Input
                                                     type="file"
-                                                    accept="image/*"
+                                                    accept="image/jpeg,image/png,image/webp"
                                                     onChange={(e) =>
                                                         changeImageAdded(e, index)
                                                     }
@@ -465,7 +514,7 @@ const EditPostForm = ({
                             <FormControl>
                                 <Input
                                     type="file"
-                                    accept="image/*"
+                                    accept="image/jpeg,image/png,image/webp"
                                     onChange={handleAddedImageChange}
                                     className="hidden"
                                 />
@@ -485,12 +534,14 @@ const EditPostForm = ({
                             <FormMessage className="mt-2 bg-red-900/60 text-red-200 px-3 py-2 rounded">
                                 {error}
                             </FormMessage>
-                            <Link
-                                href="/login"
-                                className="inline-block mt-1 text-xs text-sky-300 hover:text-sky-200 underline"
-                            >
-                                {cfg.TEXTS.acceder}
-                            </Link>
+                            {needsLogin && (
+                                <Link
+                                    href="/login"
+                                    className="inline-block mt-1 text-xs text-sky-300 hover:text-sky-200 underline"
+                                >
+                                    {cfg.TEXTS.acceder}
+                                </Link>
+                            )}
                         </>
                     )}
 
