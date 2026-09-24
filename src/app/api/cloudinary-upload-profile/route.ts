@@ -1,20 +1,22 @@
-import { NextRequest, NextResponse } from "next/server";
-import crypto from "crypto";
+// src/app/api/cloudinary-upload-profile/route.ts
+import { NextResponse } from "next/server";
 
-async function _signature() {
-    const timestamp = Math.floor(Date.now() / 1000);
-    const apiSecret = process.env.CLOUDINARY_API_SECRET!;
-    const apiKey = process.env.CLOUDINARY_API_KEY!;
-    const cloudName = process.env.CLOUDINARY_CLOUD_NAME!;
-    const folder = "Users"; // Especifica la carpeta donde guardar las imágenes
-
-    // Generar la firma incluyendo la carpeta
-    const signatureString = `folder=${folder}&timestamp=${timestamp}${apiSecret}`;
-    const signature = crypto.createHash("sha1").update(signatureString).digest("hex");
-
-    return { signature, timestamp, apiKey, cloudName, folder };
+function gone() {
+    return NextResponse.json(
+        {
+            error: "Legacy direct profile upload is disabled.",
+            registerEndpoint: "/api/register",
+            authenticatedUploadEndpoint:
+                "/api/upload-profile-image",
+        },
+        { status: 410 }
+    );
 }
 
-export async function POST(req: NextRequest) {
+export async function GET() {
+    return gone();
+}
 
+export async function POST() {
+    return gone();
 }

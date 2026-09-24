@@ -4,9 +4,6 @@ import auth from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 import { WallHeaderBGType } from "@prisma/client";
-/* -------------------------------------------------------------------------- */
-/*                                   SCHEMA                                   */
-/* -------------------------------------------------------------------------- */
 
 const nullableString = (max: number) =>
     z
@@ -14,7 +11,9 @@ const nullableString = (max: number) =>
         .max(max)
         .optional()
         .nullable()
-        .transform((v) => (v == null || v === "" ? null : v));
+        .transform((v) =>
+            v == null || v === "" ? null : v
+        );
 
 const profileUpdateSchema = z.object({
     nick: nullableString(50).refine(
@@ -26,12 +25,30 @@ const profileUpdateSchema = z.object({
     phoneNumber: nullableString(30),
     movilNumber: nullableString(30),
 
-    birthday: z.union([z.string().datetime(), z.null()]).optional(),
+    birthday: z
+        .union([z.string().datetime(), z.null()])
+        .optional(),
 
-    // 🌍 Geo IDs
-    countryId: z.number().int().positive().nullable().optional(),
-    provinceId: z.number().int().positive().nullable().optional(),
-    cityId: z.number().int().positive().nullable().optional(),
+    countryId: z
+        .number()
+        .int()
+        .positive()
+        .nullable()
+        .optional(),
+
+    provinceId: z
+        .number()
+        .int()
+        .positive()
+        .nullable()
+        .optional(),
+
+    cityId: z
+        .number()
+        .int()
+        .positive()
+        .nullable()
+        .optional(),
 
     country: nullableString(100),
     province: nullableString(100),
@@ -52,47 +69,159 @@ const profileUpdateSchema = z.object({
     instagramHandle: nullableString(100),
     linkedinHandle: nullableString(100),
     githubHandle: nullableString(100),
-    // 🖼️ IMÁGENES (CLAVE)
-    imageUrl: z.string().url().nullable().optional(),
-    imageWallUrl: z.string().url().nullable().optional(),
 
-    // opcional pero MUY recomendable
-    imagePublicId: z.string().nullable().optional(),
-    imageWallPublicId: z.string().nullable().optional(),
+    imageUrl: z
+        .string()
+        .url()
+        .nullable()
+        .optional(),
 
-    wallHeaderBackgroundType: z.nativeEnum(WallHeaderBGType).nullable().optional(),
-    wallHeaderBackgroundColor: z.string().nullable().optional(),
+    imageWallUrl: z
+        .string()
+        .url()
+        .nullable()
+        .optional(),
+
+    imagePublicId: z
+        .string()
+        .nullable()
+        .optional(),
+
+    imageWallPublicId: z
+        .string()
+        .nullable()
+        .optional(),
+
+    wallHeaderBackgroundType: z
+        .nativeEnum(WallHeaderBGType)
+        .nullable()
+        .optional(),
+
+    wallHeaderBackgroundColor: z
+        .string()
+        .nullable()
+        .optional(),
 });
-
-/* -------------------------------------------------------------------------- */
-/*                                   UTILS                                    */
-/* -------------------------------------------------------------------------- */
 
 function prismaUniqueErrorMessage(e: any) {
     if (e?.code === "P2002") {
         const target = Array.isArray(e?.meta?.target)
             ? e.meta.target.join(", ")
             : String(e?.meta?.target || "");
+
         return `Ya existe otro usuario con el mismo valor en: ${target}`;
     }
+
     return null;
 }
 
 async function getSessionUserId() {
     const session = await auth();
-    const id = session?.user?.id ? Number(session.user.id) : null;
-    return id && Number.isFinite(id) ? id : null;
+    const id = session?.user?.id
+        ? Number(session.user.id)
+        : null;
+
+    return id && Number.isFinite(id)
+        ? id
+        : null;
 }
 
-/* -------------------------------------------------------------------------- */
-/*                                     GET                                    */
-/* -------------------------------------------------------------------------- */
+class ImageReferenceError extends Error {
+    status: number;
+
+    constructor(message: string, status = 400) {
+        super(message);
+        this.name = "ImageReferenceError";
+        this.status = status;
+    }
+}
+
+async function assertOwnedImageReference({
+    userId,
+    label,
+    nextUrl,
+    nextPublicId,
+    currentUrl,
+    currentPublicId,
+}: {
+    userId: number;
+    label: string;
+    nextUrl: string | null | undefined;
+    nextPublicId: string | null | undefined;
+    currentUrl: string | null;
+    currentPublicId: string | null;
+}) {
+    const effectiveUrl =
+        nextUrl === undefined
+            ? currentUrl
+            : nextUrl;
+
+    const effectivePublicId =
+        nextPublicId === undefined
+            ? currentPublicId
+            : nextPublicId;
+
+    const changed =
+        effectiveUrl !== currentUrl ||
+        effectivePublicId !== currentPublicId;
+
+    if (!changed) {
+        return;
+    }
+
+    // Quitar una imagen sí está permitido.
+    if (
+        effectiveUrl == null &&
+        effectivePublicId == null
+    ) {
+        return;
+    }
+
+    // Una referencia nueva debe venir como par.
+    if (!effectiveUrl || !effectivePublicId) {
+        throw new ImageReferenceError(
+            `${label}: url/publicId incompletos.`
+        );
+    }
+
+    const asset =
+        await prisma.cloudinaryImage.findUnique({
+            where: {
+                publicId: effectivePublicId,
+            },
+            select: {
+                userId: true,
+                url: true,
+                deletedAt: true,
+            },
+        });
+
+    if (
+        !asset ||
+        asset.userId !== userId ||
+        asset.deletedAt != null
+    ) {
+        throw new ImageReferenceError(
+            `${label}: la imagen no pertenece al usuario.`,
+            403
+        );
+    }
+
+    if (asset.url !== effectiveUrl) {
+        throw new ImageReferenceError(
+            `${label}: url/publicId no coinciden.`
+        );
+    }
+}
 
 export async function GET() {
     const userId = await getSessionUserId();
 
     if (!userId) {
-        return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+        return NextResponse.json(
+            { error: "No autenticado" },
+            { status: 401 }
+        );
     }
 
     const user = await prisma.user.findUnique({
@@ -135,48 +264,103 @@ export async function GET() {
             imagePublicId: true,
             imageWallUrl: true,
             imageWallPublicId: true,
-
         },
     });
 
     if (!user) {
-        return NextResponse.json({ error: "Usuario no encontrado" }, { status: 404 });
+        return NextResponse.json(
+            { error: "Usuario no encontrado" },
+            { status: 404 }
+        );
     }
 
     return NextResponse.json({ data: user });
 }
 
-/* -------------------------------------------------------------------------- */
-/*                                    PATCH                                   */
-/* -------------------------------------------------------------------------- */
-
-
-
 export async function PATCH(req: NextRequest) {
     const userId = await getSessionUserId();
 
     if (!userId) {
-        return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+        return NextResponse.json(
+            { error: "No autenticado" },
+            { status: 401 }
+        );
     }
 
     const body = await req.json().catch(() => null);
-    const parsed = profileUpdateSchema.safeParse(body);
+
+    const parsed =
+        profileUpdateSchema.safeParse(body);
 
     if (!parsed.success) {
         return NextResponse.json(
-            { error: "Body inválido", details: parsed.error.flatten() },
+            {
+                error: "Body inválido",
+                details: parsed.error.flatten(),
+            },
             { status: 400 }
         );
     }
 
-    const { birthday, ...rest } = parsed.data;
+    const currentUser =
+        await prisma.user.findUnique({
+            where: { id: userId },
+            select: {
+                imageUrl: true,
+                imagePublicId: true,
+                imageWallUrl: true,
+                imageWallPublicId: true,
+            },
+        });
+
+    if (!currentUser) {
+        return NextResponse.json(
+            { error: "Usuario no encontrado" },
+            { status: 404 }
+        );
+    }
 
     try {
-        const updatedUser = await prisma.$transaction(async (tx) => {
-            /* ------------------------------
-             * 👤 Actualizar usuario
-             * ------------------------------ */
-            const user = await tx.user.update({
+        await assertOwnedImageReference({
+            userId,
+            label: "Imagen de perfil",
+            nextUrl: parsed.data.imageUrl,
+            nextPublicId:
+                parsed.data.imagePublicId,
+            currentUrl: currentUser.imageUrl,
+            currentPublicId:
+                currentUser.imagePublicId,
+        });
+
+        await assertOwnedImageReference({
+            userId,
+            label: "Imagen de portada",
+            nextUrl: parsed.data.imageWallUrl,
+            nextPublicId:
+                parsed.data.imageWallPublicId,
+            currentUrl: currentUser.imageWallUrl,
+            currentPublicId:
+                currentUser.imageWallPublicId,
+        });
+    } catch (error) {
+        if (error instanceof ImageReferenceError) {
+            return NextResponse.json(
+                { error: error.message },
+                { status: error.status }
+            );
+        }
+
+        throw error;
+    }
+
+    const {
+        birthday,
+        ...rest
+    } = parsed.data;
+
+    try {
+        const updatedUser =
+            await prisma.user.update({
                 where: { id: userId },
                 data: {
                     ...rest,
@@ -226,60 +410,27 @@ export async function PATCH(req: NextRequest) {
                 },
             });
 
-            /* ------------------------------
-             * 📸 Imagen de perfil
-             * ------------------------------ */
-            if (user.imagePublicId && user.imageUrl) {
-                await tx.cloudinaryImage.upsert({
-                    where: { publicId: user.imagePublicId },
-                    update: {
-                        deletedAt: null,
-                    },
-                    create: {
-                        userId,
-                        publicId: user.imagePublicId,
-                        url: user.imageUrl,
-                    },
-                });
-            }
-
-            /* ------------------------------
-             * 🧱 Imagen de portada
-             * ------------------------------ */
-            if (user.imageWallPublicId && user.imageWallUrl) {
-                await tx.cloudinaryImage.upsert({
-                    where: { publicId: user.imageWallPublicId },
-                    update: {
-                        deletedAt: null,
-                    },
-                    create: {
-                        userId,
-                        publicId: user.imageWallPublicId,
-                        url: user.imageWallUrl,
-                    },
-                });
-            }
-
-            return user;
+        return NextResponse.json({
+            data: updatedUser,
         });
-
-        return NextResponse.json({ data: updatedUser });
     } catch (e: any) {
-        const msg = prismaUniqueErrorMessage(e);
+        const msg =
+            prismaUniqueErrorMessage(e);
+
         if (msg) {
-            return NextResponse.json({ error: msg }, { status: 409 });
+            return NextResponse.json(
+                { error: msg },
+                { status: 409 }
+            );
         }
 
         console.error(e);
+
         return NextResponse.json(
-            { error: "Error actualizando perfil" },
+            {
+                error: "Error actualizando perfil",
+            },
             { status: 500 }
         );
     }
 }
-
-
-
-
-
-

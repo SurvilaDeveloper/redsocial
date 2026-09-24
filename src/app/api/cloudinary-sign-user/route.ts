@@ -1,16 +1,24 @@
-import { NextRequest, NextResponse } from "next/server";
-import crypto from "crypto";
+// src/app/api/cloudinary-sign-user/route.ts
+import { NextResponse } from "next/server";
 
-export async function GET(req: NextRequest) {
-    const timestamp = Math.floor(Date.now() / 1000);
-    const apiSecret = process.env.CLOUDINARY_API_SECRET!;
-    const apiKey = process.env.CLOUDINARY_API_KEY!;
-    const cloudName = process.env.CLOUDINARY_CLOUD_NAME!;
-    const folder = "Users"; // Especifica la carpeta donde guardar las imágenes
-
-    // Generar la firma incluyendo la carpeta
-    const signatureString = `folder=${folder}&timestamp=${timestamp}${apiSecret}`;
-    const signature = crypto.createHash("sha1").update(signatureString).digest("hex");
-
-    return NextResponse.json({ signature, timestamp, apiKey, cloudName, folder });
+/**
+ * Stage 3:
+ * la firma pública para avatar queda retirada.
+ *
+ * Registro:
+ * POST /api/register (multipart)
+ *
+ * Usuario autenticado:
+ * POST /api/upload-profile-image
+ */
+export async function GET() {
+    return NextResponse.json(
+        {
+            error: "Direct Cloudinary profile uploads are disabled.",
+            registerEndpoint: "/api/register",
+            authenticatedUploadEndpoint:
+                "/api/upload-profile-image",
+        },
+        { status: 410 }
+    );
 }
