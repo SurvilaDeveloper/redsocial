@@ -1403,9 +1403,12 @@ export default function ProfileForm({ user }: { user: ProfileMe }) {
                 </Form>
             </div>
 
-            <div className="mt-1 text-xs text-slate-500">
-                ¿Querés volver sin guardar? Usá <span className="text-slate-300">“Salir sin guardar”</span>.
-            </div>
+            {isDirty ? (
+                <div className="mt-1 text-xs text-slate-500">
+                    ¿Querés volver sin guardar? Usá{" "}
+                    <span className="text-slate-300">“Salir sin guardar”</span>.
+                </div>
+            ) : null}
         </PageShell>
     );
 }
