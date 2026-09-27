@@ -43,6 +43,11 @@ import citiesRaw from "@/data/geodata/cities_by_state.json";
 import WallHeaderShell from "./WallHeaderShell";
 
 import { useToast } from "@/hooks/use-toast";
+import {
+    CloudinaryUploadError,
+    getCloudinaryUploadErrorMessage,
+    validateAuthenticatedImageFile,
+} from "@/lib/cloudinary-functions";
 
 /* -------------------------------------------------------------------------- */
 /*                                   TYPES                                    */
@@ -405,6 +410,27 @@ export default function ProfileForm({ user }: { user: ProfileMe }) {
 
     const isDirty = form.formState.isDirty || imagesDirty;
 
+    function acceptSelectedImage(
+        file: File,
+        input: HTMLInputElement
+    ) {
+        try {
+            validateAuthenticatedImageFile(file);
+            setStatus({ type: "idle", message: null });
+            return true;
+        } catch (error) {
+            setStatus({
+                type: "error",
+                message: getCloudinaryUploadErrorMessage(
+                    error,
+                    "No se pudo usar ese archivo."
+                ),
+            });
+            input.value = "";
+            return false;
+        }
+    }
+
     /* ------------------------------ navigation guards ------------------------------ */
 
     const handleTryExit = useCallback(() => {
@@ -476,10 +502,20 @@ export default function ProfileForm({ user }: { user: ProfileMe }) {
         const formData = new FormData();
         formData.append("file", file);
 
-        const res = await fetch(endpoint, { method: "POST", body: formData });
-        const json = await res.json();
+        const res = await fetch(endpoint, {
+            method: "POST",
+            body: formData,
+        });
+        const json = await res.json().catch(() => null);
 
-        if (!res.ok) throw new Error(json?.error ?? "Error subiendo imagen");
+        if (!res.ok) {
+            throw new CloudinaryUploadError(
+                res.status === 401
+                    ? "Tu sesión venció. Iniciá sesión nuevamente para continuar."
+                    : json?.error ?? "Error subiendo imagen",
+                res.status
+            );
+        }
 
         return json as { url: string; publicId: string };
     }
@@ -577,7 +613,13 @@ export default function ProfileForm({ user }: { user: ProfileMe }) {
             setStatus({ type: "success", message: "Perfil actualizado" });
         } catch (err) {
             console.error(err);
-            setStatus({ type: "error", message: "Error actualizando perfil" });
+            setStatus({
+                type: "error",
+                message: getCloudinaryUploadErrorMessage(
+                    err,
+                    "Error actualizando perfil"
+                ),
+            });
         } finally {
             setSaving(false);
             setUploadingProfile(false);
@@ -766,11 +808,12 @@ export default function ProfileForm({ user }: { user: ProfileMe }) {
                                                         Elegir imagen
                                                         <input
                                                             type="file"
-                                                            accept="image/*"
+                                                            accept="image/jpeg,image/png,image/webp"
                                                             className="hidden"
                                                             onChange={(e) => {
                                                                 const file = e.target.files?.[0];
                                                                 if (!file) return;
+                                                                if (!acceptSelectedImage(file, e.target)) return;
 
                                                                 setWallFile(file);
                                                                 setWallColor(null);
@@ -799,6 +842,7 @@ export default function ProfileForm({ user }: { user: ProfileMe }) {
                                                             type="color"
                                                             className="hidden"
                                                             onChange={(e) => {
+                                                                setStatus({ type: "idle", message: null });
                                                                 setWallColor(e.target.value);
                                                                 setWallFile(null);
                                                                 setWallHeaderBackgroundTypeState("color");
@@ -851,11 +895,12 @@ export default function ProfileForm({ user }: { user: ProfileMe }) {
                                                 Cambiar imagen
                                                 <input
                                                     type="file"
-                                                    accept="image/*"
+                                                    accept="image/jpeg,image/png,image/webp"
                                                     className="hidden"
                                                     onChange={(e) => {
                                                         const file = e.target.files?.[0];
                                                         if (!file) return;
+                                                        if (!acceptSelectedImage(file, e.target)) return;
 
                                                         setProfileFile(file);
                                                         const url = URL.createObjectURL(file);
