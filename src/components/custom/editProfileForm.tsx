@@ -1,7 +1,7 @@
 // src/components/custom/editProfileForm.tsx
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
 import { useForm } from "react-hook-form";
@@ -274,6 +274,40 @@ export default function ProfileForm({ user }: { user: ProfileMe }) {
         mode: "onChange",
     });
 
+    /**
+     * Snapshot del último guardado exitoso.
+     * No usamos las props iniciales como baseline permanente porque el usuario
+     * puede guardar varias veces sin abandonar /editprofile.
+     */
+    const [savedFormValues, setSavedFormValues] =
+        useState<ProfileFormValues>(() => defaultValues);
+
+    const [savedProfilePreview, setSavedProfilePreview] =
+        useState<string | null>(initialProfilePreview);
+    const [savedWallPreview, setSavedWallPreview] =
+        useState<string | null>(initialWallPreview);
+
+    const [savedWallType, setSavedWallType] =
+        useState<string | null>(initialWallType);
+    const [savedWallColor, setSavedWallColor] =
+        useState<string | null>(initialWallColor);
+
+    const [savedProfileImageUrl, setSavedProfileImageUrl] =
+        useState<string | null>(user.imageUrl ?? null);
+    const [savedProfileImagePublicId, setSavedProfileImagePublicId] =
+        useState<string | null>(user.imagePublicId ?? null);
+    const [savedWallImageUrl, setSavedWallImageUrl] =
+        useState<string | null>(user.imageWallUrl ?? null);
+    const [savedWallImagePublicId, setSavedWallImagePublicId] =
+        useState<string | null>(user.imageWallPublicId ?? null);
+
+    const previousCountryIdRef = useRef<number | null>(
+        defaultValues.countryId ?? null
+    );
+    const previousProvinceIdRef = useRef<number | null>(
+        defaultValues.provinceId ?? null
+    );
+
     // UI-friendly date draft (YYYY-MM-DD) para no romper el typing del <input type="date">
     const [birthdayDraft, setBirthdayDraft] = useState<string>(() => {
         const b = defaultValues.birthday as any;
@@ -282,8 +316,8 @@ export default function ProfileForm({ user }: { user: ProfileMe }) {
 
     const countryId = form.watch("countryId");
     const provinceId = form.watch("provinceId");
-    const effectiveCountryId = countryId ?? defaultValues.countryId;
-    const effectiveProvinceId = provinceId ?? defaultValues.provinceId;
+    const effectiveCountryId = countryId;
+    const effectiveProvinceId = provinceId;
 
     /* ----------------------------- Preview ------------------------------- */
 
@@ -384,13 +418,36 @@ export default function ProfileForm({ user }: { user: ProfileMe }) {
         setCities(citiesData[effectiveProvinceId] ?? []);
     }, [effectiveProvinceId]);
 
-    // Si el usuario cambia provincia manualmente, limpiamos cityId
     useEffect(() => {
-        if (provinceId !== defaultValues.provinceId) {
-            form.setValue("cityId", null);
+        const currentCountryId = countryId ?? null;
+
+        if (previousCountryIdRef.current !== currentCountryId) {
+            previousCountryIdRef.current = currentCountryId;
+            previousProvinceIdRef.current = null;
+
+            form.setValue("provinceId", null, {
+                shouldDirty: true,
+                shouldValidate: true,
+            });
+            form.setValue("cityId", null, {
+                shouldDirty: true,
+                shouldValidate: true,
+            });
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [provinceId]);
+    }, [countryId, form]);
+
+    useEffect(() => {
+        const currentProvinceId = provinceId ?? null;
+
+        if (previousProvinceIdRef.current !== currentProvinceId) {
+            previousProvinceIdRef.current = currentProvinceId;
+
+            form.setValue("cityId", null, {
+                shouldDirty: true,
+                shouldValidate: true,
+            });
+        }
+    }, [provinceId, form]);
 
     // liberar ObjectURLs al cambiar preview/wallPreview
     useEffect(() => {
@@ -404,11 +461,17 @@ export default function ProfileForm({ user }: { user: ProfileMe }) {
 
     const imagesDirty =
         Boolean(profileFile || wallFile) ||
-        wallHeaderBackgroundTypeState !== initialWallType ||
+        wallHeaderBackgroundTypeState !== savedWallType ||
         (wallHeaderBackgroundTypeState === "color" &&
-            (wallColor ?? null) !== (initialWallColor ?? null));
+            (wallColor ?? null) !== (savedWallColor ?? null));
 
     const isDirty = form.formState.isDirty || imagesDirty;
+
+    useEffect(() => {
+        if (form.formState.isDirty && status.type === "success") {
+            setStatus({ type: "idle", message: null });
+        }
+    }, [form.formState.isDirty, status.type]);
 
     function acceptSelectedImage(
         file: File,
@@ -458,16 +521,36 @@ export default function ProfileForm({ user }: { user: ProfileMe }) {
     );
 
     const handleConfirmDiscard = useCallback(() => {
-        // reset form + reset imágenes a lo inicial
-        form.reset(defaultValues);
+        previousCountryIdRef.current =
+            savedFormValues.countryId ?? null;
+        previousProvinceIdRef.current =
+            savedFormValues.provinceId ?? null;
+
+        form.reset(savedFormValues, {
+            keepDirty: false,
+            keepErrors: true,
+        });
+
+        const savedBirthday = savedFormValues.birthday as any;
+        setBirthdayDraft(
+            savedBirthday
+                ? String(savedBirthday).slice(0, 10)
+                : ""
+        );
+
         setProfileFile(null);
         setWallFile(null);
 
-        setWallHeaderBackgroundTypeState(initialWallType);
-        setWallColor(initialWallColor);
+        setProfileImageUrl(savedProfileImageUrl);
+        setProfileImagePublicId(savedProfileImagePublicId);
+        setWallImageUrl(savedWallImageUrl);
+        setWallImagePublicId(savedWallImagePublicId);
 
-        setPreview(initialProfilePreview);
-        setWallPreview(initialWallPreview);
+        setWallHeaderBackgroundTypeState(savedWallType);
+        setWallColor(savedWallColor);
+
+        setPreview(savedProfilePreview);
+        setWallPreview(savedWallPreview);
 
         setStatus({ type: "idle", message: null });
 
@@ -483,12 +566,16 @@ export default function ProfileForm({ user }: { user: ProfileMe }) {
             return;
         }
     }, [
-        defaultValues,
         form,
-        initialProfilePreview,
-        initialWallPreview,
-        initialWallType,
-        initialWallColor,
+        savedFormValues,
+        savedProfilePreview,
+        savedWallPreview,
+        savedWallType,
+        savedWallColor,
+        savedProfileImageUrl,
+        savedProfileImagePublicId,
+        savedWallImageUrl,
+        savedWallImagePublicId,
         pendingExit,
         pendingPage,
     ]);
@@ -555,8 +642,6 @@ export default function ProfileForm({ user }: { user: ProfileMe }) {
                 const uploaded = await uploadImage(profileFile, "/api/upload-profile-image");
                 uploadedProfileImageUrl = uploaded.url;
                 uploadedProfileImagePublicId = uploaded.publicId;
-                setProfileImageUrl(uploaded.url);
-                setProfileImagePublicId(uploaded.publicId);
                 setUploadingProfile(false);
             }
 
@@ -565,14 +650,19 @@ export default function ProfileForm({ user }: { user: ProfileMe }) {
                 const uploaded = await uploadImage(wallFile, "/api/upload-wall-image");
                 uploadedWallImageUrl = uploaded.url;
                 uploadedWallImagePublicId = uploaded.publicId;
-                setWallImageUrl(uploaded.url);
-                setWallImagePublicId(uploaded.publicId);
                 setUploadingWall(false);
             }
 
-            // 3) Payload final
-            const valuesToSend = {
+            // 3) Payload final + nuevo baseline de datos del formulario.
+            const savedValuesAfterSave: ProfileFormValues = {
                 ...values,
+                country: countryName,
+                province: provinceName,
+                city: cityName,
+            };
+
+            const valuesToSend = {
+                ...savedValuesAfterSave,
                 // birthday ya viene ISO desde el form
                 imageUrl: uploadedProfileImageUrl,
                 imagePublicId: uploadedProfileImagePublicId,
@@ -580,9 +670,6 @@ export default function ProfileForm({ user }: { user: ProfileMe }) {
                 imageWallPublicId: uploadedWallImagePublicId,
                 wallHeaderBackgroundType: wallHeaderBackgroundTypeState,
                 wallHeaderBackgroundColor: wallColor,
-                country: countryName,
-                province: provinceName,
-                city: cityName,
             };
 
             // 4) PATCH perfil
@@ -606,7 +693,58 @@ export default function ProfileForm({ user }: { user: ProfileMe }) {
                 image: json?.data?.imageUrl ?? uploadedProfileImageUrl ?? null,
             });
 
-            form.reset(values, { keepDirty: false, keepErrors: true });
+            const nextProfilePreview =
+                profileFile && uploadedProfileImageUrl
+                    ? uploadedProfileImageUrl
+                    : savedProfilePreview;
+
+            const nextWallPreview =
+                wallHeaderBackgroundTypeState === "image"
+                    ? (
+                        wallFile && uploadedWallImageUrl
+                            ? uploadedWallImageUrl
+                            : savedWallPreview
+                    )
+                    : wallHeaderBackgroundTypeState === "color"
+                        ? wallColor
+                        : "/wall.jpg";
+
+            setProfileImageUrl(uploadedProfileImageUrl);
+            setProfileImagePublicId(uploadedProfileImagePublicId);
+            setWallImageUrl(uploadedWallImageUrl);
+            setWallImagePublicId(uploadedWallImagePublicId);
+
+            setSavedProfileImageUrl(uploadedProfileImageUrl);
+            setSavedProfileImagePublicId(uploadedProfileImagePublicId);
+            setSavedWallImageUrl(uploadedWallImageUrl);
+            setSavedWallImagePublicId(uploadedWallImagePublicId);
+
+            setPreview(nextProfilePreview);
+            setWallPreview(nextWallPreview);
+
+            setSavedProfilePreview(nextProfilePreview);
+            setSavedWallPreview(nextWallPreview);
+            setSavedWallType(wallHeaderBackgroundTypeState);
+            setSavedWallColor(wallColor);
+            setSavedFormValues(savedValuesAfterSave);
+
+            previousCountryIdRef.current =
+                savedValuesAfterSave.countryId ?? null;
+            previousProvinceIdRef.current =
+                savedValuesAfterSave.provinceId ?? null;
+
+            form.reset(savedValuesAfterSave, {
+                keepDirty: false,
+                keepErrors: true,
+            });
+
+            const savedBirthday = savedValuesAfterSave.birthday as any;
+            setBirthdayDraft(
+                savedBirthday
+                    ? String(savedBirthday).slice(0, 10)
+                    : ""
+            );
+
             setProfileFile(null);
             setWallFile(null);
 
@@ -914,7 +1052,7 @@ export default function ProfileForm({ user }: { user: ProfileMe }) {
                                                     type="button"
                                                     onClick={() => {
                                                         setProfileFile(null);
-                                                        setPreview(initialProfilePreview);
+                                                        setPreview(savedProfilePreview);
                                                     }}
                                                     className={cn(
                                                         "inline-flex items-center justify-center",
@@ -1194,10 +1332,14 @@ export default function ProfileForm({ user }: { user: ProfileMe }) {
                                 <div className="flex flex-col sm:flex-row gap-2 sm:justify-end">
                                     <Button
                                         type="submit"
-                                        disabled={saving || uploadingProfile || uploadingWall}
-                                        className="h-10 bg-emerald-600 hover:bg-emerald-500"
+                                        disabled={!isDirty || saving || uploadingProfile || uploadingWall}
+                                        className="h-10 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60"
                                     >
-                                        {saving ? "Guardando..." : "Guardar cambios"}
+                                        {saving
+                                            ? "Guardando..."
+                                            : isDirty
+                                                ? "Guardar cambios"
+                                                : "Sin cambios"}
                                     </Button>
 
                                     <Button
