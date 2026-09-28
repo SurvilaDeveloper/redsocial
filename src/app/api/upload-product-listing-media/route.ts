@@ -1,143 +1,220 @@
-//src/app/api/upload-product-listing-media/route.ts
+// src/app/api/upload-product-listing-media/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import sharp from "sharp";
-import { v2 as cloudinary } from "cloudinary";
+
 import auth from "@/auth";
+import { prisma } from "@/lib/prisma";
+import {
+    MediaUploadValidationError,
+    assertListingMediaRequestSizeIsReasonable,
+} from "@/lib/cloudinary-upload-security";
+import {
+    rollbackUploadedListingMedia,
+    uploadValidatedListingMedia,
+    type UploadedListingMedia,
+} from "@/lib/cloudinary-listing-media";
 
-cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME!,
-    api_key: process.env.CLOUDINARY_API_KEY!,
-    api_secret: process.env.CLOUDINARY_API_SECRET!,
-});
+export const runtime = "nodejs";
 
-const MAX_FILE_MB_IMAGE = 15;
-const MAX_FILE_MB_VIDEO = 50;
+const MAX_MEDIA = 6;
 
-function isLikelyImage(mime: string) {
-    return mime.startsWith("image/");
+function findFreeSlot(
+    usedIndexes: Array<number | null | undefined>
+) {
+    const used = new Set<number>();
+
+    for (const value of usedIndexes) {
+        const index = Number(value);
+        if (Number.isFinite(index)) used.add(index);
+    }
+
+    for (let i = 1; i <= MAX_MEDIA; i++) {
+        if (!used.has(i)) return i;
+    }
+
+    return null;
 }
-function isLikelyVideo(mime: string) {
-    return mime.startsWith("video/");
+
+function parseListingId(value: FormDataEntryValue | null) {
+    if (typeof value !== "string") return null;
+
+    const id = Number(value);
+
+    if (!Number.isInteger(id) || id <= 0) {
+        return null;
+    }
+
+    return id;
 }
 
 export async function POST(req: NextRequest) {
+    const session = await auth();
+    const userId =
+        session?.user?.id != null
+            ? Number(session.user.id)
+            : null;
+
+    if (!userId || !Number.isFinite(userId)) {
+        return NextResponse.json(
+            { error: "Unauthorized" },
+            { status: 401 }
+        );
+    }
+
+    let uploaded: UploadedListingMedia | null = null;
+
     try {
-        const session = await auth();
-        if (!session?.user?.id) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
+        assertListingMediaRequestSizeIsReasonable(
+            req.headers.get("content-length")
+        );
 
         const formData = await req.formData();
-        const file = formData.get("file");
+        const listingId = parseListingId(
+            formData.get("listingId")
+        );
 
-        if (!(file instanceof Blob)) {
-            return NextResponse.json({ error: "Archivo inválido" }, { status: 400 });
-        }
-
-        const mime = (file as any)?.type ? String((file as any).type) : "";
-        const sizeBytes = (file as any)?.size ? Number((file as any).size) : 0;
-
-        if (!mime) {
-            return NextResponse.json({ error: "No se detectó el tipo de archivo" }, { status: 400 });
-        }
-
-        const maxBytes = (isLikelyVideo(mime) ? MAX_FILE_MB_VIDEO : MAX_FILE_MB_IMAGE) * 1024 * 1024;
-        if (sizeBytes > maxBytes) {
+        if (!listingId) {
             return NextResponse.json(
-                { error: `Archivo demasiado grande (máx ${isLikelyVideo(mime) ? MAX_FILE_MB_VIDEO : MAX_FILE_MB_IMAGE}MB)` },
+                { error: "listingId inválido." },
                 { status: 400 }
             );
         }
 
-        const arrayBuffer = await file.arrayBuffer();
-        const inputBuffer = Buffer.from(arrayBuffer);
+        const listing = await prisma.productListing.findFirst({
+            where: {
+                id: listingId,
+                user_id: userId,
+                deletedAt: null,
+            },
+            select: { id: true },
+        });
 
-        // Carpetas cloudinary
-        const folderMain = "product_listings";
-        const folderThumb = "product_listings/thumbs";
-
-        // ✅ VIDEO: subir tal cual (sin sharp)
-        if (isLikelyVideo(mime)) {
-            const uploadVideo = await new Promise<{ secure_url: string; public_id: string; format?: string; duration?: number }>(
-                (resolve, reject) => {
-                    const stream = cloudinary.uploader.upload_stream(
-                        {
-                            folder: folderMain,
-                            resource_type: "video",
-                        },
-                        (error, result) => {
-                            if (error || !result) return reject(error || new Error("Upload failed"));
-                            resolve({
-                                secure_url: result.secure_url!,
-                                public_id: result.public_id!,
-                                format: (result as any).format,
-                                duration: (result as any).duration,
-                            });
-                        }
-                    );
-                    stream.end(inputBuffer);
-                }
+        if (!listing) {
+            return NextResponse.json(
+                { error: "Producto no encontrado o sin permisos." },
+                { status: 404 }
             );
+        }
+
+        const activeRows =
+            await prisma.productListingMedia.findMany({
+                where: {
+                    product_listing_id: listingId,
+                    active: 1,
+                },
+                select: { index: true },
+                orderBy: { index: "asc" },
+            });
+
+        if (activeRows.length >= MAX_MEDIA) {
+            return NextResponse.json(
+                {
+                    error: `Máximo ${MAX_MEDIA} medias por producto.`,
+                },
+                { status: 409 }
+            );
+        }
+
+        const slot = findFreeSlot(
+            activeRows.map((row) => row.index)
+        );
+
+        if (!slot) {
+            return NextResponse.json(
+                { error: "No hay slot disponible." },
+                { status: 409 }
+            );
+        }
+
+        uploaded = await uploadValidatedListingMedia(
+            formData.get("file"),
+            {
+                main: "product_listings",
+                thumbnail: "product_listings/thumbs",
+            }
+        );
+
+        try {
+            const row =
+                await prisma.productListingMedia.create({
+                    data: {
+                        product_listing_id: listingId,
+                        type: uploaded.type,
+                        url: uploaded.url,
+                        publicId: uploaded.publicId,
+                        thumbnailUrl:
+                            uploaded.thumbnailUrl,
+                        thumbnailPublicId:
+                            uploaded.thumbnailPublicId,
+                        durationSec:
+                            uploaded.durationSec,
+                        format: uploaded.format,
+                        index: slot,
+                        active: 1,
+                    },
+                    select: {
+                        id: true,
+                        type: true,
+                        url: true,
+                        publicId: true,
+                        thumbnailUrl: true,
+                        thumbnailPublicId: true,
+                        durationSec: true,
+                        format: true,
+                        index: true,
+                        active: true,
+                    },
+                });
 
             return NextResponse.json({
-                type: "video",
-                url: uploadVideo.secure_url,
-                publicId: uploadVideo.public_id,
-                thumbUrl: null,
-                thumbPublicId: null,
-                format: uploadVideo.format ?? null,
-                durationSec: typeof uploadVideo.duration === "number" ? Math.round(uploadVideo.duration) : null,
+                id: row.id,
+                type:
+                    row.type === "video"
+                        ? "video"
+                        : "image",
+                url: row.url,
+                publicId: row.publicId,
+                thumbUrl: row.thumbnailUrl,
+                thumbPublicId:
+                    row.thumbnailPublicId,
+                durationSec: row.durationSec,
+                format: row.format,
+                index: row.index,
+                active: row.active,
             });
+        } catch (error) {
+            await rollbackUploadedListingMedia(uploaded);
+            uploaded = null;
+            throw error;
+        }
+    } catch (error) {
+        if (error instanceof MediaUploadValidationError) {
+            return NextResponse.json(
+                { error: error.message },
+                { status: error.status }
+            );
         }
 
-        // ✅ IMAGEN: main + thumb via sharp
-        if (!isLikelyImage(mime)) {
-            return NextResponse.json({ error: "Tipo de archivo no soportado" }, { status: 400 });
+        if ((error as any)?.code === "P2002") {
+            return NextResponse.json(
+                {
+                    error:
+                        "Otro cambio ocupó ese slot. Reintentá la carga.",
+                },
+                { status: 409 }
+            );
         }
 
-        const mainBuffer = await sharp(inputBuffer)
-            .resize(1600, null, { withoutEnlargement: true })
-            .jpeg({ quality: 82 })
-            .toBuffer();
+        console.error(
+            "upload-product-listing-media error:",
+            error
+        );
 
-        const thumbBuffer = await sharp(inputBuffer)
-            .resize(360, 360, { fit: "cover" })
-            .jpeg({ quality: 75 })
-            .toBuffer();
-
-        const uploadMain = await new Promise<{ secure_url: string; public_id: string }>((resolve, reject) => {
-            const stream = cloudinary.uploader.upload_stream(
-                { folder: folderMain, resource_type: "image" },
-                (error, result) => {
-                    if (error || !result) return reject(error || new Error("Upload failed"));
-                    resolve({ secure_url: result.secure_url!, public_id: result.public_id! });
-                }
-            );
-            stream.end(mainBuffer);
-        });
-
-        const uploadThumb = await new Promise<{ secure_url: string; public_id: string }>((resolve, reject) => {
-            const stream = cloudinary.uploader.upload_stream(
-                { folder: folderThumb, resource_type: "image" },
-                (error, result) => {
-                    if (error || !result) return reject(error || new Error("Upload failed"));
-                    resolve({ secure_url: result.secure_url!, public_id: result.public_id! });
-                }
-            );
-            stream.end(thumbBuffer);
-        });
-
-        return NextResponse.json({
-            type: "image",
-            url: uploadMain.secure_url,
-            publicId: uploadMain.public_id,
-            thumbUrl: uploadThumb.secure_url,
-            thumbPublicId: uploadThumb.public_id,
-            format: "jpg",
-            durationSec: null,
-        });
-    } catch (err) {
-        console.error("upload-product-listing-media error:", err);
-        return NextResponse.json({ error: "Error procesando/subiendo el archivo" }, { status: 500 });
+        return NextResponse.json(
+            {
+                error:
+                    "Error procesando/subiendo el archivo.",
+            },
+            { status: 500 }
+        );
     }
 }

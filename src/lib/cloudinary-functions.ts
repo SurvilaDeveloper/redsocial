@@ -1,11 +1,19 @@
-//src/lib/cloudinary-functions.ts
+// src/lib/cloudinary-functions.ts
 
 const AUTHENTICATED_IMAGE_MAX_BYTES = 8 * 1024 * 1024;
+const LISTING_IMAGE_MAX_BYTES = 15 * 1024 * 1024;
+const LISTING_VIDEO_MAX_BYTES = 50 * 1024 * 1024;
 
 const AUTHENTICATED_IMAGE_MIME_TYPES = new Set([
     "image/jpeg",
     "image/png",
     "image/webp",
+]);
+
+const LISTING_VIDEO_MIME_TYPES = new Set([
+    "video/mp4",
+    "video/webm",
+    "video/quicktime",
 ]);
 
 export class CloudinaryUploadError extends Error {
@@ -39,6 +47,42 @@ export function validateAuthenticatedImageFile(file: File) {
             413
         );
     }
+}
+
+export function validateListingMediaFile(file: File) {
+    const mime = file.type.toLowerCase();
+
+    if (file.size <= 0) {
+        throw new CloudinaryUploadError(
+            "El archivo está vacío.",
+            400
+        );
+    }
+
+    if (AUTHENTICATED_IMAGE_MIME_TYPES.has(mime)) {
+        if (file.size > LISTING_IMAGE_MAX_BYTES) {
+            throw new CloudinaryUploadError(
+                "La imagen supera el límite de 15 MB.",
+                413
+            );
+        }
+        return;
+    }
+
+    if (LISTING_VIDEO_MIME_TYPES.has(mime)) {
+        if (file.size > LISTING_VIDEO_MAX_BYTES) {
+            throw new CloudinaryUploadError(
+                "El video supera el límite de 50 MB.",
+                413
+            );
+        }
+        return;
+    }
+
+    throw new CloudinaryUploadError(
+        "Formato no permitido. Usa JPEG, PNG, WebP, MP4, WebM o MOV.",
+        400
+    );
 }
 
 export function getCloudinaryUploadErrorMessage(
@@ -108,7 +152,6 @@ export async function uploadProfileImage(file: File) {
 }
 
 export async function uploadPostImage(file: File) {
-    // UX temprana. La validación de seguridad real sigue en el servidor.
     validateAuthenticatedImageFile(file);
 
     const formData = new FormData();
@@ -137,7 +180,6 @@ export async function uploadPostImage(file: File) {
 }
 
 export async function uploadSiteImage(file: File) {
-    // Stage 2 también protege los uploads de sitios.
     validateAuthenticatedImageFile(file);
 
     const formData = new FormData();
