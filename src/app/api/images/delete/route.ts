@@ -1,127 +1,176 @@
 // src/app/api/images/delete/route.ts
 import { NextResponse } from "next/server";
-import auth from "@/auth";
-import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 
-import cloudinary from "@/lib/cloudinary"; // tu config
+import auth from "@/auth";
+import cloudinary from "@/lib/cloudinary";
+import {
+    inspectCloudinaryAssetOwnership,
+    markCloudinaryAssetDeleted,
+} from "@/lib/cloudinary-asset-ownership";
+
+export const runtime = "nodejs";
 
 const bodySchema = z.object({
-    publicId: z.string().min(1),
+    publicId: z
+        .string()
+        .trim()
+        .min(1)
+        .max(255),
 });
 
-const DELETED_SVG_URL = "/image-deleted.svg";
+function uniqueLabels(labels: string[]) {
+    return Array.from(
+        new Set(
+            labels
+                .map((label) => label.trim())
+                .filter(Boolean)
+        )
+    );
+}
 
 export async function DELETE(req: Request) {
     const session = await auth();
-    if (!session?.user?.id) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-    const userId = Number(session.user.id);
 
-    const body = await req.json();
-    const parsed = bodySchema.safeParse(body);
+    const userId =
+        session?.user?.id != null
+            ? Number(session.user.id)
+            : null;
+
+    if (
+        !userId ||
+        !Number.isFinite(userId)
+    ) {
+        return NextResponse.json(
+            { error: "Unauthorized" },
+            { status: 401 }
+        );
+    }
+
+    const body = await req
+        .json()
+        .catch(() => null);
+
+    const parsed =
+        bodySchema.safeParse(body);
+
     if (!parsed.success) {
-        return NextResponse.json({ error: "Invalid data" }, { status: 400 });
+        return NextResponse.json(
+            { error: "Invalid data" },
+            { status: 400 }
+        );
     }
 
     const { publicId } = parsed.data;
 
-    // (Opcional pero recomendado) validar pertenencia vía CloudinaryImage si lo usás
-    const cloudRow = await prisma.cloudinaryImage.findUnique({
-        where: { publicId },
-        select: { userId: true, url: true },
-    });
+    const inspection =
+        await inspectCloudinaryAssetOwnership(
+            publicId,
+            userId
+        );
 
-    if (cloudRow?.userId != null && cloudRow.userId !== userId) {
-        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    if (!inspection.known) {
+        return NextResponse.json(
+            {
+                error: "Imagen no encontrada en tus recursos.",
+                code: "ASSET_NOT_OWNED",
+            },
+            { status: 404 }
+        );
     }
 
-    const urlToReplace = cloudRow?.url ?? null;
-
-    // 1) Borrar en Cloudinary
-    const result = await cloudinary.uploader.destroy(publicId, { invalidate: true });
-    if (result.result !== "ok" && result.result !== "not found") {
-        return NextResponse.json({ error: "Cloudinary delete failed", result }, { status: 500 });
+    if (
+        !inspection.ownedByRequester ||
+        inspection.hasForeignOwner
+    ) {
+        return NextResponse.json(
+            {
+                error: "No tenés permiso para eliminar esta imagen.",
+                code: "ASSET_NOT_OWNED",
+            },
+            { status: 403 }
+        );
     }
 
-    // 2) Reemplazar en DB (transacción)
-    await prisma.$transaction(async (tx) => {
-        // User avatar
-        await tx.user.updateMany({
-            where: { id: userId, imagePublicId: publicId },
-            data: { imageUrl: DELETED_SVG_URL, imagePublicId: null },
-        });
+    if (
+        inspection.resourceTypes.includes(
+            "video"
+        )
+    ) {
+        return NextResponse.json(
+            {
+                error:
+                    "Este recurso incluye video y no puede eliminarse desde la biblioteca de imágenes.",
+                code: "UNSUPPORTED_ASSET_TYPE",
+            },
+            { status: 409 }
+        );
+    }
 
-        // User wall
-        await tx.user.updateMany({
-            where: { id: userId, imageWallPublicId: publicId },
-            data: { imageWallUrl: DELETED_SVG_URL, imageWallPublicId: null },
-        });
+    if (
+        inspection.activeUsages.length >
+        0
+    ) {
+        const references =
+            uniqueLabels(
+                inspection.activeUsages.map(
+                    (usage) => usage.label
+                )
+            );
 
-        // Posts images
-        await tx.image.updateMany({
-            where: { imagePublicId: publicId },
-            data: { imageUrl: DELETED_SVG_URL, imagePublicId: null, active: 0 },
-        });
+        return NextResponse.json(
+            {
+                error:
+                    references.length > 0
+                        ? `La imagen está en uso en: ${references.join(", ")}. Quitala de ese contenido antes de eliminarla.`
+                        : "La imagen está en uso. Quitala del contenido antes de eliminarla.",
+                code: "ASSET_IN_USE",
+                references,
+            },
+            { status: 409 }
+        );
+    }
 
-        // Product listing media
-        await tx.productListingMedia.updateMany({
-            where: { publicId },
-            data: { url: DELETED_SVG_URL, publicId: null, active: 0 },
-        });
+    const cloudResult =
+        await cloudinary.uploader.destroy(
+            publicId,
+            {
+                resource_type: "image",
+                invalidate: true,
+            }
+        );
 
-        await tx.productListingMedia.updateMany({
-            where: { thumbnailPublicId: publicId },
-            data: { thumbnailUrl: DELETED_SVG_URL, thumbnailPublicId: null },
-        });
+    const result = String(
+        (cloudResult as any)?.result ??
+            ""
+    );
 
-        // Service listing media
-        await tx.serviceListingMedia.updateMany({
-            where: { publicId },
-            data: { url: DELETED_SVG_URL, publicId: null, active: 0 },
-        });
+    if (
+        result !== "ok" &&
+        result !== "not found"
+    ) {
+        console.error(
+            "Cloudinary delete failed:",
+            publicId,
+            cloudResult
+        );
 
-        await tx.serviceListingMedia.updateMany({
-            where: { thumbnailPublicId: publicId },
-            data: { thumbnailUrl: DELETED_SVG_URL, thumbnailPublicId: null },
-        });
+        return NextResponse.json(
+            {
+                error:
+                    "Cloudinary no confirmó la eliminación de la imagen.",
+                code: "CLOUDINARY_DELETE_FAILED",
+            },
+            { status: 502 }
+        );
+    }
 
-        // Cloudinary index
-        await tx.cloudinaryImage.updateMany({
-            where: { publicId },
-            data: { deletedAt: new Date(), url: DELETED_SVG_URL },
-        });
+    await markCloudinaryAssetDeleted(
+        inspection
+    );
 
-        // Extra seguridad: si en algún lado quedó solo por URL
-        if (urlToReplace) {
-            await tx.image.updateMany({
-                where: { imageUrl: urlToReplace },
-                data: { imageUrl: DELETED_SVG_URL, imagePublicId: null, active: 0 },
-            });
-
-            await tx.productListingMedia.updateMany({
-                where: { url: urlToReplace },
-                data: { url: DELETED_SVG_URL, publicId: null, active: 0 },
-            });
-
-            await tx.serviceListingMedia.updateMany({
-                where: { url: urlToReplace },
-                data: { url: DELETED_SVG_URL, publicId: null, active: 0 },
-            });
-
-            await tx.user.updateMany({
-                where: { id: userId, imageUrl: urlToReplace },
-                data: { imageUrl: DELETED_SVG_URL, imagePublicId: null },
-            });
-
-            await tx.user.updateMany({
-                where: { id: userId, imageWallUrl: urlToReplace },
-                data: { imageWallUrl: DELETED_SVG_URL, imageWallPublicId: null },
-            });
-        }
+    return NextResponse.json({
+        result: "ok",
+        cloudinaryResult: result,
     });
-
-    return NextResponse.json({ result: "ok" });
 }
-
