@@ -83,6 +83,21 @@ model SecurityLog {
   @@index([type])
 }
 
+model RateLimitBucket {
+  scope           String   @db.VarChar(100)
+  subjectHash     String   @db.Char(64)
+  windowStartedAt DateTime @db.Timestamptz(3)
+  count           Int      @default(0)
+  limitValue      Int
+  windowSeconds   Int
+  expiresAt       DateTime @db.Timestamptz(3)
+  updatedAt       DateTime @default(now()) @updatedAt @db.Timestamptz(3)
+
+  @@id([scope, subjectHash])
+  @@index([expiresAt])
+  @@map("rate_limit_bucket")
+}
+
 model TrustedDevice {
   id             Int     @id @default(autoincrement())
   userId         Int

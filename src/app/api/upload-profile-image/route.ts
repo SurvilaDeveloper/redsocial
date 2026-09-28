@@ -3,6 +3,16 @@ import { NextRequest, NextResponse } from "next/server";
 
 import auth from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { getRateLimitClientIp } from "@/lib/rate-limit-client-ip";
+import {
+    authenticatedUploadRules,
+    profileUploadRules,
+} from "@/lib/rate-limit-policies";
+import {
+    enforceRateLimits,
+    isRateLimitInfrastructureError,
+    rateLimitUnavailableResponse,
+} from "@/lib/rate-limit";
 import {
     ImageUploadValidationError,
     assertRequestSizeIsReasonable,
@@ -34,6 +44,14 @@ export async function POST(req: NextRequest) {
         assertRequestSizeIsReasonable(
             req.headers.get("content-length")
         );
+
+        const ip = getRateLimitClientIp(req.headers);
+        const rateLimited = await enforceRateLimits([
+            ...authenticatedUploadRules(userId, ip),
+            ...profileUploadRules(userId),
+        ]);
+
+        if (rateLimited) return rateLimited;
 
         const formData = await req.formData();
 
@@ -99,6 +117,14 @@ export async function POST(req: NextRequest) {
             publicId: uploadResult.public_id,
         });
     } catch (error) {
+        if (isRateLimitInfrastructureError(error)) {
+            console.error(
+                "upload-profile-image rate limit error:",
+                error
+            );
+            return rateLimitUnavailableResponse();
+        }
+
         if (uploadedPublicId) {
             await destroyCloudinaryImageBestEffort(
                 uploadedPublicId

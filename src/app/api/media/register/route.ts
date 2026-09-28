@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 
 import auth from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { mediaReferenceRules } from "@/lib/rate-limit-policies";
+import { enforceRateLimits } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
     const session = await auth();
@@ -17,6 +19,12 @@ export async function POST(req: NextRequest) {
             { status: 401 }
         );
     }
+
+    const rateLimited = await enforceRateLimits(
+        mediaReferenceRules(userId)
+    );
+
+    if (rateLimited) return rateLimited;
 
     const body = await req.json().catch(() => null);
 

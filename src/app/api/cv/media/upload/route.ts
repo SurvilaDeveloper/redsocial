@@ -3,6 +3,16 @@ import { NextRequest, NextResponse } from "next/server";
 
 import auth from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { getRateLimitClientIp } from "@/lib/rate-limit-client-ip";
+import {
+    authenticatedUploadRules,
+    cvUploadRules,
+} from "@/lib/rate-limit-policies";
+import {
+    enforceRateLimits,
+    isRateLimitInfrastructureError,
+    rateLimitUnavailableResponse,
+} from "@/lib/rate-limit";
 import {
     ImageUploadValidationError,
     assertRequestSizeIsReasonable,
@@ -54,6 +64,14 @@ export async function POST(req: NextRequest) {
         assertRequestSizeIsReasonable(
             req.headers.get("content-length")
         );
+
+        const ip = getRateLimitClientIp(req.headers);
+        const rateLimited = await enforceRateLimits([
+            ...authenticatedUploadRules(userId, ip),
+            ...cvUploadRules(userId),
+        ]);
+
+        if (rateLimited) return rateLimited;
 
         const formData = await req.formData();
         const curriculumId = parseCurriculumId(
@@ -153,6 +171,11 @@ export async function POST(req: NextRequest) {
             throw error;
         }
     } catch (error) {
+        if (isRateLimitInfrastructureError(error)) {
+            console.error("cv media upload rate limit error:", error);
+            return rateLimitUnavailableResponse();
+        }
+
         if (uploadedPublicId) {
             await destroyCloudinaryImageBestEffort(
                 uploadedPublicId

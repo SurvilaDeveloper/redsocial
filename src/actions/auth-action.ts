@@ -2,16 +2,27 @@
 "use server";
 
 import { z } from "zod";
+import { headers } from "next/headers";
 import { loginSchema, signUpSchema } from "@/lib/zod";
 import { signIn } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { registerUser } from "@/lib/auth/register-user";
+import { getRateLimitClientIp } from "@/lib/rate-limit-client-ip";
+import {
+    registrationEmailRules,
+    registrationIpRules,
+    verificationEmailRules,
+    verificationIpRules,
+} from "@/lib/rate-limit-policies";
+import { consumeRateLimits } from "@/lib/rate-limit";
 
 type ActionResponse = {
     success?: true;
     error?: string;
     email?: string;
+    code?: "RATE_LIMITED" | "RATE_LIMIT_UNAVAILABLE";
+    retryAfterSec?: number;
 };
 
 /** Función para loguear con credenciales (solo valida) */
@@ -89,6 +100,32 @@ export const registerAction = async (
     values: z.infer<typeof signUpSchema>,
     _image?: { url: string; publicId: string } | null
 ): Promise<ActionResponse> => {
+    try {
+        const requestHeaders = await headers();
+        const ip = getRateLimitClientIp(requestHeaders);
+        const email = String(values?.email ?? "");
+        const decision = await consumeRateLimits([
+            ...registrationIpRules(ip),
+            ...registrationEmailRules(email),
+            ...verificationIpRules(ip),
+            ...verificationEmailRules(email),
+        ]);
+
+        if (!decision.ok) {
+            return {
+                error: "Demasiadas solicitudes. Intenta nuevamente mas tarde.",
+                code: "RATE_LIMITED",
+                retryAfterSec: decision.retryAfterSec,
+            };
+        }
+    } catch (error) {
+        console.error("registerAction rate limit error:", error);
+        return {
+            error: "El control de solicitudes no esta disponible temporalmente.",
+            code: "RATE_LIMIT_UNAVAILABLE",
+        };
+    }
+
     const result = await registerUser(values, null);
 
     if (!result.success) {

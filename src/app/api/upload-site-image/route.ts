@@ -1,6 +1,16 @@
 // src/app/api/upload-site-image/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import auth from "@/auth";
+import { getRateLimitClientIp } from "@/lib/rate-limit-client-ip";
+import {
+    authenticatedUploadRules,
+    siteUploadRules,
+} from "@/lib/rate-limit-policies";
+import {
+    enforceRateLimits,
+    isRateLimitInfrastructureError,
+    rateLimitUnavailableResponse,
+} from "@/lib/rate-limit";
 import {
     ImageUploadValidationError,
     assertRequestSizeIsReasonable,
@@ -21,6 +31,14 @@ export async function POST(req: NextRequest) {
 
     try {
         assertRequestSizeIsReasonable(req.headers.get("content-length"));
+
+        const ip = getRateLimitClientIp(req.headers);
+        const rateLimited = await enforceRateLimits([
+            ...authenticatedUploadRules(session.user.id, ip),
+            ...siteUploadRules(session.user.id),
+        ]);
+
+        if (rateLimited) return rateLimited;
 
         const formData = await req.formData();
         const validated = await validateAuthenticatedImageUpload(
@@ -66,6 +84,11 @@ export async function POST(req: NextRequest) {
             throw error;
         }
     } catch (error) {
+        if (isRateLimitInfrastructureError(error)) {
+            console.error("upload-site-image rate limit error:", error);
+            return rateLimitUnavailableResponse();
+        }
+
         if (error instanceof ImageUploadValidationError) {
             return NextResponse.json(
                 { error: error.message },

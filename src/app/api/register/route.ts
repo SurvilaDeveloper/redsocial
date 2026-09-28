@@ -4,6 +4,18 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { signUpSchema } from "@/lib/zod";
 import { registerUser } from "@/lib/auth/register-user";
+import { getRateLimitClientIp } from "@/lib/rate-limit-client-ip";
+import {
+    registrationEmailRules,
+    registrationIpRules,
+    verificationEmailRules,
+    verificationIpRules,
+} from "@/lib/rate-limit-policies";
+import {
+    enforceRateLimits,
+    isRateLimitInfrastructureError,
+    rateLimitUnavailableResponse,
+} from "@/lib/rate-limit";
 import {
     ImageUploadValidationError,
     assertRequestSizeIsReasonable,
@@ -33,6 +45,13 @@ export async function POST(req: NextRequest) {
             req.headers.get("content-length")
         );
 
+        const ip = getRateLimitClientIp(req.headers);
+        const ipRateLimited = await enforceRateLimits(
+            registrationIpRules(ip)
+        );
+
+        if (ipRateLimited) return ipRateLimited;
+
         const formData = await req.formData();
 
         const parsed = signUpSchema.safeParse({
@@ -54,6 +73,12 @@ export async function POST(req: NextRequest) {
             );
         }
 
+        const emailRateLimited = await enforceRateLimits(
+            registrationEmailRules(parsed.data.email)
+        );
+
+        if (emailRateLimited) return emailRateLimited;
+
         // Evita subir a Cloudinary en el caso normal de email repetido.
         // registerUser vuelve a verificar para cubrir carreras.
         const existing = await prisma.user.findUnique({
@@ -67,6 +92,13 @@ export async function POST(req: NextRequest) {
                 { status: 409 }
             );
         }
+
+        const verificationRateLimited = await enforceRateLimits([
+            ...verificationIpRules(ip),
+            ...verificationEmailRules(parsed.data.email),
+        ]);
+
+        if (verificationRateLimited) return verificationRateLimited;
 
         const fileValue = formData.get("file");
 
@@ -143,6 +175,11 @@ export async function POST(req: NextRequest) {
             { status: 201 }
         );
     } catch (error) {
+        if (isRateLimitInfrastructureError(error)) {
+            console.error("register rate limit error:", error);
+            return rateLimitUnavailableResponse();
+        }
+
         if (uploadedImage?.publicId) {
             await destroyCloudinaryImageBestEffort(
                 uploadedImage.publicId

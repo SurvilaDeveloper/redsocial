@@ -2,6 +2,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import auth from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { mediaReferenceRules } from "@/lib/rate-limit-policies";
+import { enforceRateLimits } from "@/lib/rate-limit";
 
 function safeStr(v: unknown, max = 255) {
     const s = typeof v === "string" ? v.trim() : "";
@@ -78,6 +80,12 @@ export async function PATCH(
     if (!url || !publicId) {
         return NextResponse.json({ error: "Falta uploaded.url / uploaded.publicId." }, { status: 400 });
     }
+
+    const rateLimited = await enforceRateLimits(
+        mediaReferenceRules(userId)
+    );
+
+    if (rateLimited) return rateLimited;
 
     // crear row CloudinaryImage
     const imgRow = await prisma.cloudinaryImage.create({

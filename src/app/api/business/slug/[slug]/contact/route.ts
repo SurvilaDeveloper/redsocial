@@ -2,7 +2,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendBusinessContactEmail } from "@/lib/email";
-import { rateLimitTokenBucket } from "@/lib/rate-limit";
+import { getRateLimitClientIp } from "@/lib/rate-limit-client-ip";
+import { businessContactRules } from "@/lib/rate-limit-policies";
+import {
+    enforceRateLimits,
+    isRateLimitInfrastructureError,
+    rateLimitUnavailableResponse,
+} from "@/lib/rate-limit";
 
 function isValidEmail(email: string) {
     // validación mínima (formato razonable)
@@ -15,20 +21,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
     try {
         const { slug } = await params;
 
-        const ip =
-            req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-            req.headers.get("x-real-ip") ||
-            "unknown";
+        const ip = getRateLimitClientIp(req.headers);
 
-        // 5 envíos cada 10 minutos aprox => capacity=5, refill=5/600=0.00833
-        const rl = rateLimitTokenBucket({
-            key: `biz_contact:${slug}:${ip}`,
-            capacity: 5,
-            refillPerSec: 5 / 600,
-        });
-        if (!rl.ok) {
-            return NextResponse.json({ error: "Too many requests" }, { status: 429 });
-        }
+        // Limite por negocio e IP, mas un limite global por IP.
+        const rateLimited = await enforceRateLimits(
+            businessContactRules(slug, ip)
+        );
+
+        if (rateLimited) return rateLimited;
 
         const body = await req.json().catch(() => null);
         if (!body) {
@@ -92,6 +92,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
 
         return NextResponse.json({ ok: true });
     } catch (err) {
+        if (isRateLimitInfrastructureError(err)) {
+            console.error("business contact rate limit error:", err);
+            return rateLimitUnavailableResponse();
+        }
+
         console.error("POST /api/business/[slug]/contact error:", err);
         return NextResponse.json({ error: "Server error" }, { status: 500 });
     }

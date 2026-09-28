@@ -3,6 +3,16 @@ import { NextRequest, NextResponse } from "next/server";
 
 import auth from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { getRateLimitClientIp } from "@/lib/rate-limit-client-ip";
+import {
+    authenticatedUploadRules,
+    listingUploadRules,
+} from "@/lib/rate-limit-policies";
+import {
+    enforceRateLimits,
+    isRateLimitInfrastructureError,
+    rateLimitUnavailableResponse,
+} from "@/lib/rate-limit";
 import {
     MediaUploadValidationError,
     assertListingMediaRequestSizeIsReasonable,
@@ -67,6 +77,13 @@ export async function POST(req: NextRequest) {
             req.headers.get("content-length")
         );
 
+        const ip = getRateLimitClientIp(req.headers);
+        const globalRateLimited = await enforceRateLimits(
+            authenticatedUploadRules(userId, ip)
+        );
+
+        if (globalRateLimited) return globalRateLimited;
+
         const formData = await req.formData();
         const listingId = parseListingId(
             formData.get("listingId")
@@ -125,8 +142,22 @@ export async function POST(req: NextRequest) {
             );
         }
 
+        const fileValue = formData.get("file");
+        const mediaType =
+            fileValue instanceof Blob ? fileValue.type.toLowerCase() : "";
+        const listingRateLimited = await enforceRateLimits(
+            listingUploadRules({
+                userId,
+                listingType: "product",
+                listingId,
+                mediaType,
+            })
+        );
+
+        if (listingRateLimited) return listingRateLimited;
+
         uploaded = await uploadValidatedListingMedia(
-            formData.get("file"),
+            fileValue,
             {
                 main: "product_listings",
                 thumbnail: "product_listings/thumbs",
@@ -187,6 +218,14 @@ export async function POST(req: NextRequest) {
             throw error;
         }
     } catch (error) {
+        if (isRateLimitInfrastructureError(error)) {
+            console.error(
+                "upload-product-listing-media rate limit error:",
+                error
+            );
+            return rateLimitUnavailableResponse();
+        }
+
         if (error instanceof MediaUploadValidationError) {
             return NextResponse.json(
                 { error: error.message },

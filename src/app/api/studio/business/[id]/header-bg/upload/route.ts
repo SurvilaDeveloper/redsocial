@@ -2,6 +2,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import auth from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { mediaReferenceRules } from "@/lib/rate-limit-policies";
+import { enforceRateLimits } from "@/lib/rate-limit";
 
 export async function POST(
     req: NextRequest,
@@ -32,6 +34,12 @@ export async function POST(
             { status: 403 }
         );
     }
+
+    const rateLimited = await enforceRateLimits(
+        mediaReferenceRules(userId)
+    );
+
+    if (rateLimited) return rateLimited;
 
     // El cliente sube a Cloudinary (uploadSiteImage -> /api/upload-site-image)
     // y acá solo recibimos url/publicId para persistir en DB y setear headerBgImageId.
